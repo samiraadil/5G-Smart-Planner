@@ -1,399 +1,902 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5G Smart Planner - Casablanca</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>5G Smart Planner Pro - Casablanca</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f0f2f5; }
-        .header { background: linear-gradient(135deg, #1a1a2e, #16213e); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 20px; }
-        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin: 5px; }
-        .btn-green { background: #2ea043; color: white; }
-        .btn-orange { background: #ff8800; color: white; }
-        .btn-red { background: #e94560; color: white; }
-        .btn-blue { background: #1a73e8; color: white; }
-        .main { display: flex; height: calc(100vh - 70px); }
-        .map-area { flex: 1; padding: 20px; overflow-y: auto; }
-        .map-area h2 { margin-bottom: 10px; }
-        .stats { display: flex; gap: 15px; flex-wrap: wrap; margin: 10px 0; }
-        .stat-card { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-width: 100px; }
-        .stat-card .number { font-size: 24px; font-weight: bold; }
-        .stat-card .label { color: #666; font-size: 12px; }
-        .stations-list { margin-top: 15px; }
-        .station-item { background: white; padding: 10px 15px; border-radius: 6px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .sidebar { width: 320px; background: white; padding: 20px; border-left: 1px solid #ddd; overflow-y: auto; }
-        .sidebar h3 { margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .metric { margin: 10px 0; }
-        .metric .value { font-size: 22px; font-weight: bold; }
-        .metric .label { color: #666; font-size: 12px; }
-        .coverage-bar { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-top: 5px; }
-        .coverage-fill { height: 100%; background: linear-gradient(90deg, #e94560, #ff8800, #2ea043); border-radius: 4px; transition: width 0.5s; }
-        .suggestion { background: #fff8e6; padding: 10px; border-radius: 6px; border-left: 3px solid #ff8800; margin: 5px 0; }
-        .loading { color: #666; font-size: 14px; margin: 10px 0; }
-        .map-container { background: white; border-radius: 8px; padding: 20px; min-height: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .map-container p { color: #888; }
-        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0b1120;
+            color: #e8edf5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a2332;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 4px;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: rgba(16, 24, 40, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1000;
+            flex-shrink: 0;
+            height: 64px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .header-left .logo {
+            font-size: 22px;
+        }
+        .header-left h1 {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .header-left .badge {
+            font-size: 10px;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            padding: 2px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-weight: 600;
+        }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff;
+        }
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+        }
+        .btn-outline {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #334155;
+        }
+        .btn-outline:hover {
+            background: #1e293b;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .app {
+            display: flex;
+            height: calc(100vh - 64px);
+            gap: 0;
+        }
+
+        /* ===== MAP ===== */
+        .map-wrapper {
+            flex: 1;
+            position: relative;
+            background: #0f172a;
+            overflow: hidden;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+        }
+        #map .leaflet-tile-pane {
+            filter: brightness(0.85) contrast(1.1);
+        }
+        .map-overlay-stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            gap: 28px;
+            z-index: 500;
+            flex-wrap: wrap;
+        }
+        .map-overlay-stats .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .map-overlay-stats .stat-item .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+        .map-overlay-stats .stat-item .label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .map-overlay-stats .stat-item .value.good {
+            color: #4ade80;
+        }
+        .map-overlay-stats .stat-item .value.warning {
+            color: #fbbf24;
+        }
+        .map-overlay-stats .stat-item .value.danger {
+            color: #f87171;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 380px;
+            min-width: 340px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(59, 130, 246, 0.08);
+            padding: 20px 22px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            flex-shrink: 0;
+        }
+        .sidebar-section {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 16px 18px;
+            border: 1px solid rgba(59, 130, 246, 0.06);
+        }
+        .sidebar-section h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        /* ===== METRICS GRID ===== */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .metric-card {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            padding: 12px 14px;
+            border: 1px solid rgba(59, 130, 246, 0.06);
+            transition: all 0.2s;
+        }
+        .metric-card:hover {
+            border-color: rgba(59, 130, 246, 0.15);
+        }
+        .metric-card .number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f1f5f9;
+            line-height: 1.2;
+        }
+        .metric-card .number.green {
+            color: #4ade80;
+        }
+        .metric-card .number.orange {
+            color: #fbbf24;
+        }
+        .metric-card .number.red {
+            color: #f87171;
+        }
+        .metric-card .number.blue {
+            color: #60a5fa;
+        }
+        .metric-card .label {
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        .metric-card .bar {
+            width: 100%;
+            height: 3px;
+            background: #1e293b;
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .metric-card .bar .fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.8s ease;
+        }
+        .metric-card .bar .fill.green {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+        .metric-card .bar .fill.orange {
+            background: linear-gradient(90deg, #d97706, #fbbf24);
+        }
+        .metric-card .bar .fill.red {
+            background: linear-gradient(90deg, #dc2626, #f87171);
+        }
+        .metric-card .bar .fill.blue {
+            background: linear-gradient(90deg, #2563eb, #60a5fa);
+        }
+
+        /* ===== STATIONS LIST ===== */
+        .stations-list {
+            max-height: 180px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .station-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 6px;
+            font-size: 12px;
+            border-left: 3px solid #3b82f6;
+            transition: all 0.2s;
+        }
+        .station-item:hover {
+            background: rgba(30, 41, 59, 0.6);
+        }
+        .station-item .name {
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        .station-item .details {
+            color: #94a3b8;
+            font-size: 10px;
+        }
+        .station-item .delete-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 4px;
+            transition: color 0.2s;
+        }
+        .station-item .delete-btn:hover {
+            color: #ef4444;
+        }
+        .station-item.active {
+            border-left-color: #4ade80;
+        }
+        .station-item.overloaded {
+            border-left-color: #f87171;
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        /* ===== SUGGESTIONS ===== */
+        .suggestion-item {
+            background: rgba(59, 130, 246, 0.06);
+            border-left: 3px solid #3b82f6;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .suggestion-item .title {
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        .suggestion-item .desc {
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .suggestion-item .badge {
+            font-size: 9px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .suggestion-item .badge.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+        .suggestion-item .badge.medium {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+        .suggestion-item .badge.low {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 320px;
+                min-width: 280px;
+                padding: 16px;
+            }
+        }
+        @media (max-width: 768px) {
+            .app {
+                flex-direction: column;
+                height: calc(100vh - 64px);
+            }
+            .sidebar {
+                width: 100%;
+                min-width: unset;
+                max-height: 45vh;
+                border-left: none;
+                border-top: 1px solid rgba(59, 130, 246, 0.08);
+                padding: 14px;
+            }
+            .map-wrapper {
+                height: 55vh;
+            }
+            .header {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 10px 16px;
+                gap: 8px;
+            }
+            .header-actions .btn {
+                font-size: 10px;
+                padding: 5px 10px;
+            }
+            .map-overlay-stats {
+                padding: 10px 14px;
+                gap: 14px;
+                bottom: 10px;
+                left: 10px;
+            }
+            .map-overlay-stats .stat-item .value {
+                font-size: 14px;
+            }
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .sidebar {
+                max-height: 50vh;
+            }
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 14px 22px;
+            color: #f1f5f9;
+            font-size: 13px;
+            z-index: 9999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            max-width: 380px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.success {
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+        .toast.warning {
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+        .toast.error {
+            border-color: rgba(248, 113, 113, 0.3);
+        }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>📡 5G Smart Planner - Casablanca</h1>
-    <div>
-        <button class="btn btn-green" onclick="generateUsers()">👥 Générer utilisateurs</button>
-        <button class="btn btn-orange" onclick="optimizeNetwork()">🤖 Optimiser</button>
-        <button class="btn btn-blue" onclick="addStation()">📡 Ajouter station</button>
-        <button class="btn btn-red" onclick="clearAll()">🗑️ Effacer tout</button>
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-left">
+            <span class="logo">📡</span>
+            <h1>5G Smart Planner</h1>
+            <span class="badge">Casablanca</span>
+            <span class="badge" style="background:rgba(34,197,94,0.15);color:#4ade80;border-color:rgba(34,197,94,0.2);">● Live</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-success" onclick="generateUsers()">👥 Générer UE</button>
+            <button class="btn btn-primary" onclick="addRandomStation()">📡 Ajouter gNB</button>
+            <button class="btn btn-warning" onclick="optimizeNetwork()">🤖 IA Optimiser</button>
+            <button class="btn btn-danger" onclick="clearAll()">🗑️ Reset</button>
+        </div>
+    </header>
+
+    <!-- ===== APP ===== -->
+    <div class="app">
+
+        <!-- MAP -->
+        <div class="map-wrapper">
+            <div id="map"></div>
+            <div class="map-overlay-stats" id="overlayStats">
+                <div class="stat-item">
+                    <span class="value" id="overlayCoverage">0%</span>
+                    <span class="label">Couverture</span>
+                </div>
+                <div class="stat-item">
+                    <span class="value" id="overlayUsers">0</span>
+                    <span class="label">Utilisateurs</span>
+                </div>
+                <div class="stat-item">
+                    <span class="value" id="overlayStations">0</span>
+                    <span class="label">Stations</span>
+                </div>
+                <div class="stat-item">
+                    <span class="value" id="overlayLatency">0ms</span>
+                    <span class="label">Latence</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+
+            <!-- KPIs -->
+            <div class="sidebar-section">
+                <h3>📊 KPIs Temps Réel</h3>
+                <div class="metrics-grid" id="metricsGrid">
+                    <div class="metric-card">
+                        <div class="number blue" id="kpiCoverage">0%</div>
+                        <div class="label">Couverture</div>
+                        <div class="bar"><div class="fill blue" id="kpiCoverageBar" style="width:0%"></div></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="number green" id="kpiLatency">0 ms</div>
+                        <div class="label">Latence</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="number orange" id="kpiCapacity">0%</div>
+                        <div class="label">Capacité</div>
+                        <div class="bar"><div class="fill orange" id="kpiCapacityBar" style="width:0%"></div></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="number blue" id="kpiUsers">0</div>
+                        <div class="label">UE connectés</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="number blue" id="kpiStations">0</div>
+                        <div class="label">gNodeB actifs</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="number red" id="kpiSaturated">0</div>
+                        <div class="label">Saturées</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stations -->
+            <div class="sidebar-section">
+                <h3>📡 Stations gNodeB</h3>
+                <div class="stations-list" id="stationsList">
+                    <div style="color:#64748b;font-size:12px;text-align:center;padding:12px 0;">
+                        Aucune station. Cliquez sur "Ajouter gNB"
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions IA -->
+            <div class="sidebar-section">
+                <h3>🤖 Suggestions IA</h3>
+                <div id="suggestionsContainer">
+                    <div style="color:#64748b;font-size:12px;text-align:center;padding:8px 0;">
+                        En attente d'analyse...
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
-</div>
 
-<div class="main">
-    <div class="map-area">
-        <h2>🗺️ Carte de Casablanca</h2>
-        <div class="stats">
-            <div class="stat-card">
-                <div class="number" id="stationCount">0</div>
-                <div class="label">Stations (gNodeB)</div>
-            </div>
-            <div class="stat-card">
-                <div class="number" id="userCount">0</div>
-                <div class="label">Utilisateurs</div>
-            </div>
-            <div class="stat-card">
-                <div class="number" id="coveragePercent">0%</div>
-                <div class="label">Couverture</div>
-            </div>
-        </div>
+    <script>
+        // ========================================================================
+        // 5G SMART PLANNER - APPLICATION COMPLÈTE
+        // ========================================================================
 
-        <div class="map-container" id="mapContainer">
-            <p id="mapMessage">💡 Cliquez sur "Ajouter station" pour placer des gNodeB</p>
-            <div id="stationsList"></div>
-            <div id="usersList"></div>
-        </div>
-    </div>
+        // ---- DONNÉES ----
+        let stations = [];
+        let users = [];
+        let coverageData = [];
+        let stationIdCounter = 1;
+        let map = null;
+        let markers = { stations: [], users: [] };
+        let circles = [];
 
-    <div class="sidebar">
-        <h3>📊 Indicateurs</h3>
-        <div id="metrics">
-            <div class="metric">
-                <div class="value" id="metricCoverage">0%</div>
-                <div class="label">Couverture réseau</div>
-                <div class="coverage-bar"><div class="coverage-fill" id="coverageFill" style="width:0%"></div></div>
-            </div>
-            <div class="metric">
-                <div class="value" id="metricLatency">0 ms</div>
-                <div class="label">Latence moyenne</div>
-            </div>
-            <div class="metric">
-                <div class="value" id="metricCapacity">0%</div>
-                <div class="label">Capacité utilisée</div>
-            </div>
-            <div class="metric">
-                <div class="value" id="metricUsers">0</div>
-                <div class="label">Utilisateurs connectés</div>
-            </div>
-            <div class="metric">
-                <div class="value" id="metricStations">0</div>
-                <div class="label">Stations actives</div>
-            </div>
-            <div class="metric">
-                <div class="value" id="metricSaturated">0</div>
-                <div class="label">Stations saturées</div>
-            </div>
-        </div>
+        // ---- CONSTANTES CASABLANCA ----
+        const CASABLANCA_CENTER = [33.5731, -7.5898];
+        const CASABLANCA_BOUNDS = [
+            [33.52, -7.65],
+            [33.62, -7.50]
+        ];
 
-        <h3 style="margin-top:20px;">🤖 Suggestions IA</h3>
-        <div id="suggestions">
-            <p style="color:#888;font-size:13px;">Aucune suggestion. Cliquez sur "Optimiser" pour analyser.</p>
-        </div>
-    </div>
-</div>
+        const landmarks = [
+            { name: "Mosquée Hassan II", lat: 33.6085, lng: -7.6330 },
+            { name: "Place Mohammed V", lat: 33.5961, lng: -7.6156 },
+            { name: "Ain Diab", lat: 33.5880, lng: -7.7180 },
+            { name: "Casa Port", lat: 33.5950, lng: -7.6000 },
+            { name: "Maarif", lat: 33.5850, lng: -7.6030 },
+            { name: "Sidi Moumen", lat: 33.5800, lng: -7.5700 },
+            { name: "Derb Sultan", lat: 33.5700, lng: -7.5900 }
+        ];
 
-<script>
-    // ===== DONNÉES =====
-    let stations = [];
-    let users = [];
-    let coverageData = [];
-    let stationIdCounter = 1;
+        // ---- INIT MAP ----
+        function initMap() {
+            map = L.map('map', {
+                center: CASABLANCA_CENTER,
+                zoom: 12,
+                zoomControl: false
+            });
 
-    // Points d'intérêt de Casablanca
-    const landmarks = [
-        { name: "Mosquée Hassan II", lat: 33.6085, lng: -7.6330 },
-        { name: "Place Mohammed V", lat: 33.5961, lng: -7.6156 },
-        { name: "Ain Diab", lat: 33.5880, lng: -7.7180 },
-        { name: "Casa Port", lat: 33.5950, lng: -7.6000 },
-        { name: "Maarif", lat: 33.5850, lng: -7.6030 }
-    ];
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
 
-    // ===== FONCTIONS =====
+            // Contrôle zoom
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // Ajouter une station
-    function addStation() {
-        const lat = 33.57 + (Math.random() - 0.5) * 0.08;
-        const lng = -7.62 + (Math.random() - 0.5) * 0.08;
-        
-        const station = {
-            id: `gNB-${stationIdCounter++}`,
-            name: `Station-${stations.length + 1}`,
-            lat: lat,
-            lng: lng,
-            power: 43,
-            frequency: 3.5
-        };
-        stations.push(station);
-        updateUI();
-        calculateCoverage();
-        updateMetrics();
-        
-        showMessage(`📡 Station ajoutée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
-    }
+            // Marqueurs des landmarks
+            landmarks.forEach(lm => {
+                L.circleMarker([lm.lat, lm.lng], {
+                    radius: 4,
+                    color: '#60a5fa',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.3,
+                    weight: 1
+                }).addTo(map).bindPopup(`
+                    <div style="color:#0f172a;font-weight:600;font-size:13px;">${lm.name}</div>
+                    <div style="color:#64748b;font-size:11px;">Point d'intérêt</div>
+                `);
+            });
 
-    // Supprimer une station
-    function deleteStation(id) {
-        stations = stations.filter(s => s.id !== id);
-        updateUI();
-        calculateCoverage();
-        updateMetrics();
-    }
+            // Ajuster la vue
+            map.fitBounds(CASABLANCA_BOUNDS);
 
-    // Générer des utilisateurs
-    function generateUsers() {
-        const count = 30;
-        users = [];
-        for (let i = 0; i < count; i++) {
-            users.push({
-                id: `UE-${String(i+1).padStart(3,'0')}`,
-                lat: 33.55 + Math.random() * 0.12,
-                lng: -7.68 + Math.random() * 0.12,
-                service: ['eMBB', 'uRLLC', 'mMTC'][Math.floor(Math.random() * 3)],
-                dataRate: 50 + Math.random() * 150
+            // Ajouter une station de départ
+            setTimeout(() => {
+                addStation(33.5731, -7.5898);
+                addStation(33.5850, -7.6200);
+                addStation(33.5600, -7.5750);
+                generateUsers();
+            }, 300);
+        }
+
+        // ---- FONCTIONS ----
+
+        // Ajouter une station
+        function addStation(lat, lng) {
+            if (!lat || !lng) {
+                lat = 33.55 + (Math.random() - 0.5) * 0.1;
+                lng = -7.65 + (Math.random() - 0.5) * 0.12;
+            }
+            const station = {
+                id: `gNB-${String(stationIdCounter++).padStart(3, '0')}`,
+                name: `gNodeB-${stations.length + 1}`,
+                lat: lat,
+                lng: lng,
+                power: 40 + Math.floor(Math.random() * 10),
+                frequency: 3.5,
+                users: 0
+            };
+            stations.push(station);
+            updateAll();
+            showToast(`📡 ${station.name} ajoutée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'success');
+            return station;
+        }
+
+        function addRandomStation() {
+            const lat = 33.54 + Math.random() * 0.08;
+            const lng = -7.68 + Math.random() * 0.12;
+            addStation(lat, lng);
+        }
+
+        // Supprimer une station
+        function deleteStation(id) {
+            stations = stations.filter(s => s.id !== id);
+            updateAll();
+            showToast(`🗑️ Station ${id} supprimée`, 'warning');
+        }
+
+        // Générer des utilisateurs
+        function generateUsers() {
+            const count = 20 + Math.floor(Math.random() * 30);
+            users = [];
+            for (let i = 0; i < count; i++) {
+                users.push({
+                    id: `UE-${String(i + 1).padStart(3, '0')}`,
+                    lat: 33.53 + Math.random() * 0.12,
+                    lng: -7.70 + Math.random() * 0.16,
+                    service: ['eMBB', 'uRLLC', 'mMTC'][Math.floor(Math.random() * 3)],
+                    dataRate: 50 + Math.random() * 150
+                });
+            }
+            calculateCoverage();
+            updateAll();
+            showToast(`👥 ${users.length} utilisateurs générés`, 'success');
+        }
+
+        // Calcul de la couverture
+        function calculateCoverage() {
+            coverageData = [];
+            if (stations.length === 0 || users.length === 0) {
+                updateAll();
+                return;
+            }
+
+            users.forEach(user => {
+                let bestRsrp = -200;
+                let bestStation = null;
+
+                stations.forEach(station => {
+                    const dist = haversine(user.lat, user.lng, station.lat, station.lng);
+                    const rsrp = station.power - 28 * Math.log10(dist * 1000 + 10);
+                    if (rsrp > bestRsrp) {
+                        bestRsrp = rsrp;
+                        bestStation = station.id;
+                    }
+                });
+
+                const status = bestRsrp > -80 ? 'good' : bestRsrp > -100 ? 'poor' : 'none';
+                coverageData.push({
+                    userId: user.id,
+                    rsrp: Math.round(bestRsrp),
+                    stationId: bestStation,
+                    status: status
+                });
+            });
+
+            // Mettre à jour le nombre d'utilisateurs par station
+            stations.forEach(s => {
+                s.users = coverageData.filter(c => c.stationId === s.id && c.status !== 'none').length;
             });
         }
-        updateUI();
-        calculateCoverage();
-        updateMetrics();
-        showMessage(`👥 ${count} utilisateurs générés !`);
-    }
 
-    // Calculer la couverture
-    function calculateCoverage() {
-        coverageData = [];
-        if (stations.length === 0 || users.length === 0) {
-            updateUI();
-            return;
+        // Distance Haversine
+        function haversine(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.asin(Math.sqrt(a));
         }
 
-        users.forEach(user => {
-            let bestRsrp = -200;
-            let bestStation = null;
-            
-            stations.forEach(station => {
-                const dist = distance(user.lat, user.lng, station.lat, station.lng);
-                const rsrp = station.power - 30 * Math.log10(dist * 1000 + 10);
-                if (rsrp > bestRsrp) {
-                    bestRsrp = rsrp;
-                    bestStation = station.id;
+        // Optimisation IA
+        function optimizeNetwork() {
+            if (stations.length === 0) {
+                showToast('⚠️ Ajoutez d\'abord des stations !', 'warning');
+                return;
+            }
+            if (users.length === 0) {
+                showToast('⚠️ Générez d\'abord des utilisateurs !', 'warning');
+                return;
+            }
+
+            calculateCoverage();
+            const poor = coverageData.filter(c => c.status === 'poor' || c.status === 'none');
+
+            const container = document.getElementById('suggestionsContainer');
+
+            if (poor.length === 0) {
+                container.innerHTML = `
+                    <div class="suggestion-item" style="border-color:#4ade80;background:rgba(74,222,128,0.05);">
+                        <div class="title">✅ Réseau optimal</div>
+                        <div class="desc">La couverture est excellente. Aucune amélioration nécessaire.</div>
+                        <span class="badge low">Parfait</span>
+                    </div>
+                `;
+                showToast('✅ Réseau optimisé !', 'success');
+                return;
+            }
+
+            // Trouver le centroïde des zones mal couvertes
+            let sumLat = 0,
+                sumLng = 0,
+                count = 0;
+            poor.forEach(p => {
+                const user = users.find(u => u.id === p.userId);
+                if (user) {
+                    sumLat += user.lat;
+                    sumLng += user.lng;
+                    count++;
                 }
             });
-            
-            const status = bestRsrp > -85 ? 'good' : bestRsrp > -105 ? 'poor' : 'none';
-            coverageData.push({
-                userId: user.id,
-                rsrp: bestRsrp,
-                stationId: bestStation,
-                status: status
-            });
-        });
-        
-        updateUI();
-        updateMetrics();
-    }
 
-    // Distance en km
-    function distance(lat1, lng1, lat2, lng2) {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLng = (lng2 - lng1) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2)**2;
-        return R * 2 * Math.asin(Math.sqrt(a));
-    }
+            const avgLat = sumLat / count + (Math.random() - 0.5) * 0.003;
+            const avgLng = sumLng / count + (Math.random() - 0.5) * 0.003;
 
-    // Mettre à jour l'interface
-    function updateUI() {
-        document.getElementById('stationCount').textContent = stations.length;
-        document.getElementById('userCount').textContent = users.length;
-        document.getElementById('metricStations').textContent = stations.length;
-        document.getElementById('metricUsers').textContent = users.length;
+            // Ajouter une station IA
+            const newStation = addStation(avgLat, avgLng);
+            newStation.name = `🤖 IA-${stations.length}`;
 
-        // Liste des stations
-        const listDiv = document.getElementById('stationsList');
-        if (stations.length === 0) {
-            listDiv.innerHTML = '<p style="color:#888;font-size:13px;">Aucune station. Cliquez sur "Ajouter station"</p>';
-        } else {
-            listDiv.innerHTML = stations.map(s => `
-                <div class="station-item">
-                    <div>
-                        <strong>${s.name}</strong>
-                        <span style="color:#666;font-size:12px;margin-left:10px;">📶 ${s.frequency}GHz | ⚡ ${s.power}dBm</span>
-                        <span style="color:#888;font-size:11px;margin-left:10px;">📍 ${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</span>
+            container.innerHTML = `
+                <div class="suggestion-item" style="border-color:#fbbf24;">
+                    <div class="title">📡 Nouvelle station recommandée</div>
+                    <div class="desc">📍 ${avgLat.toFixed(4)}, ${avgLng.toFixed(4)}</div>
+                    <div class="desc">👥 ${poor.length} utilisateurs mal couverts</div>
+                    <span class="badge high">Priorité haute</span>
+                    <div style="margin-top:6px;font-size:11px;color:#4ade80;">✅ Station ajoutée automatiquement</div>
+                </div>
+            `;
+
+            calculateCoverage();
+            updateAll();
+            showToast(`🤖 Station IA ajoutée ! ${poor.length} utilisateurs mieux couverts.`, 'success');
+        }
+
+        // Effacer tout
+        function clearAll() {
+            if (confirm('⚠️ Supprimer toutes les stations et utilisateurs ?')) {
+                stations = [];
+                users = [];
+                coverageData = [];
+                stationIdCounter = 1;
+                updateAll();
+                document.getElementById('suggestionsContainer').innerHTML = `
+                    <div style="color:#64748b;font-size:12px;text-align:center;padding:8px 0;">
+                        En attente d'analyse...
                     </div>
-                    <button onclick="deleteStation('${s.id}')" style="background:#e94560;color:white;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;">🗑️</button>
-                </div>
-            `).join('');
+                `;
+                showToast('🗑️ Tout a été effacé', 'warning');
+            }
         }
 
-        // Liste des utilisateurs (juste un résumé)
-        const usersDiv = document.getElementById('usersList');
-        if (users.length > 0) {
-            const covered = coverageData.filter(c => c.status !== 'none').length;
-            const good = coverageData.filter(c => c.status === 'good').length;
-            usersDiv.innerHTML = `
-                <div style="margin-top:10px;padding:10px;background:#f8f9fa;border-radius:6px;font-size:13px;">
-                    <strong>📱 Utilisateurs :</strong> ${users.length} total
-                    <span style="margin-left:15px;">✅ Couverture : ${covered} (${Math.round(covered/users.length*100)}%)</span>
-                    <span style="margin-left:15px;">📶 Bonne : ${good}</span>
-                </div>
-            `;
-        } else {
-            usersDiv.innerHTML = '';
-        }
-
-        // Couverture dans la carte
-        document.getElementById('coveragePercent').textContent = getCoveragePercent() + '%';
-    }
-
-    // Calculer le pourcentage de couverture
-    function getCoveragePercent() {
-        if (users.length === 0 || coverageData.length === 0) return 0;
-        const covered = coverageData.filter(c => c.status !== 'none').length;
-        return Math.round(covered / users.length * 100);
-    }
-
-    // Mettre à jour les métriques
-    function updateMetrics() {
-        const covPct = getCoveragePercent();
-        document.getElementById('metricCoverage').textContent = covPct + '%';
-        document.getElementById('coverageFill').style.width = covPct + '%';
-
-        const latency = 10 + (100 - covPct) * 0.5;
-        document.getElementById('metricLatency').textContent = Math.round(latency) + ' ms';
-
-        const capacity = stations.length > 0 ? Math.min(30 + users.length * 2, 95) : 0;
-        document.getElementById('metricCapacity').textContent = Math.round(capacity) + '%';
-
-        const saturated = stations.filter(s => {
-            const count = coverageData.filter(c => c.stationId === s.id).length;
-            return count > 15;
-        }).length;
-        document.getElementById('metricSaturated').textContent = saturated;
-    }
-
-    // Optimiser le réseau
-    function optimizeNetwork() {
-        if (stations.length === 0) {
-            showMessage('⚠️ Ajoutez d\'abord des stations !');
-            return;
-        }
-        
-        if (users.length === 0) {
-            showMessage('⚠️ Générez d\'abord des utilisateurs !');
-            return;
-        }
-
-        calculateCoverage();
-        const poor = coverageData.filter(c => c.status === 'poor' || c.status === 'none');
-        
-        if (poor.length === 0) {
-            document.getElementById('suggestions').innerHTML = `
-                <div class="suggestion" style="border-color:#2ea043;background:#e8f5e9;">
-                    ✅ La couverture est excellente ! Aucune amélioration nécessaire.
-                </div>
-            `;
-            showMessage('✅ Réseau optimisé !');
-            return;
-        }
-
-        // Trouver la zone la plus mal couverte
-        const avgLat = poor.reduce((sum, c) => {
-            const user = users.find(u => u.id === c.userId);
-            return sum + (user ? user.lat : 0);
-        }, 0) / poor.length;
-        
-        const avgLng = poor.reduce((sum, c) => {
-            const user = users.find(u => u.id === c.userId);
-            return sum + (user ? user.lng : 0);
-        }, 0) / poor.length;
-
-        // Ajouter automatiquement une station
-        const newStation = {
-            id: `gNB-${stationIdCounter++}`,
-            name: `Station-IA-${stations.length + 1}`,
-            lat: avgLat + (Math.random() - 0.5) * 0.005,
-            lng: avgLng + (Math.random() - 0.5) * 0.005,
-            power: 46,
-            frequency: 3.5
-        };
-        stations.push(newStation);
-
-        const suggestionsDiv = document.getElementById('suggestions');
-        suggestionsDiv.innerHTML = `
-            <div class="suggestion">
-                <strong>📡 Nouvelle station proposée</strong>
-                <p>📍 Position: ${newStation.lat.toFixed(4)}, ${newStation.lng.toFixed(4)}</p>
-                <p>👥 ${poor.length} utilisateurs mal couverts</p>
-                <p style="color:#e94560;font-weight:bold;">⚡ Station ajoutée automatiquement !</p>
-            </div>
-        `;
-
-        calculateCoverage();
-        updateMetrics();
-        updateUI();
-        showMessage(`🤖 Station IA ajoutée ! ${poor.length} utilisateurs mieux couverts.`);
-    }
-
-    // Effacer tout
-    function clearAll() {
-        if (confirm('Supprimer toutes les stations et utilisateurs ?')) {
-            stations = [];
-            users = [];
-            coverageData = [];
-            stationIdCounter = 1;
+        // ---- UPDATE ALL ----
+        function updateAll() {
+            updateMap();
             updateUI();
             updateMetrics();
-            document.getElementById('suggestions').innerHTML = '<p style="color:#888;font-size:13px;">Aucune suggestion.</p>';
-            document.getElementById('stationsList').innerHTML = '<p style="color:#888;font-size:13px;">Aucune station.</p>';
-            document.getElementById('usersList').innerHTML = '';
-            document.getElementById('metricStations').textContent = '0';
-            document.getElementById('metricUsers').textContent = '0';
-            showMessage('🗑️ Tout a été effacé !');
+            updateStationsList();
+            updateOverlay();
         }
-    }
 
-    // Afficher un message
-    function showMessage(msg) {
-        document.getElementById('mapMessage').textContent = msg;
-        setTimeout(() => {
-            if (stations.length === 0 && users.length === 0) {
-                document.getElementById('mapMessage').textContent = '💡 Cliquez sur "Ajouter station" pour commencer';
-            } else {
-                document.getElementById('mapMessage').textContent = '✅ ' + stations.length + ' stations, ' + users.length + ' utilisateurs';
-            }
-        }, 3000);
-    }
+        // ---- UPDATE MAP ----
+        function updateMap() {
+            if (!map) return;
 
-    // ===== INIT =====
-    // Ajouter une première station pour démarrer
-    setTimeout(() => {
-        addStation();
-        addStation();
-    }, 500);
+            // Supprimer les anciens marqueurs
+            markers.stations.forEach(m => map.removeLayer(m));
+            markers.users.forEach(m => map.removeLayer(m));
+            circles.forEach(c => map.removeLayer(c));
+            markers.stations = [];
+            markers.users = [];
+            circles = [];
 
-    // Message de démarrage
-    console.log('📡 5G Smart Planner - Casablanca');
-    console.log('💡 Cliquez sur les boutons pour interagir');
-</script>
+            // Icône personnalisée pour les stations
+            const stationIcon = L.divIcon({
+                html: `<div style="background:#3b82f6;width:12px;height:12px;border-radius:50%;border:2px solid #60a5fa;box-shadow:0 0 12px rgba(59,130,246,0.5);"></div>`,
+                className: '',
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
+            });
 
-</body>
-</html>
+            const stationIconOverloaded = L.divIcon({
+                html: `<div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:2px solid #f87171;box-shadow:0 0 16px rgba(239,68,68,0.5);animation:pulse 1.5s infinite;"></div>`,
+                className: '',
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            });
+
+            // Ajouter style d'animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.3); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Stations
+            stations.forEach(s => {
+                const isOverloaded = (s.users || 0) > 15;
+                const icon = isOverloaded ? stationIconOverloaded : stationIcon;
+                const marker = L.marker([s.lat, s.lng], { icon: icon })
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="color:#0f172a;font-family:Inter,sans-serif;min-width:160px;">
+                            <div style="font-weight:700;font-size:14px;">${s.name}</div>
+                            <div style="color:#64748b;font-size:11px;margin:2px 0;">📶 ${s.frequency} GHz | ⚡ ${s.power} dBm</div>
+                            <div style="color:#64748b;font-size:11px;">👥 ${s.users || 0} utilisateurs</div>
+                            <div style="color:#64748b;font-size:11px;">📍 ${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</div>
+                            <button onclick="deleteStation('${s.id}')" style="margin-top:6px;background:#ef4444;color:#fff;border:none;border-radius:4px;padding:3px 12px;cursor:pointer;font-size:11px;">🗑️ Supprimer</button>
+                        </div>
+                    `);
+                markers.stations.push(marker);
+
+                // Cercle de couverture
+                const radius = 150 + (s.power - 40) * 20;
+                const circle =

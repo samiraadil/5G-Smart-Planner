@@ -13,15 +13,15 @@
     --bp:#0a3556;            /* blueprint base */
     --bp-2:#0e4370;          /* panel */
     --bp-3:#124d80;          /* panel elevated / hover */
-    --line:#2c6a99;          /* rules & borders */
+    --line:#dfe3e8;          /* rules & borders */
     --line-soft:rgba(191,227,245,0.14);
-    --ink:#eaf4fb;           /* primary text (drafting ink) */
-    --ink-dim:#9dc3dd;
+    --ink:#172033;           /* primary text (drafting ink) */
+    --ink-dim:#667085;
     --ink-mute:#5f8bab;
     --paper:#eef6fb;         /* paper accents */
     --amber:#f2a65a;         /* AI / optimisation accent */
     --amber-dim:#b97a37;
-    --good:#7fd9a8;
+    --good:#168a5b;
     --ok:#f2c94c;
     --poor:#ef8477;
     --none:#3c6a8c;
@@ -209,6 +209,18 @@
   .popup-del{background:transparent; border:1px solid var(--poor); color:var(--poor); font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; padding:5px 10px; border-radius:2px; cursor:pointer; margin-top:8px; text-transform:uppercase;}
   .popup-del:hover{background:var(--poor); color:#082238;}
 
+  .model-status{
+    position:fixed; left:24px; bottom:24px; z-index:998;
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    background:rgba(10,53,86,.94); border:1px solid var(--line);
+    padding:8px 11px; border-radius:2px; font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px; color:var(--ink-dim); box-shadow:0 12px 34px rgba(0,0,0,.3);
+  }
+  .model-status span:first-child{color:var(--good);}
+  @media (max-width:560px){
+    .model-status{left:10px; right:10px; bottom:10px; font-size:8.5px;}
+  }
+
   #toast{
     position:fixed; bottom:24px; right:24px; background:var(--bp-2); color:var(--ink);
     border:1px solid var(--line); padding:12px 18px; border-radius:2px; font-size:12.5px;
@@ -250,17 +262,294 @@
     main{grid-template-columns:1fr;}
     aside{border-left:none; border-top:1px solid var(--line);}
     .kpi-strip{grid-template-columns:repeat(3,1fr);}
+    #map{min-height:52vh;}
   }
+  @media (max-width:560px){
+    header{padding:10px 12px; align-items:flex-start; gap:10px; flex-wrap:wrap;}
+    .brand .tag{font-size:8.5px; line-height:1.25;}
+    nav{width:100%; overflow-x:auto;}
+    nav button{flex:1; min-width:105px;}
+    .toolbar{padding:8px 10px;}
+    .toolbar .btn{font-size:10px; padding:8px 10px;}
+    .kpi-strip{grid-template-columns:repeat(2,1fr);}
+  }
+
+  /* =========================================================
+     WHITE PROFESSIONAL THEME — VISUAL ONLY
+     No simulation logic, map logic or application features changed.
+     ========================================================= */
+  body{
+    background:#f5f7fa;
+    color:#172033;
+  }
+  header{
+    background:#ffffff;
+    border-bottom:1px solid #dfe3e8;
+  }
+  .brand .tag{color:#667085;}
+  nav button{
+    color:#667085;
+    border-color:transparent;
+    background:transparent;
+  }
+  nav button:hover{
+    color:#374151;
+    background:#f1f5f9;
+  }
+  nav button.active{
+    color:#374151;
+    border-color:#cfd5dc;
+    background:#f7f9fc;
+  }
+  .toolbar{
+    background:#ffffff;
+    border-bottom:1px solid #dfe3e8;
+  }
+  .btn{
+    background:#ffffff;
+    color:#172033;
+    border-color:#cfd5dc;
+  }
+  .btn:hover{
+    background:#f7f9fc;
+    border-color:#374151;
+  }
+  .btn.primary{
+    background:#374151;
+    border-color:#374151;
+    color:#ffffff;
+  }
+  .btn.primary:hover{
+    background:#1f2937;
+    border-color:#1f2937;
+  }
+  .btn.orange{
+    background:#9a6a32;
+    border-color:#9a6a32;
+    color:#ffffff;
+  }
+  .btn.orange:hover{
+    background:#7a5227;
+    border-color:#7a5227;
+  }
+  .btn.danger{
+    background:#fff5f6;
+    border-color:#e8aab2;
+    color:#b42333;
+  }
+  main{
+    background:#f5f7fa;
+  }
+  aside{
+    background:#ffffff;
+    border-left:1px solid #dfe3e8;
+  }
+  .panel{
+    background:#ffffff;
+    border:1px solid #dfe3e8;
+    box-shadow:0 3px 14px rgba(16,24,40,.05);
+  }
+  .panel-title{
+    color:#172033;
+    border-bottom-color:#e4e9ef;
+  }
+  .panel-title .badge{
+    background:#f3f4f6;
+    color:#374151;
+    border-color:#d1d5db;
+  }
+  .field label{
+    color:#667085;
+  }
+  .field input,
+  .field select{
+    background:#ffffff;
+    color:#172033;
+    border-color:#cfd5dc;
+  }
+  .field input:focus,
+  .field select:focus{
+    border-color:#374151;
+    box-shadow:0 0 0 3px rgba(11,94,168,.08);
+  }
+  .kpi-strip{
+    background:#ffffff;
+    border-top-color:#dfe3e8;
+    box-shadow:0 -3px 14px rgba(16,24,40,.04);
+  }
+  .kpi{
+    border-right-color:#e4e9ef;
+  }
+  .kpi .v{
+    color:#172033;
+  }
+  .kpi .l{
+    color:#667085;
+  }
+  .kpi .v.good{color:#168a5b;}
+  .kpi .v.warn{color:#b7791f;}
+  .kpi .v.bad{color:#c83b4b;}
+  .station-card{
+    background:#ffffff;
+    border-color:#dfe3e8;
+  }
+  .station-card:hover{
+    border-color:#9ca3af;
+    background:#f9fbfd;
+  }
+  .station-card .name{
+    color:#172033;
+  }
+  .station-card .meta{
+    color:#667085;
+  }
+  .progress{
+    background:#edf1f5;
+  }
+  .log{
+    background:#f8fafc;
+    border-color:#dfe3e8;
+  }
+  .log-line{
+    border-bottom-color:#e6ebf1;
+  }
+  .log-line .time{
+    color:#8a94a6;
+  }
+  .log-line .msg{
+    color:#344054;
+  }
+  .empty{
+    color:#98a2b3;
+  }
+  .model-status{
+    background:rgba(255,255,255,.96);
+    border-color:#dfe3e8;
+    color:#667085;
+    box-shadow:0 8px 26px rgba(16,24,40,.10);
+  }
+  .model-status span:first-child{color:#168a5b;}
+  #toast{
+    background:#ffffff;
+    color:#172033;
+    border-color:#dfe3e8;
+    box-shadow:0 12px 34px rgba(16,24,40,.14);
+  }
+  .leaflet-control-zoom a{
+    background:#ffffff !important;
+    color:#172033 !important;
+    border-color:#dfe3e8 !important;
+  }
+  .leaflet-control-zoom a:hover{
+    background:#f5f7fa !important;
+    color:#374151 !important;
+  }
+  .leaflet-control-attribution{
+    background:rgba(255,255,255,.9) !important;
+    color:#667085 !important;
+  }
+  @media (max-width:880px){
+    aside{border-top-color:#dfe3e8;}
+  }
+
+
+  /* Humanised engineering dashboard: restrained, neutral, no AI-heavy visual language */
+  .btn.ai{background:#ffffff;color:#344054;border-color:#cfd5dc;box-shadow:none;}
+  .btn.ai:hover{background:#f7f9fc;color:#374151;border-color:#9fb3c8;}
+  .panel-h .info-btn{color:#667085;border-color:#cfd5dc;background:#fff;}
+  .sugg{border-left-width:3px;box-shadow:none;}
+  .sugg .score{font-family:'IBM Plex Mono',monospace;color:#667085;}
+  .station-row .dot{font-weight:600;letter-spacing:.2px;}
+  .brand .mark{box-shadow:none;}
+
+
+  /* ---------- REPORT PREVIEW ---------- */
+  .report-overlay{
+    display:none; position:fixed; inset:0; z-index:2000;
+    background:rgba(15,23,42,.38); backdrop-filter:blur(3px);
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .report-overlay.show{display:flex;}
+  .report-modal{
+    width:min(720px, 100%); max-height:88vh; overflow:auto;
+    background:#fff; border:1px solid #dfe3e8; border-radius:8px;
+    box-shadow:0 24px 70px rgba(15,23,42,.22); padding:26px;
+    color:#172033; position:relative;
+  }
+  .report-close{
+    position:absolute; right:14px; top:10px; border:0; background:none;
+    color:#667085; font-size:25px; cursor:pointer;
+  }
+  .report-kicker{
+    font-size:10px; letter-spacing:.14em; color:#6b7280;
+    font-weight:700; margin-bottom:7px;
+  }
+  .report-modal h2{font-size:22px; margin-bottom:5px;}
+  .report-sub{color:#667085; font-size:13px; margin-bottom:18px;}
+  .report-preview{
+    background:#f8fafc; border:1px solid #e5e7eb; border-radius:6px;
+    padding:15px; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    line-height:1.7; white-space:pre-wrap; color:#374151;
+    max-height:330px; overflow:auto;
+  }
+  .report-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:16px; flex-wrap:wrap;}
+  .report-location{margin-top:12px; color:#8a94a6; font-size:10px;}
+
+
+  /* ---------- PROFESSIONAL WORDMARK ---------- */
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .brand-mark{
+    width:34px;
+    height:34px;
+    border:1px solid #cfd5dc;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f8fafc;
+    color:#374151;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.04em;
+  }
+  .brand-copy h1{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:18px;
+    line-height:1.1;
+    font-weight:600;
+    letter-spacing:-.02em;
+    color:#172033;
+  }
+  .brand-copy .tag{
+    margin-top:4px;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:8.5px;
+    line-height:1.2;
+    letter-spacing:.08em;
+    color:#7b8491;
+    font-weight:500;
+  }
+  @media (max-width:560px){
+    .brand-mark{width:31px;height:31px;font-size:11px;}
+    .brand-copy h1{font-size:16px;}
+    .brand-copy .tag{font-size:7.5px;}
+  }
+
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <div class="mark">5G</div>
-    <div>
+    <div class="brand-mark" aria-label="5G Smart Planner">5SP</div>
+    <div class="brand-copy">
       <h1>5G Smart Planner</h1>
-      <div class="tag">ÉTUDE DE COUVERTURE — MODÈLE 3GPP TR 38.901 · CASABLANCA</div>
+      
     </div>
   </div>
   <nav>
@@ -275,7 +564,7 @@
     <div class="toolbar">
       <button class="btn primary" id="btnAddStation"><span class="tag-ico">+</span>Ajouter station</button>
       <button class="btn" id="btnGenUsers"><span class="tag-ico">U</span>Générer utilisateurs</button>
-      <button class="btn ai" id="btnOptimize"><span class="tag-ico">∴</span>Optimiser (DBSCAN)</button>
+      <button class="btn ai" id="btnOptimize"><span class="tag-ico">∴</span>Analyser et optimiser</button>
       <div class="spacer"></div>
       <span class="hint" id="placeHint">Cliquez sur la carte pour placer la station…</span>
       <button class="btn ghost danger" id="btnClear"><span class="tag-ico">×</span>Tout effacer</button>
@@ -299,9 +588,9 @@
       </div>
     </div>
     <div class="panel">
-      <div class="panel-h"><span>Optimisation (clustering DBSCAN)</span><button class="info-btn" id="btnAiInfo" title="Comment ça marche ?">i</button></div>
+      <div class="panel-h"><span>Recommandations réseau</span><button class="info-btn" id="btnAiInfo" title="Comment ça marche ?">i</button></div>
       <div class="panel-body" id="aiPanel" style="max-height:230px;">
-        <div class="empty">En attente d'analyse. Cliquez « Optimiser ».</div>
+        <div class="empty">Aucune analyse pour le moment. Cliquez « Analyser et optimiser ».</div>
       </div>
     </div>
     <div class="panel" style="flex:1;">
@@ -315,7 +604,29 @@
   </aside>
 </main>
 
+<div id="modelStatus" class="model-status" aria-live="polite">
+  <span>● SIMULATION ACTIVE</span>
+  <span>3.5 GHz · n78</span>
+  <span>3GPP 38.901 · UMi</span>
+</div>
+
 <div id="toast"></div>
+
+<div id="reportOverlay" class="report-overlay" aria-hidden="true">
+  <div class="report-modal">
+    <button class="report-close" id="reportClose" aria-label="Fermer">×</button>
+    <div class="report-kicker">RAPPORT DE SIMULATION</div>
+    <h2>Rapport 5G Smart Planner</h2>
+    <p class="report-sub">Synthèse du scénario courant et des principaux indicateurs réseau.</p>
+    <div id="reportPreview" class="report-preview"></div>
+    <div class="report-actions">
+      <button class="btn" id="reportDownload">Télécharger le rapport (.txt)</button>
+      <button class="btn primary" id="reportClose2">Fermer</button>
+    </div>
+    <div class="report-location">Le fichier téléchargé sera enregistré dans le dossier <b>Téléchargements / Downloads</b> de votre navigateur.</div>
+  </div>
+</div>
+
 
 <div id="methOverlay">
   <div id="methModal" class="ticks">
@@ -457,7 +768,7 @@ function createStation(lat, lng, opts={}){
 function buildStationMarker(st){
   const icon = L.divIcon({
     className:'',
-    html:`<div class="gnb-icon" id="icon-${st.id}"><span>${st.ai?'AI':'BS'}</span></div>`,
+    html:`<div class="gnb-icon" id="icon-${st.id}"><span>${st.ai?'OPT':'BS'}</span></div>`,
     iconSize:[26,26], iconAnchor:[13,13]
   });
   st.marker = L.marker([st.lat, st.lng], {icon, draggable:true}).addTo(markersLayer);
@@ -517,7 +828,8 @@ function generateUsers(){
     const lng = c.lng + (Math.random()-0.5)*c.spread;
     users.push({
       id:'UE-'+String(i+1).padStart(3,'0'),
-      lat, lng,
+      lat: Math.max(bounds.getSouth(), Math.min(bounds.getNorth(), lat)),
+      lng: Math.max(bounds.getWest(), Math.min(bounds.getEast(), lng)),
       service:['eMBB','uRLLC','mMTC'][Math.floor(Math.random()*3)]
     });
   }
@@ -609,7 +921,7 @@ function refreshSidebar(){
   list.innerHTML = stations.map(s => {
     const sat = s.users > CAPACITY_PER_STATION*0.9;
     return `<div class="station-row ${sat?'sat':''}" onclick="focusStation('${s.id}')">
-      <span class="dot">${s.ai?'AI':'BS'}</span>
+      <span class="dot">${s.ai?'OPT':'BS'}</span>
       <div class="meta">
         <div class="name">${s.name}</div>
         <div class="sub">${s.power}dBm · ${s.users}/${CAPACITY_PER_STATION} UE ${sat?'· SATURÉE':''}</div>
@@ -662,106 +974,184 @@ function dbscan(points, eps, minPts, distFn){
   return Object.values(clusters);
 }
 
-// ---------- AI OPTIMIZER ----------
+// ---------- NETWORK OPTIMIZER ----------
+// L'objectif n'est pas seulement de supprimer une station : on compare
+// plusieurs actions candidates et on retient celles qui améliorent le
+// compromis couverture + qualité radio + charge.
+function networkScore(candidateStations){
+  if(!users.length) return {score:0, covered:0, good:0, avgRsrp:-999, loadStd:0};
+  const loads = candidateStations.map(()=>0);
+  let covered=0, good=0, sum=0;
+  users.forEach(u => {
+    let best=-999, bestIdx=-1;
+    candidateStations.forEach((st,idx)=>{
+      const r=rsrpAt(st,[u.lat,u.lng]);
+      if(r>best){best=r; bestIdx=idx;}
+    });
+    sum += best;
+    if(best>=RSRP_OK) covered++;
+    if(best>=RSRP_GOOD) good++;
+    if(bestIdx>=0 && best>=RSRP_MIN) loads[bestIdx]++;
+  });
+  const avg=loads.reduce((a,b)=>a+b,0)/Math.max(loads.length,1);
+  const variance=loads.reduce((a,b)=>a+Math.pow(b-avg,2),0)/Math.max(loads.length,1);
+  const loadStd=Math.sqrt(variance);
+  const avgRsrp=sum/users.length;
+  const score=covered*5 + good*2 + Math.max(avgRsrp+100,0)*0.8 - loadStd*1.5;
+  return {score, covered, good, avgRsrp, loadStd, loads};
+}
+
+function candidatePositionsForCluster(cluster, limit=7){
+  const cLat=cluster.reduce((a,p)=>a+p.lat,0)/cluster.length;
+  const cLng=cluster.reduce((a,p)=>a+p.lng,0)/cluster.length;
+  const points=[{lat:cLat,lng:cLng}];
+  cluster.slice().sort((a,b)=>a.lat-b.lat).forEach(p=>points.push(p));
+  cluster.slice().sort((a,b)=>b.lng-a.lng).forEach(p=>points.push(p));
+  return points.slice(0,limit);
+}
+
+function bestAddCandidate(cluster){
+  const candidates=candidatePositionsForCluster(cluster);
+  const base=networkScore(stations);
+  let best=null;
+  candidates.forEach(pos=>{
+    // Avoid proposing a site almost co-located with an existing gNodeB.
+    const tooClose=stations.some(s=>map.distance([s.lat,s.lng],[pos.lat,pos.lng])<120);
+    if(tooClose) return;
+    const candidate={id:'candidate',lat:pos.lat,lng:pos.lng,power:43};
+    const result=networkScore(stations.concat(candidate));
+    const gain=result.score-base.score;
+    if(!best || gain>best.gain) best={...pos,gain,result,base};
+  });
+  return best;
+}
+
+function bestMoveCandidate(station, targetPoints){
+  const candidates=candidatePositionsForCluster(targetPoints,8);
+  const base=networkScore(stations);
+  let best=null;
+  candidates.forEach(pos=>{
+    const tooClose=stations.some(s=>s.id!==station.id && map.distance([s.lat,s.lng],[pos.lat,pos.lng])<120);
+    if(tooClose) return;
+    const moved=stations.map(s=>s.id===station.id ? {...s,lat:pos.lat,lng:pos.lng} : s);
+    const result=networkScore(moved);
+    const gain=result.score-base.score;
+    if(!best || gain>best.gain) best={...pos,gain,result,base};
+  });
+  return best;
+}
+
 function optimizeNetwork(){
   if(stations.length === 0){ toast("Ajoutez au moins une station d'abord", 'warning'); return; }
   if(users.length === 0){ toast("Générez des utilisateurs d'abord", 'warning'); return; }
 
-  const suggestions = [];
-
-  // 1) grid scan for coverage gaps, then DBSCAN to find real clusters of weak-signal points
-  const bounds = map.getBounds();
-  const steps = 16;
-  const gridPoints = [];
-  const cellSizeM = map.distance([bounds.getSouth(),bounds.getWest()],[bounds.getSouth(),bounds.getEast()]) / steps;
+  const suggestions=[];
+  const bounds=map.getBounds();
+  const steps=16;
+  const gridPoints=[];
+  const cellSizeM=map.distance([bounds.getSouth(),bounds.getWest()],[bounds.getSouth(),bounds.getEast()])/steps;
   for(let i=0;i<=steps;i++){
     for(let j=0;j<=steps;j++){
-      const lat = bounds.getSouth() + (bounds.getNorth()-bounds.getSouth())*i/steps;
-      const lng = bounds.getWest() + (bounds.getEast()-bounds.getWest())*j/steps;
-      let bestRsrp = -999;
-      stations.forEach(s => { const r = rsrpAt(s,[lat,lng]); if(r>bestRsrp) bestRsrp=r; });
-      if(classify(bestRsrp) === 'poor' || classify(bestRsrp) === 'none'){
-        gridPoints.push({lat,lng});
-      }
+      const lat=bounds.getSouth()+(bounds.getNorth()-bounds.getSouth())*i/steps;
+      const lng=bounds.getWest()+(bounds.getEast()-bounds.getWest())*j/steps;
+      let bestRsrp=-999;
+      stations.forEach(s=>{const r=rsrpAt(s,[lat,lng]);if(r>bestRsrp)bestRsrp=r;});
+      if(classify(bestRsrp)==='poor'||classify(bestRsrp)==='none') gridPoints.push({lat,lng});
     }
   }
-  const eps = Math.max(cellSizeM * 1.6, 60);
-  const clusters = dbscan(gridPoints, eps, 3, (a,b) => map.distance([a.lat,a.lng],[b.lat,b.lng]));
-  clusters
-    .sort((a,b) => b.length - a.length)
-    .slice(0, 3)
-    .forEach(cluster => {
-      const cLat = cluster.reduce((a,p)=>a+p.lat,0)/cluster.length;
-      const cLng = cluster.reduce((a,p)=>a+p.lng,0)/cluster.length;
-      suggestions.push({
-        type:'add', title:'Ajouter une station',
-        desc:`Cluster DBSCAN de ${cluster.length} points de grille sous le seuil de service. Centroïde recommandé : ${cLat.toFixed(4)}, ${cLng.toFixed(4)}.`,
-        score:`densité=${cluster.length} pts · ε=${Math.round(eps)}m · minPts=3`,
-        action:() => createStation(cLat, cLng, {ai:true, power:43})
-      });
-    });
+  const eps=Math.max(cellSizeM*1.6,60);
+  const clusters=dbscan(gridPoints,eps,3,(a,b)=>map.distance([a.lat,a.lng],[b.lat,b.lng]));
+  const base=networkScore(stations);
 
-  // 2) saturated stations -> suggest add nearby to offload
-  stations.filter(s => s.users > CAPACITY_PER_STATION*0.9).forEach(s => {
-    const lat = s.lat + (Math.random()-0.5)*0.006;
-    const lng = s.lng + (Math.random()-0.5)*0.006;
+  // 1) Coverage: propose the best site among several candidates, not just the centroid.
+  clusters.sort((a,b)=>b.length-a.length).slice(0,3).forEach(cluster=>{
+    const best=bestAddCandidate(cluster);
+    if(!best || best.gain<=0) return;
     suggestions.push({
-      type:'add', title:`Délester ${s.name}`,
-      desc:`${s.name} est saturée (${s.users}/${CAPACITY_PER_STATION} UE). Ajouter une station voisine pour répartir la charge.`,
-      score:`heuristique glouton · charge=${Math.round(s.users/CAPACITY_PER_STATION*100)}%`,
-      action:() => createStation(lat, lng, {ai:true, power:40})
+      type:'add', title:'Ajouter une station ici',
+      desc:`Zone de couverture faible regroupant ${cluster.length} points. Parmi plusieurs emplacements testés, celui-ci améliore le mieux la couverture et la répartition de charge.`,
+      score:`gain estimé=${best.gain.toFixed(1)} · couverture ${base.covered}→${best.result.covered} UE · RSRP moyen ${Math.round(base.avgRsrp)}→${Math.round(best.result.avgRsrp)} dBm`,
+      action:()=>createStation(best.lat,best.lng,{ai:true,power:43})
     });
   });
 
-  // 3) overlapping / redundant stations -> suggest remove the lighter-loaded one
+  // 2) Capacity: choose a candidate location based on the actual overloaded users.
+  stations.filter(s=>s.users>CAPACITY_PER_STATION*0.9).forEach(s=>{
+    const attached=users.filter(u=>u.stationId===s.id);
+    const targets=attached.length?attached:users.filter(u=>u.status==='poor'||u.status==='none');
+    if(!targets.length)return;
+    const best=bestAddCandidate(targets);
+    if(!best || best.gain<=0)return;
+    suggestions.push({
+      type:'add', title:`Délester ${s.name}`,
+      desc:`${s.name} est à ${Math.round(s.users/CAPACITY_PER_STATION*100)}% de charge. L'emplacement proposé est celui qui donne le meilleur gain simulé parmi plusieurs candidats autour du trafic concerné.`,
+      score:`gain=${best.gain.toFixed(1)} · charge actuelle=${s.users}/${CAPACITY_PER_STATION} UE · position ${best.lat.toFixed(4)}, ${best.lng.toFixed(4)}`,
+      action:()=>createStation(best.lat,best.lng,{ai:true,power:40})
+    });
+  });
+
+  // 3) Redundancy: before deleting, also propose moving the under-used station to a useful area.
   for(let i=0;i<stations.length;i++){
     for(let j=i+1;j<stations.length;j++){
-      const a = stations[i], b = stations[j];
-      const d = map.distance([a.lat,a.lng],[b.lat,b.lng]);
-      const combinedRange = radiusForThreshold(a,RSRP_OK) + radiusForThreshold(b,RSRP_OK);
-      if(d < combinedRange*0.35 && (a.users < CAPACITY_PER_STATION*0.3 || b.users < CAPACITY_PER_STATION*0.3)){
-        const weaker = a.users <= b.users ? a : b;
+      const a=stations[i],b=stations[j];
+      const d=map.distance([a.lat,a.lng],[b.lat,b.lng]);
+      const combinedRange=radiusForThreshold(a,RSRP_OK)+radiusForThreshold(b,RSRP_OK);
+      if(d<combinedRange*0.35&&(a.users<CAPACITY_PER_STATION*0.3||b.users<CAPACITY_PER_STATION*0.3)){
+        const weak=a.users<=b.users?a:b;
+        const targetUsers=users.filter(u=>u.status==='poor'||u.status==='none');
+        const move=targetUsers.length?bestMoveCandidate(weak,targetUsers):null;
+        if(move && move.gain>0){
+          suggestions.push({
+            type:'move', title:`Déplacer ${weak.name}`,
+            desc:`${weak.name} est peu chargée et très proche d'une autre cellule. Au lieu de la supprimer, cet emplacement alternatif améliore davantage le réseau selon la simulation.`,
+            score:`gain=${move.gain.toFixed(1)} · nouvelle position=${move.lat.toFixed(4)}, ${move.lng.toFixed(4)}`,
+            action:()=>{moveStation(weak.id,move.lat,move.lng);addLog(`${weak.name} déplacée vers un emplacement plus utile`,'yellow');}
+          });
+        }
         suggestions.push({
-          type:'remove', title:`Supprimer ${weaker.name}`,
-          desc:`${a.name} et ${b.name} se chevauchent fortement (${Math.round(d)} m) alors que ${weaker.name} ne sert que ${weaker.users} UE. Fusionner la couverture.`,
-          score:`recouvrement=${Math.round((1-d/combinedRange)*100)}%`,
-          action:() => deleteStation(weaker.id)
+          type:'remove', title:`Supprimer ${weak.name}`,
+          desc:`Option économique : supprimer ${weak.name} car son utilisation est faible et son recouvrement avec une autre station est important.`,
+          score:`distance=${Math.round(d)} m · charge=${Math.round(weak.users/CAPACITY_PER_STATION*100)}%`,
+          action:()=>deleteStation(weak.id)
         });
       }
     }
   }
 
-  // 4) isolated low-load station far from any user -> suggest move to centroid of nearby uncovered users
-  stations.forEach(s => {
-    if(s.users === 0 && users.length){
-      let nearestD = Infinity;
-      users.forEach(u => { const d = map.distance([s.lat,s.lng],[u.lat,u.lng]); if(d<nearestD) nearestD=d; });
-      if(nearestD > radiusForThreshold(s,RSRP_MIN)*1.5){
-        const poorUsers = users.filter(u => u.status==='poor' || u.status==='none');
-        if(poorUsers.length){
-          const cLat = poorUsers.reduce((a,p)=>a+p.lat,0)/poorUsers.length;
-          const cLng = poorUsers.reduce((a,p)=>a+p.lng,0)/poorUsers.length;
-          suggestions.push({
-            type:'move', title:`Déplacer ${s.name}`,
-            desc:`${s.name} ne sert aucun utilisateur et est isolée du trafic. La déplacer vers une zone mal couverte.`,
-            score:`heuristique glouton · dist. UE la + proche=${Math.round(nearestD)}m`,
-            action:() => { moveStation(s.id, cLat, cLng); addLog(`${s.name} déplacée par l'optimiseur`, 'yellow'); }
-          });
-        }
-      }
+  // 4) Move isolated stations toward the best uncovered/weak-signal user area.
+  stations.forEach(s=>{
+    if(s.users!==0)return;
+    const poorUsers=users.filter(u=>u.status==='poor'||u.status==='none');
+    if(!poorUsers.length)return;
+    const nearestD=Math.min(...users.map(u=>map.distance([s.lat,s.lng],[u.lat,u.lng])));
+    if(nearestD<=radiusForThreshold(s,RSRP_MIN)*1.5)return;
+    const best=bestMoveCandidate(s,poorUsers);
+    if(best&&best.gain>0){
+      suggestions.push({
+        type:'move', title:`Déplacer ${s.name}`,
+        desc:`${s.name} est isolée du trafic. L'optimiseur compare plusieurs points dans les zones faibles et propose celui qui améliore le plus le réseau.`,
+        score:`gain=${best.gain.toFixed(1)} · couverture ${base.covered}→${best.result.covered} UE · dist. actuelle=${Math.round(nearestD)} m`,
+        action:()=>{moveStation(s.id,best.lat,best.lng);addLog(`${s.name} déplacée vers un emplacement plus utile`,'yellow');}
+      });
     }
   });
 
-  renderSuggestions(suggestions);
-  addLog(`Analyse : ${clusters.length} cluster(s) DBSCAN, ${suggestions.length} recommandation(s)`, 'cyan');
-  toast(suggestions.length ? `${suggestions.length} recommandation(s)` : 'Réseau déjà optimal', 'success');
+  // Remove near-duplicates while keeping the strongest recommendation for each action/location.
+  suggestions.sort((a,b)=>{
+    const ga=parseFloat((a.score.match(/gain=([\d.-]+)/)||[])[1]||'-999');
+    const gb=parseFloat((b.score.match(/gain=([\d.-]+)/)||[])[1]||'-999');
+    return gb-ga;
+  });
+  renderSuggestions(suggestions.slice(0,8));
+  addLog(`Analyse : ${clusters.length} zone(s) faible(s), ${suggestions.length} recommandation(s)`, 'cyan');
+  toast(suggestions.length?`${Math.min(suggestions.length,8)} recommandation(s) proposées`:'Réseau déjà satisfaisant','success');
 }
 
 function renderSuggestions(list){
   const panel = document.getElementById('aiPanel');
   if(list.length === 0){
-    panel.innerHTML = `<div class="sugg ok"><div class="stitle">✓ Réseau optimal</div>
-      <div class="sdesc">Couverture, charge et placement des stations sont satisfaisants selon l'analyse DBSCAN. Aucune action recommandée.</div></div>`;
+    panel.innerHTML = `<div class="sugg ok"><div class="stitle">✓ Réseau satisfaisant</div>
+      <div class="sdesc">La simulation ne détecte pas d'action prioritaire sur la couverture, la charge ou le placement des stations.</div></div>`;
     return;
   }
   panel.innerHTML = list.map((s, idx) => `
@@ -796,7 +1186,7 @@ function clearAll(){
   stations = []; users = []; stationSeq = 1;
   ringsLayer.clearLayers(); usersLayer.clearLayers();
   refreshSidebar(); updateKPIs();
-  document.getElementById('aiPanel').innerHTML = `<div class="empty">En attente d'analyse. Cliquez « Optimiser ».</div>`;
+  document.getElementById('aiPanel').innerHTML = `<div class="empty">Aucune analyse pour le moment. Cliquez « Analyser et optimiser ».</div>`;
   addLog('Scénario réinitialisé', 'red');
   toast('Tout a été effacé', 'warning');
 }
@@ -829,7 +1219,80 @@ document.getElementById('navMeth').addEventListener('click', () => document.getE
 document.getElementById('btnAiInfo').addEventListener('click', () => document.getElementById('methOverlay').classList.add('show'));
 document.getElementById('methClose').addEventListener('click', () => document.getElementById('methOverlay').classList.remove('show'));
 document.getElementById('methOverlay').addEventListener('click', (e) => { if(e.target.id === 'methOverlay') e.currentTarget.classList.remove('show'); });
-document.getElementById('navReports').addEventListener('click', () => toast('Les rapports exportables arrivent dans une prochaine itération', 'warning'));
+function buildReportText(){
+  const covered = users.filter(u => u.status==='good' || u.status==='ok').length;
+  const coveragePct = users.length ? Math.round(covered/users.length*100) : 0;
+  const avgLoad = stations.length
+    ? Math.round(stations.reduce((a,s)=>a+Math.min(s.users/CAPACITY_PER_STATION*100,100),0)/stations.length)
+    : 0;
+  const saturated = stations.filter(s => s.users > CAPACITY_PER_STATION*0.9).length;
+
+  const lines = [
+    '5G SMART PLANNER — RAPPORT DE SIMULATION',
+    '==========================================',
+    `Date : ${new Date().toLocaleString('fr-FR')}`,
+    'Zone : Casablanca',
+    'Modèle : 3GPP TR 38.901 — UMi Street Canyon',
+    'Fréquence : 3.5 GHz (n78)',
+    '',
+    'INDICATEURS',
+    `Stations : ${stations.length}`,
+    `Utilisateurs : ${users.length}`,
+    `Couverture service : ${coveragePct}%`,
+    `Charge moyenne : ${avgLoad}%`,
+    `Stations saturées : ${saturated}`,
+    '',
+    'STATIONS'
+  ];
+
+  stations.forEach(s => {
+    lines.push(`${s.name} | ${s.lat.toFixed(5)}, ${s.lng.toFixed(5)} | Ptx=${s.power} dBm | UE=${s.users}/${CAPACITY_PER_STATION}`);
+  });
+
+  lines.push(
+    '',
+    'LIMITES',
+    'Simulation pédagogique : sans bâtiments réels, ray-tracing, fast fading ou capacité radio détaillée.'
+  );
+  return lines.join('\n');
+}
+
+function openReport(){
+  const preview = document.getElementById('reportPreview');
+  preview.textContent = buildReportText();
+  document.getElementById('reportOverlay').classList.add('show');
+  document.getElementById('reportOverlay').setAttribute('aria-hidden','false');
+}
+
+function closeReport(){
+  document.getElementById('reportOverlay').classList.remove('show');
+  document.getElementById('reportOverlay').setAttribute('aria-hidden','true');
+}
+
+function downloadReport(){
+  const blob = new Blob([buildReportText()], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `5G-Smart-Planner-rapport-${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+  addLog('Rapport de simulation téléchargé', 'green');
+  toast('Rapport téléchargé dans Téléchargements', 'success');
+}
+
+window.exportReport = openReport;
+document.getElementById('navReports').addEventListener('click', openReport);
+document.getElementById('reportClose').addEventListener('click', closeReport);
+document.getElementById('reportClose2').addEventListener('click', closeReport);
+document.getElementById('reportDownload').addEventListener('click', downloadReport);
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeReport(); });
+document.getElementById('reportOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'reportOverlay') closeReport();
+});
+document.getElementById('navReports').addEventListener('click', exportReport);
 
 // ---------- BOOTSTRAP ----------
 initMap();
@@ -842,3 +1305,19 @@ setTimeout(() => {
 </script>
 </body>
 </html>
+
+<style>
+  .brand-mark{
+    width:36px !important;
+    height:36px !important;
+    border-radius:50% !important;
+    background:#ffffff !important;
+    border:1.5px solid #9ca3af !important;
+    color:#374151 !important;
+    font-family:'IBM Plex Sans',sans-serif !important;
+    font-size:10px !important;
+    font-weight:700 !important;
+    letter-spacing:.03em !important;
+  }
+  .brand-copy .tag{display:none !important;}
+</style>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>5G Smart Planner — Étude de Couverture</title>
+<title>5G Smart Planner — Étude De Couverture</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -64,7 +64,7 @@
   nav button{
     font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; color:var(--ink-dim);
     background:none; border:none; padding:8px 13px; border-radius:2px; cursor:pointer;
-    letter-spacing:0.3px; text-transform:uppercase; transition:all .15s;
+    letter-spacing:0.3px; transition:all .15s;
   }
   nav button.active{background:#ffffff; color:var(--ink); border:1px solid var(--line);}
   nav button:hover:not(.active){color:var(--ink); background:#f1f5f9;}
@@ -82,7 +82,7 @@
     font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; letter-spacing:0.3px;
     padding:9px 14px; border-radius:2px; border:1px solid var(--line);
     background:#ffffff; color:var(--ink); cursor:pointer;
-    display:flex; align-items:center; gap:7px; transition:all .15s; text-transform:uppercase;
+    display:flex; align-items:center; gap:7px; transition:all .15s;
   }
   .btn .tag-ico{
     display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px;
@@ -111,7 +111,7 @@
   }
   .kpi{background:#ffffff; padding:11px 14px; text-align:left; position:relative;}
   .kpi .val{font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:700; color:var(--ink);}
-  .kpi .lbl{font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.7px; margin-top:2px;}
+  .kpi .lbl{font-size:9.5px; color:var(--ink-dim); letter-spacing:0.7px; margin-top:2px;}
   .kpi.c-green .val{color:var(--good);}
   .kpi.c-yellow .val{color:var(--ok);}
   .kpi.c-red .val{color:var(--poor);}
@@ -125,7 +125,7 @@
   .panel{border-bottom:1px solid var(--line); display:flex; flex-direction:column; min-height:0; background:#ffffff;}
   .panel-h{
     padding:11px 15px 8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; color:var(--ink);
-    text-transform:uppercase; letter-spacing:0.8px; display:flex; justify-content:space-between; align-items:center;
+    letter-spacing:0.8px; display:flex; justify-content:space-between; align-items:center;
   }
   .panel-h .info-btn{
     font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-dim); background:#ffffff;
@@ -173,7 +173,7 @@
   .sugg .score{font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-dim); margin-bottom:6px;}
   .sugg .apply{
     font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; padding:6px 12px; border-radius:2px; border:1px solid var(--line);
-    background:#ffffff; color:var(--ink); cursor:pointer; text-transform:uppercase;
+    background:#ffffff; color:var(--ink); cursor:pointer;
   }
   .sugg .apply:hover{background:#172033; color:#ffffff; border-color:#172033;}
 
@@ -201,7 +201,7 @@
   }
   .gnb-icon span{transform:rotate(-45deg);}
   .gnb-icon.sat{border-color:var(--poor); color:var(--poor);}
-  .popup-del{background:transparent; border:1px solid var(--poor); color:var(--poor); font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; padding:5px 10px; border-radius:2px; cursor:pointer; margin-top:8px; text-transform:uppercase;}
+  .popup-del{background:transparent; border:1px solid var(--poor); color:var(--poor); font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; padding:5px 10px; border-radius:2px; cursor:pointer; margin-top:8px;}
   .popup-del:hover{background:var(--poor); color:#ffffff;}
 
   #toast{
@@ -228,7 +228,7 @@
   }
   #methModal h2{font-family:'Space Grotesk',sans-serif; font-size:18px; margin-bottom:4px; color:var(--ink);}
   #methModal .sub{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-dim); margin-bottom:18px; letter-spacing:0.4px;}
-  #methModal h3{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--amber); text-transform:uppercase; letter-spacing:0.5px; margin:18px 0 8px;}
+  #methModal h3{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--amber); letter-spacing:0.5px; margin:18px 0 8px;}
   #methModal p{font-size:13px; line-height:1.65; color:var(--ink-dim); margin-bottom:6px;}
   #methModal .formula{
     font-family:'IBM Plex Mono',monospace; font-size:12px; background:#f8fafc; border-left:2px solid var(--amber);
@@ -317,12 +317,12 @@
 <main>
   <div class="map-col">
     <div class="toolbar">
-      <button class="btn primary" id="btnAddStation"><span class="tag-ico">+</span>Ajouter station</button>
-      <button class="btn" id="btnGenUsers"><span class="tag-ico">U</span>Générer utilisateurs</button>
-      <button class="btn ai" id="btnOptimize"><span class="tag-ico">∴</span>Analyser et optimiser</button>
+      <button class="btn primary" id="btnAddStation"><span class="tag-ico">+</span>Ajouter Station</button>
+      <button class="btn" id="btnGenUsers"><span class="tag-ico">U</span>Générer Utilisateurs</button>
+      <button class="btn ai" id="btnOptimize"><span class="tag-ico">∴</span>Analyser Et Optimiser</button>
       <div class="spacer"></div>
       <span class="hint" id="placeHint">Cliquez sur la carte pour placer la station…</span>
-      <button class="btn ghost danger" id="btnClear"><span class="tag-ico">×</span>Tout effacer</button>
+      <button class="btn ghost danger" id="btnClear"><span class="tag-ico">×</span>Tout Effacer</button>
     </div>
     <div id="map"></div>
 
@@ -330,8 +330,8 @@
       <div class="kpi c-cyan"><div class="val" id="kStations">0</div><div class="lbl">Stations</div></div>
       <div class="kpi c-cyan"><div class="val" id="kUsers">0</div><div class="lbl">Utilisateurs</div></div>
       <div class="kpi c-green"><div class="val" id="kCoverage">0%</div><div class="lbl">Couverture</div></div>
-      <div class="kpi c-yellow"><div class="val" id="kLatency">0 ms</div><div class="lbl">Latence est.</div></div>
-      <div class="kpi c-yellow"><div class="val" id="kCapacity">0%</div><div class="lbl">Charge moy.</div></div>
+      <div class="kpi c-yellow"><div class="val" id="kLatency">0 ms</div><div class="lbl">Latence Est.</div></div>
+      <div class="kpi c-yellow"><div class="val" id="kCapacity">0%</div><div class="lbl">Charge Moy.</div></div>
       <div class="kpi c-red"><div class="val" id="kSaturated">0</div><div class="lbl">Saturées</div></div>
     </div>
   </div>
@@ -340,20 +340,20 @@
     <div class="panel">
       <div class="panel-h"><span>Stations gNodeB</span><span class="count" id="cntStations">0</span></div>
       <div class="panel-body" id="stationsList" style="max-height:190px;">
-        <div class="empty">Aucune station.<br>Cliquez « Ajouter station » puis sur la carte.</div>
+        <div class="empty">Aucune station.<br>Cliquez « Ajouter Station » puis sur la carte.</div>
       </div>
     </div>
     <div class="panel">
-      <div class="panel-h"><span>Recommandations réseau</span><button class="info-btn" id="btnAiInfo" title="Comment ça marche ?">i</button></div>
+      <div class="panel-h"><span>Recommandations Réseau</span><button class="info-btn" id="btnAiInfo" title="Comment ça marche ?">i</button></div>
       <div class="panel-body" id="aiPanel" style="max-height:230px;">
-        <div class="empty">Aucune analyse pour le moment. Cliquez « Analyser et optimiser ».</div>
+        <div class="empty">Aucune analyse pour le moment. Cliquez « Analyser Et Optimiser ».</div>
       </div>
     </div>
     <div class="panel" style="flex:1;">
-      <div class="panel-h"><span>Journal d'activité</span></div>
+      <div class="panel-h"><span>Journal D'Activité</span></div>
       <div class="panel-body grow">
         <div class="log" id="logBox">
-          <div class="log-line cyan"><span class="t">[init]</span>Plateforme prête.</div>
+          <div class="log-line cyan"><span class="t">[Init]</span>Plateforme prête.</div>
         </div>
       </div>
     </div>
@@ -365,12 +365,12 @@
 <div id="reportOverlay" class="report-overlay" aria-hidden="true">
   <div class="report-modal">
     <button class="report-close" id="reportClose" aria-label="Fermer">×</button>
-    <div class="report-kicker">RAPPORT DE SIMULATION</div>
+    <div class="report-kicker">Rapport De Simulation</div>
     <h2>Rapport 5G Smart Planner</h2>
     <p class="report-sub">Synthèse du scénario courant et des principaux indicateurs réseau.</p>
     <div id="reportPreview" class="report-preview"></div>
     <div class="report-actions">
-      <button class="btn" id="reportDownload">Télécharger le rapport (.txt)</button>
+      <button class="btn" id="reportDownload">Télécharger Le Rapport (.txt)</button>
       <button class="btn primary" id="reportClose2">Fermer</button>
     </div>
     <div class="report-location">Le fichier téléchargé sera enregistré dans le dossier <b>Téléchargements / Downloads</b> de votre navigateur.</div>
@@ -380,10 +380,10 @@
 <div id="methOverlay">
   <div id="methModal" class="ticks">
     <button id="methClose">×</button>
-    <h2>Méthodologie de simulation</h2>
-    <div class="sub">CE QUI EST RÉELLEMENT CALCULÉ DANS CETTE MAQUETTE — ET SES LIMITES</div>
+    <h2>Méthodologie De Simulation</h2>
+    <div class="sub">Ce qui est réellement calculé dans cette maquette — et ses limites</div>
 
-    <h3>1 · Modèle de propagation radio</h3>
+    <h3>1 · Modèle De Propagation Radio</h3>
     <p>Le lien radio utilise le modèle standardisé <b>3GPP TR 38.901</b> pour le scénario <b>UMi — Street Canyon</b> (macro/micro urbain dense), pertinent pour la bande 3.5 GHz (n78), là où le couple Hata / COST-231 Hata historique n'est valide que jusqu'à 2 GHz et ne s'applique donc pas correctement à la 5G mid-band.</p>
     <div class="formula">P_LOS(d2D) = 1                                    si d2D ≤ 18 m
 P_LOS(d2D) = 18/d2D + e^(-d2D/36)·(1 − 18/d2D)    sinon
@@ -395,13 +395,13 @@ PL_eff  = P_LOS · PL_LOS + (1 − P_LOS) · PL_NLOS
 RSRP    = EIRP − PL_eff   avec EIRP = Ptx + Gtx(17 dBi, antenne secteur)</div>
     <p>d3D intègre la différence de hauteur antenne/UE (hBS=10 m, hUT=1.5 m). fc = 3.5 GHz.</p>
 
-    <h3>2 · Détection des zones blanches — DBSCAN</h3>
+    <h3>2 · Détection Des Zones Blanches — DBSCAN</h3>
     <p>Un balayage en grille évalue le meilleur RSRP en chaque point de la vue courante. Les points sous le seuil de service sont regroupés par un véritable algorithme <b>DBSCAN</b> (density-based clustering, ε et minPts configurés pour l'échelle de la carte) : chaque cluster de points contigus devient une recommandation d'implantation, positionnée au centroïde du cluster — pas une simple moyenne globale.</p>
 
-    <h3>3 · Équilibrage de charge — heuristique gloutonne</h3>
+    <h3>3 · Équilibrage De Charge — Heuristique Gloutonne</h3>
     <p>Les stations à plus de 90 % de leur capacité (25 UE simultanés, hypothèse 3GPP eMBB dense) déclenchent une suggestion de délestage ; les stations en fort recouvrement et sous-chargées sont fusionnées. C'est une <b>heuristique gloutonne</b> — une approximation rapide, exécutable dans le navigateur, de ce qu'un solveur d'optimisation linéaire en nombres entiers (ex. PuLP/CBC côté serveur) calculerait de façon optimale sur un vrai déploiement.</p>
 
-    <h3>Limites assumées</h3>
+    <h3>Limites Assumées</h3>
     <ul>
       <li>Pas de tracé de rayons ni de base de données de bâtiments réelle : la probabilité LOS/NLOS est statistique, pas géométrique.</li>
       <li>Pas d'évanouissement rapide (fast fading) ni de shadowing aléatoire — la carte affiche une moyenne déterministe.</li>
@@ -661,7 +661,7 @@ function refreshSidebar(){
   document.getElementById('cntStations').textContent = stations.length;
   const list = document.getElementById('stationsList');
   if(stations.length === 0){
-    list.innerHTML = `<div class="empty">Aucune station.<br>Cliquez « Ajouter station » puis sur la carte.</div>`;
+    list.innerHTML = `<div class="empty">Aucune station.<br>Cliquez « Ajouter Station » puis sur la carte.</div>`;
     return;
   }
   list.innerHTML = stations.map(s => {
@@ -670,7 +670,7 @@ function refreshSidebar(){
       <span class="dot">${s.ai?'OPT':'BS'}</span>
       <div class="meta">
         <div class="name">${s.name}</div>
-        <div class="sub">${s.power}dBm · ${s.users}/${CAPACITY_PER_STATION} UE ${sat?'· SATURÉE':''}</div>
+        <div class="sub">${s.power}dBm · ${s.users}/${CAPACITY_PER_STATION} UE ${sat?'· Saturée':''}</div>
       </div>
       <button class="del" onclick="event.stopPropagation(); deleteStation('${s.id}')">✕</button>
     </div>`;
@@ -869,7 +869,7 @@ function optimizeNetwork(){
 function renderSuggestions(list){
   const panel = document.getElementById('aiPanel');
   if(list.length === 0){
-    panel.innerHTML = `<div class="sugg ok"><div class="stitle">✓ Réseau satisfaisant</div>
+    panel.innerHTML = `<div class="sugg ok"><div class="stitle">✓ Réseau Satisfaisant</div>
       <div class="sdesc">La simulation ne détecte pas d'action prioritaire sur la couverture, la charge ou le placement des stations.</div></div>`;
     return;
   }
@@ -905,7 +905,7 @@ function clearAll(){
   stations = []; users = []; stationSeq = 1;
   ringsLayer.clearLayers(); usersLayer.clearLayers();
   refreshSidebar(); updateKPIs();
-  document.getElementById('aiPanel').innerHTML = `<div class="empty">Aucune analyse pour le moment. Cliquez « Analyser et optimiser ».</div>`;
+  document.getElementById('aiPanel').innerHTML = `<div class="empty">Aucune analyse pour le moment. Cliquez « Analyser Et Optimiser ».</div>`;
   addLog('Scénario réinitialisé', 'red');
   toast('Tout a été effacé', 'warning');
 }
@@ -948,21 +948,21 @@ function buildReportText(){
   const saturated = stations.filter(s => s.users > CAPACITY_PER_STATION*0.9).length;
 
   const lines = [
-    '5G SMART PLANNER — RAPPORT DE SIMULATION',
+    '5G Smart Planner — Rapport De Simulation',
     '==========================================',
     `Date : ${new Date().toLocaleString('fr-FR')}`,
     'Zone : Casablanca',
     'Modèle : 3GPP TR 38.901 — UMi Street Canyon',
     'Fréquence : 3.5 GHz (n78)',
     '',
-    'INDICATEURS',
+    'Indicateurs',
     `Stations : ${stations.length}`,
     `Utilisateurs : ${users.length}`,
     `Couverture service : ${coveragePct}%`,
     `Charge moyenne : ${avgLoad}%`,
     `Stations saturées : ${saturated}`,
     '',
-    'STATIONS'
+    'Stations'
   ];
 
   stations.forEach(s => {
@@ -971,7 +971,7 @@ function buildReportText(){
 
   lines.push(
     '',
-    'LIMITES',
+    'Limites',
     'Simulation pédagogique : sans bâtiments réels, ray-tracing, fast fading ou capacité radio détaillée.'
   );
   return lines.join('\n');

@@ -1,252 +1,399 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="5G Smart Planner — AI-powered 5G network planning and optimization dashboard.">
-  <title>5G Smart Planner</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G Smart Planner - Casablanca</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; }
+        .header { background: linear-gradient(135deg, #1a1a2e, #16213e); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 20px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin: 5px; }
+        .btn-green { background: #2ea043; color: white; }
+        .btn-orange { background: #ff8800; color: white; }
+        .btn-red { background: #e94560; color: white; }
+        .btn-blue { background: #1a73e8; color: white; }
+        .main { display: flex; height: calc(100vh - 70px); }
+        .map-area { flex: 1; padding: 20px; overflow-y: auto; }
+        .map-area h2 { margin-bottom: 10px; }
+        .stats { display: flex; gap: 15px; flex-wrap: wrap; margin: 10px 0; }
+        .stat-card { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-width: 100px; }
+        .stat-card .number { font-size: 24px; font-weight: bold; }
+        .stat-card .label { color: #666; font-size: 12px; }
+        .stations-list { margin-top: 15px; }
+        .station-item { background: white; padding: 10px 15px; border-radius: 6px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .sidebar { width: 320px; background: white; padding: 20px; border-left: 1px solid #ddd; overflow-y: auto; }
+        .sidebar h3 { margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .metric { margin: 10px 0; }
+        .metric .value { font-size: 22px; font-weight: bold; }
+        .metric .label { color: #666; font-size: 12px; }
+        .coverage-bar { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-top: 5px; }
+        .coverage-fill { height: 100%; background: linear-gradient(90deg, #e94560, #ff8800, #2ea043); border-radius: 4px; transition: width 0.5s; }
+        .suggestion { background: #fff8e6; padding: 10px; border-radius: 6px; border-left: 3px solid #ff8800; margin: 5px 0; }
+        .loading { color: #666; font-size: 14px; margin: 10px 0; }
+        .map-container { background: white; border-radius: 8px; padding: 20px; min-height: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .map-container p { color: #888; }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+    </style>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <div class="brand-mark"><span>5G</span></div>
-        <div>
-          <strong>Smart Planner</strong>
-          <small>Network Intelligence</small>
-        </div>
-      </div>
 
-      <div class="workspace">
-        <span class="workspace-label">WORKSPACE</span>
-        <button class="workspace-select">
-          <span class="workspace-dot"></span>
-          Casablanca Demo
-          <span class="chevron">⌄</span>
-        </button>
-      </div>
+<div class="header">
+    <h1>📡 5G Smart Planner - Casablanca</h1>
+    <div>
+        <button class="btn btn-green" onclick="generateUsers()">👥 Générer utilisateurs</button>
+        <button class="btn btn-orange" onclick="optimizeNetwork()">🤖 Optimiser</button>
+        <button class="btn btn-blue" onclick="addStation()">📡 Ajouter station</button>
+        <button class="btn btn-red" onclick="clearAll()">🗑️ Effacer tout</button>
+    </div>
+</div>
 
-      <nav class="nav">
-        <span class="nav-label">MAIN</span>
-        <button class="nav-item active" data-page="dashboard">
-          <span class="nav-icon">⌂</span><span>Dashboard</span>
-        </button>
-        <button class="nav-item" data-page="simulation">
-          <span class="nav-icon">◉</span><span>Simulation</span>
-        </button>
-        <button class="nav-item" data-page="stations">
-          <span class="nav-icon">⌁</span><span>Stations</span><span class="nav-badge">14</span>
-        </button>
-        <button class="nav-item" data-page="optimization">
-          <span class="nav-icon">✦</span><span>AI Optimization</span><span class="ai-pill">AI</span>
-        </button>
-        <button class="nav-item" data-page="analytics">
-          <span class="nav-icon">▥</span><span>Analytics</span>
-        </button>
-        <button class="nav-item" data-page="reports">
-          <span class="nav-icon">▤</span><span>Reports</span>
-        </button>
-
-        <span class="nav-label nav-label-spaced">SYSTEM</span>
-        <button class="nav-item" data-page="settings">
-          <span class="nav-icon">⚙</span><span>Settings</span>
-        </button>
-        <button class="nav-item" id="helpBtn">
-          <span class="nav-icon">?</span><span>Help Center</span>
-        </button>
-      </nav>
-
-      <div class="sidebar-bottom">
-        <div class="system-status">
-          <span class="status-pulse"></span>
-          <div><strong>All systems operational</strong><small>Last sync 2 min ago</small></div>
-        </div>
-        <div class="user-card">
-          <div class="avatar">SA</div>
-          <div class="user-meta"><strong>Samira A.</strong><small>Network Engineer</small></div>
-          <button class="more-btn" aria-label="More">•••</button>
-        </div>
-      </div>
-    </aside>
-
-    <main class="main">
-      <header class="topbar">
-        <button class="mobile-menu" id="mobileMenu">☰</button>
-        <div class="breadcrumbs"><span>Workspace</span><b>/</b><strong id="pageTitle">Dashboard</strong></div>
-        <div class="top-actions">
-          <button class="icon-btn" id="searchBtn" aria-label="Search">⌕</button>
-          <button class="icon-btn notification-btn" id="notificationBtn" aria-label="Notifications">♧<i></i></button>
-          <div class="top-divider"></div>
-          <div class="profile-mini"><div class="avatar small">SA</div><span>Samira</span><span class="chevron">⌄</span></div>
-        </div>
-      </header>
-
-      <div class="content">
-        <section class="page dashboard-page active-page" id="dashboard">
-          <div class="page-heading">
-            <div>
-              <div class="eyebrow">NETWORK CONTROL CENTER</div>
-              <h1>Network Overview</h1>
-              <p>Monitor your 5G deployment, coverage and performance in real time.</p>
+<div class="main">
+    <div class="map-area">
+        <h2>🗺️ Carte de Casablanca</h2>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number" id="stationCount">0</div>
+                <div class="label">Stations (gNodeB)</div>
             </div>
-            <div class="heading-actions">
-              <button class="btn btn-secondary" id="refreshBtn">↻ <span>Refresh</span></button>
-              <button class="btn btn-primary" id="runSimulation">▶ Run Simulation</button>
+            <div class="stat-card">
+                <div class="number" id="userCount">0</div>
+                <div class="label">Utilisateurs</div>
             </div>
-          </div>
+            <div class="stat-card">
+                <div class="number" id="coveragePercent">0%</div>
+                <div class="label">Couverture</div>
+            </div>
+        </div>
 
-          <div class="kpi-grid">
-            <article class="kpi-card">
-              <div class="kpi-top"><span class="kpi-icon cyan">⌁</span><span class="trend positive">↗ 4.2%</span></div>
-              <div class="kpi-label">Network Coverage</div>
-              <div class="kpi-value" data-counter="94.2">94.2<span>%</span></div>
-              <div class="sparkline"><span style="height:32%"></span><span style="height:42%"></span><span style="height:38%"></span><span style="height:56%"></span><span style="height:50%"></span><span style="height:67%"></span><span style="height:75%"></span><span style="height:92%"></span></div>
-              <div class="kpi-foot">vs. previous simulation</div>
-            </article>
-            <article class="kpi-card">
-              <div class="kpi-top"><span class="kpi-icon blue">♙</span><span class="trend positive">↗ 12.5%</span></div>
-              <div class="kpi-label">Active Users</div>
-              <div class="kpi-value">1,000</div>
-              <div class="mini-progress"><span style="width:78%"></span></div>
-              <div class="kpi-foot">78% of estimated peak demand</div>
-            </article>
-            <article class="kpi-card">
-              <div class="kpi-top"><span class="kpi-icon violet">⌁</span><span class="trend neutral">+2</span></div>
-              <div class="kpi-label">Active gNodeB</div>
-              <div class="kpi-value">14</div>
-              <div class="station-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <div class="kpi-foot">13 operational · 1 warning</div>
-            </article>
-            <article class="kpi-card">
-              <div class="kpi-top"><span class="kpi-icon amber">◒</span><span class="trend positive">↘ 8.2%</span></div>
-              <div class="kpi-label">Average Load</div>
-              <div class="kpi-value">61.4<span>%</span></div>
-              <div class="load-meter"><span style="width:61.4%"></span></div>
-              <div class="kpi-foot">Healthy network utilization</div>
-            </article>
-          </div>
+        <div class="map-container" id="mapContainer">
+            <p id="mapMessage">💡 Cliquez sur "Ajouter station" pour placer des gNodeB</p>
+            <div id="stationsList"></div>
+            <div id="usersList"></div>
+        </div>
+    </div>
 
-          <div class="main-grid">
-            <section class="panel map-panel">
-              <div class="panel-head">
-                <div><h2>Live Network Map</h2><p>Casablanca urban deployment · Scenario #24</p></div>
-                <div class="map-actions">
-                  <button class="chip active" data-layer="coverage">Coverage</button>
-                  <button class="chip" data-layer="users">Users</button>
-                  <button class="chip" data-layer="stations">gNodeB</button>
-                  <button class="icon-btn compact" id="fullscreenMap">⛶</button>
+    <div class="sidebar">
+        <h3>📊 Indicateurs</h3>
+        <div id="metrics">
+            <div class="metric">
+                <div class="value" id="metricCoverage">0%</div>
+                <div class="label">Couverture réseau</div>
+                <div class="coverage-bar"><div class="coverage-fill" id="coverageFill" style="width:0%"></div></div>
+            </div>
+            <div class="metric">
+                <div class="value" id="metricLatency">0 ms</div>
+                <div class="label">Latence moyenne</div>
+            </div>
+            <div class="metric">
+                <div class="value" id="metricCapacity">0%</div>
+                <div class="label">Capacité utilisée</div>
+            </div>
+            <div class="metric">
+                <div class="value" id="metricUsers">0</div>
+                <div class="label">Utilisateurs connectés</div>
+            </div>
+            <div class="metric">
+                <div class="value" id="metricStations">0</div>
+                <div class="label">Stations actives</div>
+            </div>
+            <div class="metric">
+                <div class="value" id="metricSaturated">0</div>
+                <div class="label">Stations saturées</div>
+            </div>
+        </div>
+
+        <h3 style="margin-top:20px;">🤖 Suggestions IA</h3>
+        <div id="suggestions">
+            <p style="color:#888;font-size:13px;">Aucune suggestion. Cliquez sur "Optimiser" pour analyser.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== DONNÉES =====
+    let stations = [];
+    let users = [];
+    let coverageData = [];
+    let stationIdCounter = 1;
+
+    // Points d'intérêt de Casablanca
+    const landmarks = [
+        { name: "Mosquée Hassan II", lat: 33.6085, lng: -7.6330 },
+        { name: "Place Mohammed V", lat: 33.5961, lng: -7.6156 },
+        { name: "Ain Diab", lat: 33.5880, lng: -7.7180 },
+        { name: "Casa Port", lat: 33.5950, lng: -7.6000 },
+        { name: "Maarif", lat: 33.5850, lng: -7.6030 }
+    ];
+
+    // ===== FONCTIONS =====
+
+    // Ajouter une station
+    function addStation() {
+        const lat = 33.57 + (Math.random() - 0.5) * 0.08;
+        const lng = -7.62 + (Math.random() - 0.5) * 0.08;
+        
+        const station = {
+            id: `gNB-${stationIdCounter++}`,
+            name: `Station-${stations.length + 1}`,
+            lat: lat,
+            lng: lng,
+            power: 43,
+            frequency: 3.5
+        };
+        stations.push(station);
+        updateUI();
+        calculateCoverage();
+        updateMetrics();
+        
+        showMessage(`📡 Station ajoutée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+    }
+
+    // Supprimer une station
+    function deleteStation(id) {
+        stations = stations.filter(s => s.id !== id);
+        updateUI();
+        calculateCoverage();
+        updateMetrics();
+    }
+
+    // Générer des utilisateurs
+    function generateUsers() {
+        const count = 30;
+        users = [];
+        for (let i = 0; i < count; i++) {
+            users.push({
+                id: `UE-${String(i+1).padStart(3,'0')}`,
+                lat: 33.55 + Math.random() * 0.12,
+                lng: -7.68 + Math.random() * 0.12,
+                service: ['eMBB', 'uRLLC', 'mMTC'][Math.floor(Math.random() * 3)],
+                dataRate: 50 + Math.random() * 150
+            });
+        }
+        updateUI();
+        calculateCoverage();
+        updateMetrics();
+        showMessage(`👥 ${count} utilisateurs générés !`);
+    }
+
+    // Calculer la couverture
+    function calculateCoverage() {
+        coverageData = [];
+        if (stations.length === 0 || users.length === 0) {
+            updateUI();
+            return;
+        }
+
+        users.forEach(user => {
+            let bestRsrp = -200;
+            let bestStation = null;
+            
+            stations.forEach(station => {
+                const dist = distance(user.lat, user.lng, station.lat, station.lng);
+                const rsrp = station.power - 30 * Math.log10(dist * 1000 + 10);
+                if (rsrp > bestRsrp) {
+                    bestRsrp = rsrp;
+                    bestStation = station.id;
+                }
+            });
+            
+            const status = bestRsrp > -85 ? 'good' : bestRsrp > -105 ? 'poor' : 'none';
+            coverageData.push({
+                userId: user.id,
+                rsrp: bestRsrp,
+                stationId: bestStation,
+                status: status
+            });
+        });
+        
+        updateUI();
+        updateMetrics();
+    }
+
+    // Distance en km
+    function distance(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2)**2;
+        return R * 2 * Math.asin(Math.sqrt(a));
+    }
+
+    // Mettre à jour l'interface
+    function updateUI() {
+        document.getElementById('stationCount').textContent = stations.length;
+        document.getElementById('userCount').textContent = users.length;
+        document.getElementById('metricStations').textContent = stations.length;
+        document.getElementById('metricUsers').textContent = users.length;
+
+        // Liste des stations
+        const listDiv = document.getElementById('stationsList');
+        if (stations.length === 0) {
+            listDiv.innerHTML = '<p style="color:#888;font-size:13px;">Aucune station. Cliquez sur "Ajouter station"</p>';
+        } else {
+            listDiv.innerHTML = stations.map(s => `
+                <div class="station-item">
+                    <div>
+                        <strong>${s.name}</strong>
+                        <span style="color:#666;font-size:12px;margin-left:10px;">📶 ${s.frequency}GHz | ⚡ ${s.power}dBm</span>
+                        <span style="color:#888;font-size:11px;margin-left:10px;">📍 ${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</span>
+                    </div>
+                    <button onclick="deleteStation('${s.id}')" style="background:#e94560;color:white;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;">🗑️</button>
                 </div>
-              </div>
-              <div class="map-wrap">
-                <div id="map"></div>
-                <div class="map-overlay legend">
-                  <strong>Signal quality</strong>
-                  <span><i class="legend-dot excellent"></i> Excellent <b>&gt; -85 dBm</b></span>
-                  <span><i class="legend-dot medium"></i> Medium <b>-100 dBm</b></span>
-                  <span><i class="legend-dot poor"></i> Weak <b>&lt; -100 dBm</b></span>
+            `).join('');
+        }
+
+        // Liste des utilisateurs (juste un résumé)
+        const usersDiv = document.getElementById('usersList');
+        if (users.length > 0) {
+            const covered = coverageData.filter(c => c.status !== 'none').length;
+            const good = coverageData.filter(c => c.status === 'good').length;
+            usersDiv.innerHTML = `
+                <div style="margin-top:10px;padding:10px;background:#f8f9fa;border-radius:6px;font-size:13px;">
+                    <strong>📱 Utilisateurs :</strong> ${users.length} total
+                    <span style="margin-left:15px;">✅ Couverture : ${covered} (${Math.round(covered/users.length*100)}%)</span>
+                    <span style="margin-left:15px;">📶 Bonne : ${good}</span>
                 </div>
-                <div class="map-overlay map-tools">
-                  <button id="zoomIn">+</button><button id="zoomOut">−</button><button id="locateBtn">⌖</button>
+            `;
+        } else {
+            usersDiv.innerHTML = '';
+        }
+
+        // Couverture dans la carte
+        document.getElementById('coveragePercent').textContent = getCoveragePercent() + '%';
+    }
+
+    // Calculer le pourcentage de couverture
+    function getCoveragePercent() {
+        if (users.length === 0 || coverageData.length === 0) return 0;
+        const covered = coverageData.filter(c => c.status !== 'none').length;
+        return Math.round(covered / users.length * 100);
+    }
+
+    // Mettre à jour les métriques
+    function updateMetrics() {
+        const covPct = getCoveragePercent();
+        document.getElementById('metricCoverage').textContent = covPct + '%';
+        document.getElementById('coverageFill').style.width = covPct + '%';
+
+        const latency = 10 + (100 - covPct) * 0.5;
+        document.getElementById('metricLatency').textContent = Math.round(latency) + ' ms';
+
+        const capacity = stations.length > 0 ? Math.min(30 + users.length * 2, 95) : 0;
+        document.getElementById('metricCapacity').textContent = Math.round(capacity) + '%';
+
+        const saturated = stations.filter(s => {
+            const count = coverageData.filter(c => c.stationId === s.id).length;
+            return count > 15;
+        }).length;
+        document.getElementById('metricSaturated').textContent = saturated;
+    }
+
+    // Optimiser le réseau
+    function optimizeNetwork() {
+        if (stations.length === 0) {
+            showMessage('⚠️ Ajoutez d\'abord des stations !');
+            return;
+        }
+        
+        if (users.length === 0) {
+            showMessage('⚠️ Générez d\'abord des utilisateurs !');
+            return;
+        }
+
+        calculateCoverage();
+        const poor = coverageData.filter(c => c.status === 'poor' || c.status === 'none');
+        
+        if (poor.length === 0) {
+            document.getElementById('suggestions').innerHTML = `
+                <div class="suggestion" style="border-color:#2ea043;background:#e8f5e9;">
+                    ✅ La couverture est excellente ! Aucune amélioration nécessaire.
                 </div>
-                <div class="map-overlay map-status"><span class="status-pulse"></span> Simulation active</div>
-              </div>
-            </section>
+            `;
+            showMessage('✅ Réseau optimisé !');
+            return;
+        }
 
-            <section class="panel ai-panel">
-              <div class="panel-head">
-                <div><span class="ai-title"><span class="spark">✦</span> AI Insight</span><p>Optimization assistant</p></div>
-                <span class="live-tag">LIVE</span>
-              </div>
-              <div class="ai-score">
-                <div class="score-ring"><div><strong>87</strong><small>/100</small></div></div>
-                <div><strong>Network health</strong><span>Good performance</span><small>2 optimization opportunities</small></div>
-              </div>
-              <div class="recommendation">
-                <div class="rec-icon">✦</div>
-                <div><strong>Improve coverage in Zone B</strong><p>Adding one gNodeB near Industrial Park could improve coverage by <b>3.8%</b>.</p><button class="text-btn" id="detailsBtn">View recommendation →</button></div>
-              </div>
-              <div class="recommendation warning">
-                <div class="rec-icon">!</div>
-                <div><strong>gNodeB-07 is highly loaded</strong><p>Current load is <b>91%</b>. Consider redistribution of nearby users.</p><button class="text-btn">Analyze load →</button></div>
-              </div>
-              <button class="btn btn-ai" id="optimizeBtn">✦ Optimize Network</button>
-            </section>
-          </div>
+        // Trouver la zone la plus mal couverte
+        const avgLat = poor.reduce((sum, c) => {
+            const user = users.find(u => u.id === c.userId);
+            return sum + (user ? user.lat : 0);
+        }, 0) / poor.length;
+        
+        const avgLng = poor.reduce((sum, c) => {
+            const user = users.find(u => u.id === c.userId);
+            return sum + (user ? user.lng : 0);
+        }, 0) / poor.length;
 
-          <div class="bottom-grid">
-            <section class="panel chart-panel">
-              <div class="panel-head"><div><h2>Coverage Performance</h2><p>Last 24 hours</p></div><div class="chart-value"><strong>94.2%</strong><span>↗ 4.2%</span></div></div>
-              <canvas id="coverageChart"></canvas>
-            </section>
-            <section class="panel chart-panel">
-              <div class="panel-head"><div><h2>Network Load</h2><p>By station</p></div><button class="dropdown-btn">Last simulation ⌄</button></div>
-              <canvas id="loadChart"></canvas>
-            </section>
-            <section class="panel alerts-panel">
-              <div class="panel-head"><div><h2>Network Alerts</h2><p>Requires attention</p></div><span class="count-badge">3</span></div>
-              <div class="alert-item"><span class="alert-icon red">!</span><div><strong>High station load</strong><p>gNodeB-07 reached 91% capacity</p></div><time>2m</time></div>
-              <div class="alert-item"><span class="alert-icon amber">!</span><div><strong>Coverage gap detected</strong><p>Industrial Park · Zone B</p></div><time>8m</time></div>
-              <div class="alert-item"><span class="alert-icon cyan">✓</span><div><strong>Optimization ready</strong><p>AI generated 3 recommendations</p></div><time>12m</time></div>
-            </section>
-          </div>
-        </section>
+        // Ajouter automatiquement une station
+        const newStation = {
+            id: `gNB-${stationIdCounter++}`,
+            name: `Station-IA-${stations.length + 1}`,
+            lat: avgLat + (Math.random() - 0.5) * 0.005,
+            lng: avgLng + (Math.random() - 0.5) * 0.005,
+            power: 46,
+            frequency: 3.5
+        };
+        stations.push(newStation);
 
-        <section class="page" id="simulation">
-          <div class="page-heading"><div><div class="eyebrow">SCENARIO BUILDER</div><h1>Simulation</h1><p>Configure and run a 5G network scenario.</p></div><button class="btn btn-primary" id="simulatePageBtn">▶ Start Simulation</button></div>
-          <div class="simulation-grid">
-            <section class="panel config-panel">
-              <div class="panel-head"><div><h2>Scenario Configuration</h2><p>Define your virtual city and network parameters.</p></div><span class="status-tag">Draft</span></div>
-              <label>Scenario name<input id="scenarioName" value="Casablanca Urban — Scenario #25"></label>
-              <div class="two-col"><label>Users<input type="number" value="1000"></label><label>gNodeB<input type="number" value="14"></label></div>
-              <div class="two-col"><label>Frequency<select><option>3.5 GHz</option><option>2.6 GHz</option><option>26 GHz</option></select></label><label>Tx Power<select><option>40 dBm</option><option>43 dBm</option><option>46 dBm</option></select></label></div>
-              <label>Environment<select><option>Dense Urban</option><option>Urban</option><option>Industrial</option><option>Rural</option></select></label>
-              <div class="range-row"><label>Demand intensity <output id="demandValue">78%</output></label><input type="range" id="demandRange" min="10" max="100" value="78"></div>
-              <div class="config-actions"><button class="btn btn-secondary" id="resetConfig">Reset</button><button class="btn btn-primary" id="saveScenario">Save Scenario</button></div>
-            </section>
-            <section class="panel simulation-preview"><div class="panel-head"><div><h2>Simulation Preview</h2><p>Real-time execution monitor</p></div><span class="live-tag" id="simStatus">READY</span></div><div class="simulation-console" id="simConsole"><div><span>12:24:03</span> System initialized</div><div><span>12:24:04</span> Scenario loaded</div><div><span>12:24:04</span> Awaiting simulation start...</div></div><div class="sim-progress"><div><span id="simProgress"></span></div><strong id="simPercent">0%</strong></div><div class="sim-result"><div><span>Coverage</span><strong id="simCoverage">—</strong></div><div><span>Avg. latency</span><strong id="simLatency">—</strong></div><div><span>Connected users</span><strong id="simUsers">—</strong></div></div></section>
-          </div>
-        </section>
+        const suggestionsDiv = document.getElementById('suggestions');
+        suggestionsDiv.innerHTML = `
+            <div class="suggestion">
+                <strong>📡 Nouvelle station proposée</strong>
+                <p>📍 Position: ${newStation.lat.toFixed(4)}, ${newStation.lng.toFixed(4)}</p>
+                <p>👥 ${poor.length} utilisateurs mal couverts</p>
+                <p style="color:#e94560;font-weight:bold;">⚡ Station ajoutée automatiquement !</p>
+            </div>
+        `;
 
-        <section class="page" id="stations">
-          <div class="page-heading"><div><div class="eyebrow">RADIO ACCESS NETWORK</div><h1>gNodeB Stations</h1><p>Manage and monitor your 5G base stations.</p></div><button class="btn btn-primary" id="addStation">＋ Add gNodeB</button></div>
-          <section class="panel table-panel"><div class="table-toolbar"><div class="search-field">⌕ <input id="stationSearch" placeholder="Search station..."></div><button class="dropdown-btn">All status ⌄</button></div><div class="table-wrap"><table><thead><tr><th>Station</th><th>Status</th><th>Zone</th><th>Users</th><th>Load</th><th>Coverage</th><th>Actions</th></tr></thead><tbody id="stationTable"></tbody></table></div></section>
-        </section>
+        calculateCoverage();
+        updateMetrics();
+        updateUI();
+        showMessage(`🤖 Station IA ajoutée ! ${poor.length} utilisateurs mieux couverts.`);
+    }
 
-        <section class="page" id="optimization">
-          <div class="page-heading"><div><div class="eyebrow">INTELLIGENT NETWORK DESIGN</div><h1>AI Optimization</h1><p>Find better station placements with scenario-based optimization.</p></div><button class="btn btn-ai" id="optimizePageBtn">✦ Run AI Optimization</button></div>
-          <div class="optimization-grid"><section class="panel"><div class="panel-head"><div><h2>Optimization Score</h2><p>Current network configuration</p></div></div><div class="big-score"><strong>87</strong><span>/100</span></div><div class="score-bars"><div><span>Coverage</span><b>94%</b><i><em style="width:94%"></em></i></div><div><span>Capacity</span><b>78%</b><i><em style="width:78%"></em></i></div><div><span>Cost efficiency</span><b>82%</b><i><em style="width:82%"></em></i></div></div></section><section class="panel"><div class="panel-head"><div><h2>AI Recommendations</h2><p>Generated from the latest simulation</p></div></div><div id="aiRecommendations"><div class="ai-empty"><span>✦</span><strong>Optimization is ready</strong><p>Run the optimizer to generate recommended actions for your network.</p><button class="btn btn-ai" id="runOptimizer">Run optimizer</button></div></div></section></div>
-        </section>
+    // Effacer tout
+    function clearAll() {
+        if (confirm('Supprimer toutes les stations et utilisateurs ?')) {
+            stations = [];
+            users = [];
+            coverageData = [];
+            stationIdCounter = 1;
+            updateUI();
+            updateMetrics();
+            document.getElementById('suggestions').innerHTML = '<p style="color:#888;font-size:13px;">Aucune suggestion.</p>';
+            document.getElementById('stationsList').innerHTML = '<p style="color:#888;font-size:13px;">Aucune station.</p>';
+            document.getElementById('usersList').innerHTML = '';
+            document.getElementById('metricStations').textContent = '0';
+            document.getElementById('metricUsers').textContent = '0';
+            showMessage('🗑️ Tout a été effacé !');
+        }
+    }
 
-        <section class="page" id="analytics">
-          <div class="page-heading"><div><div class="eyebrow">NETWORK INTELLIGENCE</div><h1>Analytics</h1><p>Explore performance trends and network KPIs.</p></div><button class="dropdown-btn">Last 24 hours ⌄</button></div>
-          <div class="analytics-grid"><section class="panel large-chart"><div class="panel-head"><div><h2>Coverage & Quality</h2><p>Average signal quality across the simulation</p></div></div><canvas id="analyticsChart"></canvas></section><section class="panel metric-list"><h2>Performance Metrics</h2><div class="metric"><span>Average RSRP</span><strong>-84.6 dBm</strong><i><em style="width:86%"></em></i></div><div class="metric"><span>Average latency</span><strong>6.2 ms</strong><i><em style="width:92%"></em></i></div><div class="metric"><span>Average throughput</span><strong>186 Mbps</strong><i><em style="width:78%"></em></i></div><div class="metric"><span>Connection success</span><strong>98.7%</strong><i><em style="width:99%"></em></i></div></section></div>
-        </section>
+    // Afficher un message
+    function showMessage(msg) {
+        document.getElementById('mapMessage').textContent = msg;
+        setTimeout(() => {
+            if (stations.length === 0 && users.length === 0) {
+                document.getElementById('mapMessage').textContent = '💡 Cliquez sur "Ajouter station" pour commencer';
+            } else {
+                document.getElementById('mapMessage').textContent = '✅ ' + stations.length + ' stations, ' + users.length + ' utilisateurs';
+            }
+        }, 3000);
+    }
 
-        <section class="page" id="reports">
-          <div class="page-heading"><div><div class="eyebrow">DOCUMENT CENTER</div><h1>Reports</h1><p>Generate and review network analysis reports.</p></div><button class="btn btn-primary" id="generateReport">＋ Generate Report</button></div>
-          <section class="panel report-list"><div class="report-row"><div class="file-icon">PDF</div><div><strong>Network Optimization Report — #24</strong><p>Generated today · 12:12</p></div><span class="report-status">Ready</span><button class="text-btn">View →</button></div><div class="report-row"><div class="file-icon">PDF</div><div><strong>Coverage Analysis — Casablanca</strong><p>Generated yesterday · 17:42</p></div><span class="report-status">Ready</span><button class="text-btn">View →</button></div><div class="report-row"><div class="file-icon">CSV</div><div><strong>Station KPI Export</strong><p>Generated Aug 12 · 09:28</p></div><span class="report-status">Ready</span><button class="text-btn">Download →</button></div></section>
-        </section>
+    // ===== INIT =====
+    // Ajouter une première station pour démarrer
+    setTimeout(() => {
+        addStation();
+        addStation();
+    }, 500);
 
-        <section class="page" id="settings">
-          <div class="page-heading"><div><div class="eyebrow">SYSTEM CONFIGURATION</div><h1>Settings</h1><p>Manage your workspace preferences.</p></div></div>
-          <section class="panel settings-panel"><div class="setting-row"><div><strong>Dark mode</strong><p>Use the professional dark interface.</p></div><label class="switch"><input type="checkbox" checked><span></span></label></div><div class="setting-row"><div><strong>Live simulation updates</strong><p>Refresh KPI values while a simulation is running.</p></div><label class="switch"><input type="checkbox" checked><span></span></label></div><div class="setting-row"><div><strong>AI recommendations</strong><p>Show optimization insights on the dashboard.</p></div><label class="switch"><input type="checkbox" checked><span></span></label></div></section>
-        </section>
-      </div>
-    </main>
-  </div>
+    // Message de démarrage
+    console.log('📡 5G Smart Planner - Casablanca');
+    console.log('💡 Cliquez sur les boutons pour interagir');
+</script>
 
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal" id="modal"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div>
-  </div>
-  <div class="toast-container" id="toastContainer"></div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="script.js"></script>
 </body>
 </html>

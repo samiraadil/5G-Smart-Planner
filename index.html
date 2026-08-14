@@ -4,606 +4,969 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>5G Smart Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* ============================================================
+           STYLE CLAIR & PROFESSIONNEL
+           ============================================================ */
+        :root {
+            --bg: #f0f4f9;
+            --panel: #ffffff;
+            --panel-2: #f8faff;
+            --line: #e2e8f0;
+            --text: #0b1a33;
+            --text-dim: #5f6b7a;
+            --text-mute: #9aa6b5;
+            --blue: #1a73e8;
+            --blue-light: #e8f0fe;
+            --green: #34a853;
+            --green-light: #e6f4ea;
+            --yellow: #e37400;
+            --yellow-light: #fef7e0;
+            --red: #ea4335;
+            --red-light: #fce8e6;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+        }
+        html,
+        body {
+            height: 100%;
         }
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f5f7fa;
-            color: #1a2332;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-        }
-
-        h1 {
-            font-size: 24px;
-            color: #0b1a33;
-            margin-bottom: 6px;
-        }
-        .subtitle {
-            color: #5f6b7a;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        .buttons {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 25px;
+            flex-direction: column;
+        }
+        ::selection {
+            background: rgba(26, 115, 232, 0.15);
         }
 
-        .btn {
-            padding: 10px 22px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
+        /* ---------- HEADER ---------- */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 28px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--line);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            flex-shrink: 0;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .brand .mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--blue), #1557b0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(26, 115, 232, 0.25);
+        }
+        .brand h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+        .brand .tag {
+            font-size: 11px;
+            color: var(--text-dim);
+            font-weight: 500;
+            margin-top: 1px;
+        }
+        nav {
+            display: flex;
+            gap: 4px;
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 4px;
+        }
+        nav button {
+            font-family: 'Inter', sans-serif;
             font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 7px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s;
+        }
+        nav button.active {
+            background: #ffffff;
+            color: var(--blue);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+        nav button:hover:not(.active) {
+            color: var(--text);
+        }
+
+        /* ---------- LAYOUT ---------- */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 0;
+            min-height: 0;
+        }
+        .map-col {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: #e8edf5;
+        }
+        #map {
+            flex: 1;
+            background: #e8edf5;
+        }
+        .leaflet-container {
+            background: #e8edf5 !important;
+        }
+
+        /* ---------- TOOLBAR ---------- */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--line);
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
         }
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
         }
-        .btn-green {
-            background: #34a853;
-            color: white;
+        .btn:active {
+            transform: scale(0.97);
         }
-        .btn-blue {
-            background: #1a73e8;
-            color: white;
+        .btn.primary {
+            background: var(--blue);
+            color: #fff;
         }
-        .btn-orange {
-            background: #fbbc04;
-            color: #1a2332;
+        .btn.primary:hover {
+            background: #1557b0;
         }
-        .btn-red {
-            background: #ea4335;
-            color: white;
+        .btn.ai {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: #fff;
         }
-        .btn-purple {
-            background: #7c3aed;
-            color: white;
+        .btn.ai:hover {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+        .btn.ghost {
+            background: transparent;
+            color: var(--text-dim);
+        }
+        .btn.ghost:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+        .btn.danger:hover {
+            color: var(--red);
+            background: var(--red-light);
+        }
+        .btn.success {
+            background: var(--green);
+            color: #fff;
+        }
+        .btn.success:hover {
+            background: #2d8f47;
+        }
+        .btn.on {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
+        }
+        .spacer {
+            flex: 1;
+        }
+        .hint {
+            font-size: 12px;
+            color: var(--blue);
+            background: var(--blue-light);
+            padding: 5px 14px;
+            border-radius: 20px;
+            display: none;
+            font-weight: 500;
+        }
+        .hint.show {
+            display: block;
+            animation: pulse-hint 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-hint {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
         }
 
-        .stats {
+        /* ---------- KPI STRIP ---------- */
+        .kpi-strip {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
-            margin-bottom: 25px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0;
+            background: #ffffff;
+            border-top: 1px solid var(--line);
+            flex-shrink: 0;
         }
-
-        .stat-card {
-            background: #f8faff;
-            border-radius: 10px;
-            padding: 14px 16px;
+        .kpi {
+            background: #ffffff;
+            padding: 12px 16px;
             text-align: center;
-            border: 1px solid #e8edf5;
+            border-right: 1px solid var(--line);
         }
-        .stat-card .number {
-            font-size: 26px;
+        .kpi:last-child {
+            border-right: none;
+        }
+        .kpi .val {
+            font-size: 22px;
             font-weight: 700;
-            color: #0b1a33;
+            color: var(--text);
         }
-        .stat-card .number.green {
-            color: #34a853;
+        .kpi .lbl {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+            margin-top: 2px;
         }
-        .stat-card .number.blue {
-            color: #1a73e8;
+        .kpi.c-green .val {
+            color: var(--green);
         }
-        .stat-card .number.orange {
-            color: #e37400;
+        .kpi.c-yellow .val {
+            color: var(--yellow);
         }
-        .stat-card .number.red {
-            color: #ea4335;
+        .kpi.c-red .val {
+            color: var(--red);
         }
-        .stat-card .label {
+        .kpi.c-blue .val {
+            color: var(--blue);
+        }
+
+        /* ---------- SIDEBAR ---------- */
+        aside {
+            background: #ffffff;
+            border-left: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .panel {
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .panel:last-child {
+            border-bottom: none;
+            flex: 1;
+        }
+        .panel-h {
+            padding: 12px 18px 8px;
             font-size: 11px;
-            color: #5f6b7a;
-            font-weight: 600;
+            font-weight: 700;
+            color: var(--text-dim);
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-top: 4px;
-        }
-
-        .section {
-            background: #f8faff;
-            border-radius: 10px;
-            padding: 16px 18px;
-            margin-bottom: 15px;
-            border: 1px solid #e8edf5;
-        }
-        .section h3 {
-            font-size: 13px;
-            color: #5f6b7a;
-            font-weight: 600;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .station-item {
+            letter-spacing: 0.8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
-            background: white;
-            border-radius: 6px;
-            margin-bottom: 4px;
-            border-left: 3px solid #1a73e8;
-            font-size: 13px;
+            flex-shrink: 0;
         }
-        .station-item .name {
+        .panel-h .count {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
+            color: var(--blue);
+            padding: 1px 10px;
+            border-radius: 20px;
+            font-size: 11px;
             font-weight: 600;
         }
-        .station-item .info {
-            color: #5f6b7a;
-            font-size: 12px;
+        .panel-body {
+            padding: 0 14px 12px;
+            overflow-y: auto;
         }
-        .station-item .del {
-            background: none;
-            border: none;
-            color: #b0b8c4;
+        .panel-body.grow {
+            flex: 1;
+        }
+        .panel-body::-webkit-scrollbar {
+            width: 5px;
+        }
+        .panel-body::-webkit-scrollbar-track {
+            background: var(--bg);
+            border-radius: 4px;
+        }
+        .panel-body::-webkit-scrollbar-thumb {
+            background: var(--line);
+            border-radius: 4px;
+        }
+
+        /* ---------- STATION ROW ---------- */
+        .station-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            background: var(--panel-2);
+            border-radius: 8px;
+            border-left: 3px solid var(--blue);
             cursor: pointer;
+            transition: all 0.15s;
+        }
+        .station-row:hover {
+            background: #eef2f7;
+        }
+        .station-row.sat {
+            border-left-color: var(--red);
+            background: var(--red-light);
+        }
+        .station-row .dot {
             font-size: 16px;
         }
-        .station-item .del:hover {
-            color: #ea4335;
+        .station-row .meta {
+            flex: 1;
+            min-width: 0;
         }
-
-        .suggestion-box {
-            background: #e8f0fe;
-            border-radius: 8px;
-            padding: 12px 16px;
-            border-left: 3px solid #1a73e8;
+        .station-row .name {
             font-size: 13px;
-        }
-        .suggestion-box .title {
             font-weight: 600;
-            color: #0b1a33;
         }
-        .suggestion-box .desc {
-            color: #5f6b7a;
-            font-size: 12px;
-            margin-top: 2px;
+        .station-row .sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10.5px;
+            color: var(--text-dim);
+            margin-top: 1px;
+        }
+        .station-row .del {
+            background: none;
+            border: none;
+            color: var(--text-mute);
+            cursor: pointer;
+            font-size: 15px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.15s;
+        }
+        .station-row .del:hover {
+            background: var(--red-light);
+            color: var(--red);
         }
 
-        .toast {
+        .empty {
+            color: var(--text-mute);
+            font-size: 13px;
+            text-align: center;
+            padding: 20px 8px;
+            line-height: 1.6;
+        }
+
+        /* ---------- SUGGESTIONS ---------- */
+        .sugg {
+            background: var(--panel-2);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 6px;
+            border-left: 3px solid var(--yellow);
+        }
+        .sugg.add {
+            border-left-color: var(--green);
+            background: var(--green-light);
+        }
+        .sugg.remove {
+            border-left-color: var(--red);
+            background: var(--red-light);
+        }
+        .sugg.move {
+            border-left-color: var(--yellow);
+            background: var(--yellow-light);
+        }
+        .sugg.ok {
+            border-left-color: var(--blue);
+            background: var(--blue-light);
+        }
+        .sugg .stitle {
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .sugg .sdesc {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin: 4px 0 10px;
+            line-height: 1.5;
+        }
+        .sugg .apply {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: none;
+            background: var(--blue);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .sugg .apply:hover {
+            background: #1557b0;
+            transform: translateY(-1px);
+        }
+
+        /* ---------- LOG ---------- */
+        .log {
+            background: #f8faff;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            max-height: 160px;
+            overflow-y: auto;
+            border: 1px solid var(--line);
+        }
+        .log-line {
+            padding: 3px 0;
+            color: var(--text-dim);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        }
+        .log-line .t {
+            color: var(--text-mute);
+            margin-right: 8px;
+        }
+        .log-line.green {
+            color: var(--green);
+        }
+        .log-line.yellow {
+            color: var(--yellow);
+        }
+        .log-line.red {
+            color: var(--red);
+        }
+        .log-line.blue {
+            color: var(--blue);
+        }
+
+        /* ---------- LEAFLET TWEAKS ---------- */
+        .leaflet-popup-content-wrapper {
+            background: #ffffff;
+            color: var(--text);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--line);
+        }
+        .leaflet-popup-tip {
+            background: #ffffff;
+        }
+        .leaflet-popup-content {
+            font-size: 13px;
+            margin: 12px 14px;
+        }
+        .leaflet-popup-content b {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gnb-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e8f0fe, #ffffff);
+            border: 2px solid var(--blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 2px 12px rgba(26, 115, 232, 0.15);
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        .gnb-icon:hover {
+            transform: scale(1.05);
+        }
+        .gnb-icon.sat {
+            border-color: var(--red);
+            box-shadow: 0 2px 12px rgba(234, 67, 53, 0.2);
+        }
+
+        .popup-del {
+            background: var(--red);
+            border: none;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: all 0.15s;
+        }
+        .popup-del:hover {
+            background: #d33426;
+        }
+
+        /* ---------- TOAST ---------- */
+        #toast {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #1a2332;
-            color: white;
-            padding: 14px 24px;
+            bottom: 24px;
+            right: 24px;
+            background: #ffffff;
+            color: var(--text);
+            border: 1px solid var(--line);
+            padding: 14px 22px;
             border-radius: 10px;
             font-size: 14px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-            transform: translateY(80px);
+            font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            transform: translateY(90px);
             opacity: 0;
-            transition: all 0.4s ease;
+            transition: all 0.35s ease;
             z-index: 999;
+            max-width: 360px;
+            border-left: 4px solid var(--blue);
         }
-        .toast.show {
+        #toast.show {
             transform: translateY(0);
             opacity: 1;
         }
-        .toast.success {
-            background: #34a853;
+        #toast.success {
+            border-left-color: var(--green);
         }
-        .toast.warning {
-            background: #e37400;
+        #toast.warning {
+            border-left-color: var(--yellow);
         }
-        .toast.error {
-            background: #ea4335;
-        }
-
-        .empty-msg {
-            color: #b0b8c4;
-            font-size: 13px;
-            text-align: center;
-            padding: 10px 0;
+        #toast.error {
+            border-left-color: var(--red);
         }
 
-        .log-container {
-            background: #0b1a33;
-            color: #a8c7fa;
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-height: 120px;
-            overflow-y: auto;
-            margin-top: 10px;
-        }
-        .log-container .log-line {
-            padding: 2px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        }
-        .log-container .log-line .time {
-            color: #5f6b7a;
-            margin-right: 10px;
-        }
-        .log-container .log-line .green {
-            color: #34a853;
-        }
-        .log-container .log-line .orange {
-            color: #fbbc04;
-        }
-        .log-container .log-line .red {
-            color: #ea4335;
-        }
-        .log-container .log-line .blue {
-            color: #60a5fa;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 16px;
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 880px) {
+            main {
+                grid-template-columns: 1fr;
             }
-            .stats {
-                grid-template-columns: 1fr 1fr 1fr;
+            aside {
+                border-left: none;
+                border-top: 1px solid var(--line);
             }
-            .buttons .btn {
+            .kpi-strip {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            header {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 12px 16px;
+            }
+            .brand h1 {
+                font-size: 17px;
+            }
+            .toolbar .btn {
                 font-size: 11px;
-                padding: 8px 14px;
+                padding: 6px 12px;
             }
-            .stat-card .number {
-                font-size: 20px;
+        }
+        @media (max-width: 480px) {
+            .kpi-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .kpi .val {
+                font-size: 18px;
+            }
+            .sidebar {
+                max-height: 50vh;
+            }
+            nav button {
+                font-size: 11px;
+                padding: 6px 10px;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-
-        <h1>📡 5G Smart Planner</h1>
-        <div class="subtitle">Casablanca • Planification réseau 5G</div>
-
-        <!-- BOUTONS -->
-        <div class="buttons">
-            <button class="btn btn-green" onclick="generateUsers()">👥 Générer utilisateurs</button>
-            <button class="btn btn-blue" onclick="addStation()">📡 Ajouter station</button>
-            <button class="btn btn-orange" onclick="optimizeNetwork()">🤖 Optimiser (IA)</button>
-            <button class="btn btn-red" onclick="clearAll()">🗑️ Tout effacer</button>
+    <!-- ===== HEADER ===== -->
+    <header>
+        <div class="brand">
+            <div class="mark">📡</div>
+            <div>
+                <h1>5G Smart Planner</h1>
+                <div class="tag">AI-Powered Network Planning — Casablanca</div>
+            </div>
         </div>
+        <nav>
+            <button class="active">Simulation</button>
+            <button id="navDash">Dashboard</button>
+            <button id="navReports">Rapports</button>
+        </nav>
+    </header>
 
-        <!-- STATS -->
-        <div class="stats">
-            <div class="stat-card">
-                <div class="number blue" id="statStations">0</div>
-                <div class="label">Stations</div>
+    <!-- ===== MAIN ===== -->
+    <main>
+        <div class="map-col">
+            <div class="toolbar">
+                <button class="btn primary" id="btnAddStation">📡 Ajouter station</button>
+                <button class="btn success" id="btnGenUsers">👥 Générer utilisateurs</button>
+                <button class="btn ai" id="btnOptimize">🤖 Optimiser (IA)</button>
+                <div class="spacer"></div>
+                <span class="hint" id="placeHint">📍 Cliquez sur la carte pour placer la station</span>
+                <button class="btn ghost danger" id="btnClear">🗑️ Effacer tout</button>
             </div>
-            <div class="stat-card">
-                <div class="number blue" id="statUsers">0</div>
-                <div class="label">Utilisateurs</div>
-            </div>
-            <div class="stat-card">
-                <div class="number green" id="statCoverage">0%</div>
-                <div class="label">Couverture</div>
-            </div>
-            <div class="stat-card">
-                <div class="number orange" id="statLatency">0ms</div>
-                <div class="label">Latence</div>
-            </div>
-            <div class="stat-card">
-                <div class="number orange" id="statCapacity">0%</div>
-                <div class="label">Capacité</div>
-            </div>
-            <div class="stat-card">
-                <div class="number red" id="statSaturated">0</div>
-                <div class="label">Saturées</div>
+            <div id="map"></div>
+            <div class="kpi-strip">
+                <div class="kpi c-blue"><div class="val" id="kStations">0</div><div class="lbl">Stations</div></div>
+                <div class="kpi c-blue"><div class="val" id="kUsers">0</div><div class="lbl">Utilisateurs</div></div>
+                <div class="kpi c-green"><div class="val" id="kCoverage">0%</div><div class="lbl">Couverture</div></div>
+                <div class="kpi c-yellow"><div class="val" id="kLatency">0 ms</div><div class="lbl">Latence</div></div>
+                <div class="kpi c-yellow"><div class="val" id="kCapacity">0%</div><div class="lbl">Charge</div></div>
+                <div class="kpi c-red"><div class="val" id="kSaturated">0</div><div class="lbl">Saturées</div></div>
             </div>
         </div>
 
-        <!-- STATIONS -->
-        <div class="section">
-            <h3>📡 Stations gNodeB</h3>
-            <div id="stationsList">
-                <div class="empty-msg">Aucune station. Cliquez sur "Ajouter station"</div>
+        <!-- ===== SIDEBAR ===== -->
+        <aside>
+            <div class="panel">
+                <div class="panel-h"><span>Stations gNodeB</span><span class="count" id="cntStations">0</span></div>
+                <div class="panel-body" id="stationsList" style="max-height:200px;">
+                    <div class="empty">Aucune station.<br>Cliquez sur « Ajouter station » puis sur la carte.</div>
+                </div>
             </div>
-        </div>
-
-        <!-- SUGGESTIONS -->
-        <div class="section">
-            <h3>🤖 Suggestions IA</h3>
-            <div id="suggestionsContainer">
-                <div class="empty-msg">En attente d'analyse...</div>
+            <div class="panel">
+                <div class="panel-h"><span>Suggestions IA</span></div>
+                <div class="panel-body" id="aiPanel" style="max-height:230px;">
+                    <div class="empty">En attente d'analyse.<br>Cliquez sur « Optimiser (IA) ».</div>
+                </div>
             </div>
-        </div>
-
-        <!-- LOG -->
-        <div class="section" style="background:#0b1a33;border-color:#1a2332;">
-            <h3 style="color:#5f6b7a;">📋 Journal d'activité</h3>
-            <div class="log-container" id="logContainer">
-                <div class="log-line"><span class="time">[Démarrage]</span> <span class="blue">Application 5G Smart Planner prête</span></div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- TOAST -->
-    <div class="toast" id="toast"></div>
-
-    <script>
-        // ============================================================
-        //  DONNÉES
-        // ============================================================
-        let stations = [];
-        let users = [];
-        let coverageData = [];
-        let stationIdCounter = 1;
-
-        // ============================================================
-        //  FONCTIONS PRINCIPALES
-        // ============================================================
-
-        // ---- AJOUTER STATION ----
-        function addStation() {
-            const lat = 33.54 + Math.random() * 0.08;
-            const lng = -7.68 + Math.random() * 0.12;
-
-            const station = {
-                id: `gNB-${String(stationIdCounter++).padStart(3, '0')}`,
-                name: `gNodeB-${stations.length + 1}`,
-                lat: lat.toFixed(4),
-                lng: lng.toFixed(4),
-                power: 40 + Math.floor(Math.random() * 10),
-                frequency: 3.5,
-                users: 0
-            };
-            stations.push(station);
-            calculateCoverage();
-            updateUI();
-            addLog(`📡 ${station.name} ajoutée à (${station.lat}, ${station.lng})`, 'blue');
-            toast(`📡 Station ajoutée !`, 'success');
-        }
-
-        // ---- SUPPRIMER STATION ----
-        function deleteStation(id) {
-            const station = stations.find(s => s.id === id);
-            stations = stations.filter(s => s.id !== id);
-            calculateCoverage();
-            updateUI();
-            addLog(`🗑️ ${station ? station.name : 'Station'} supprimée`, 'red');
-            toast(`🗑️ Station supprimée`, 'warning');
-        }
-
-        // ---- GÉNÉRER UTILISATEURS ----
-        function generateUsers() {
-            const count = 20 + Math.floor(Math.random() * 30);
-            users = [];
-            for (let i = 0; i < count; i++) {
-                users.push({
-                    id: `UE-${String(i + 1).padStart(3, '0')}`,
-                    lat: (33.53 + Math.random() * 0.12).toFixed(4),
-                    lng: (-7.70 + Math.random() * 0.16).toFixed(4),
-                    service: ['eMBB', 'uRLLC', 'mMTC'][Math.floor(Math.random() * 3)],
-                    dataRate: Math.round(50 + Math.random() * 150)
-                });
-            }
-            calculateCoverage();
-            updateUI();
-            addLog(`👥 ${users.length} utilisateurs générés`, 'green');
-            toast(`👥 ${users.length} utilisateurs créés !`, 'success');
-        }
-
-        // ---- CALCUL COUVERTURE ----
-        function calculateCoverage() {
-            coverageData = [];
-            if (stations.length === 0 || users.length === 0) return;
-
-            users.forEach(user => {
-                let bestRsrp = -200;
-                let bestStation = null;
-
-                stations.forEach(station => {
-                    const dist = haversine(parseFloat(user.lat), parseFloat(user.lng),
-                        parseFloat(station.lat), parseFloat(station.lng));
-                    const rsrp = station.power - 28 * Math.log10(dist * 1000 + 10);
-                    if (rsrp > bestRsrp) {
-                        bestRsrp = rsrp;
-                        bestStation = station.id;
-                    }
-                });
-
-                const status = bestRsrp > -80 ? 'good' : bestRsrp > -100 ? 'poor' : 'none';
-                coverageData.push({
-                    userId: user.id,
-                    rsrp: Math.round(bestRsrp),
-                    stationId: bestStation,
-                    status: status
-                });
-            });
-
-            stations.forEach(s => {
-                s.users = coverageData.filter(c => c.stationId === s.id && c.status !== 'none').length;
-            });
-        }
-
-        function haversine(lat1, lng1, lat2, lng2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) ** 2 +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLng / 2) ** 2;
-            return R * 2 * Math.asin(Math.sqrt(a));
-        }
-
-        // ---- OPTIMISATION IA ----
-        function optimizeNetwork() {
-            if (stations.length === 0) {
-                toast('⚠️ Ajoutez des stations d\'abord !', 'warning');
-                return;
-            }
-            if (users.length === 0) {
-                toast('⚠️ Générez des utilisateurs d\'abord !', 'warning');
-                return;
-            }
-
-            calculateCoverage();
-            const poor = coverageData.filter(c => c.status === 'poor' || c.status === 'none');
-            const container = document.getElementById('suggestionsContainer');
-
-            if (poor.length === 0) {
-                container.innerHTML = `
-                    <div class="suggestion-box" style="border-color:#34a853;background:#e6f4ea;">
-                        <div class="title">✅ Réseau optimal</div>
-                        <div class="desc">La couverture est excellente. Aucune amélioration nécessaire.</div>
+            <div class="panel">
+                <div class="panel-h"><span>Journal d'activité</span></div>
+                <div class="panel-body grow">
+                    <div class="log" id="logBox">
+                        <div class="log-line blue"><span class="t">[init]</span>Plateforme prête</div>
                     </div>
-                `;
-                toast('✅ Réseau déjà optimal !', 'success');
-                addLog('✅ Réseau optimal - aucune amélioration nécessaire', 'green');
-                return;
-            }
+                </div>
+            </div>
+        </aside>
+    </main>
 
-            // Calcul du centroïde des zones mal couvertes
-            let sumLat = 0,
-                sumLng = 0,
-                count = 0;
-            poor.forEach(p => {
-                const u = users.find(u => u.id === p.userId);
-                if (u) {
-                    sumLat += parseFloat(u.lat);
-                    sumLng += parseFloat(u.lng);
-                    count++;
+    <!-- ===== TOAST ===== -->
+    <div id="toast"></div>
+
+    <!-- ===== LEAFLET ===== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js">
+    </script>
+
+    <!-- ===== APPLICATION ===== -->
+    <script>
+        /* ============================================================
+           5G SMART PLANNER — MOTEUR COMPLET
+           ============================================================ */
+        const CENTER = [33.5731, -7.5898];
+        const CAPACITY_PER_STATION = 25;
+        const RSRP_GOOD = -85;
+        const RSRP_OK = -100;
+        const RSRP_MIN = -112;
+
+        let map, stations = [],
+            users = [];
+        let stationSeq = 1;
+        let placing = false;
+        let markersLayer, ringsLayer, usersLayer, linesLayer;
+        let selectedStationId = null;
+
+        // ---------- INIT MAP ----------
+        function initMap() {
+            map = L.map('map', { zoomControl: true, attributionControl: false }).setView(CENTER, 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            ringsLayer = L.layerGroup().addTo(map);
+            linesLayer = L.layerGroup().addTo(map);
+            usersLayer = L.layerGroup().addTo(map);
+            markersLayer = L.layerGroup().addTo(map);
+
+            map.on('click', (e) => {
+                if (!placing) return;
+                createStation(e.latlng.lat, e.latlng.lng);
+                setPlacing(false);
+            });
+        }
+
+        // ---------- RADIO MODEL ----------
+        function rsrpAt(station, latlng) {
+            const d = Math.max(map.distance([station.lat, station.lng], latlng), 1);
+            const n = 3.2;
+            return station.power - 10 * n * Math.log10(d);
+        }
+
+        function radiusForThreshold(station, threshold) {
+            const n = 3.2;
+            return Math.pow(10, (station.power - threshold) / (10 * n));
+        }
+
+        function classify(rsrp) {
+            if (rsrp >= RSRP_GOOD) return 'good';
+            if (rsrp >= RSRP_OK) return 'ok';
+            if (rsrp >= RSRP_MIN) return 'poor';
+            return 'none';
+        }
+        const COLORS = { good: '#34a853', ok: '#fbbc04', poor: '#ea4335', none: '#c5cdd8' };
+
+        // ---------- STATIONS ----------
+        function createStation(lat, lng, opts = {}) {
+            const st = {
+                id: 'gNB-' + String(stationSeq++).padStart(3, '0'),
+                name: opts.name || `gNodeB-${stations.length + 1}`,
+                lat,
+                lng,
+                power: opts.power || 43,
+                freq: 3.5,
+                users: 0,
+                ai: !!opts.ai
+            };
+            stations.push(st);
+            buildStationMarker(st);
+            recompute();
+            addLog(`📡 ${st.name} ajoutée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'blue');
+            toast(`Station ${st.name} ajoutée`, 'success');
+            return st;
+        }
+
+        function buildStationMarker(st) {
+            const icon = L.divIcon({
+                className: '',
+                html: `<div class="gnb-icon" id="icon-${st.id}">${st.ai ? '🤖' : '📡'}</div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 17]
+            });
+            st.marker = L.marker([st.lat, st.lng], { icon, draggable: true }).addTo(markersLayer);
+            st.marker.bindPopup(popupHTML(st));
+            st.marker.on('dragend', (e) => {
+                const p = e.target.getLatLng();
+                st.lat = p.lat;
+                st.lng = p.lng;
+                recompute();
+                addLog(`↔️ ${st.name} déplacée`, 'yellow');
+            });
+            st.marker.on('click', () => { selectedStationId = st.id;
+                refreshSidebar(); });
+        }
+
+        function popupHTML(st) {
+            return `<b>${st.name}</b><br>${st.power} dBm • ${st.freq} GHz<br>👥 <span id="pu-${st.id}">${st.users}</span> connectés
+            <br><button class="popup-del" onclick="deleteStation('${st.id}')">🗑️ Supprimer</button>`;
+        }
+
+        function deleteStation(id) {
+            const st = stations.find(s => s.id === id);
+            if (!st) return;
+            map.removeLayer(st.marker);
+            stations = stations.filter(s => s.id !== id);
+            recompute();
+            addLog(`🗑️ ${st.name} supprimée`, 'red');
+            toast(`Station supprimée`, 'warning');
+        }
+        window.deleteStation = deleteStation;
+
+        function moveStation(id, lat, lng) {
+            const st = stations.find(s => s.id === id);
+            if (!st) return;
+            st.lat = lat;
+            st.lng = lng;
+            st.marker.setLatLng([lat, lng]);
+            recompute();
+        }
+
+        // ---------- USERS ----------
+        function generateUsers() {
+            users = [];
+            const bounds = map.getBounds();
+            const clusterCount = 3 + Math.floor(Math.random() * 2);
+            const clusters = [];
+            for (let c = 0; c < clusterCount; c++) {
+                clusters.push({
+                    lat: bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth()),
+                    lng: bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest()),
+                    spread: 0.006 + Math.random() * 0.01
+                });
+            }
+            const total = 60 + Math.floor(Math.random() * 40);
+            for (let i = 0; i < total; i++) {
+                const c = clusters[Math.floor(Math.random() * clusters.length)];
+                const lat = c.lat + (Math.random() - 0.5) * c.spread;
+                const lng = c.lng + (Math.random() - 0.5) * c.spread;
+                users.push({
+                    id: 'UE-' + String(i + 1).padStart(3, '0'),
+                    lat,
+                    lng,
+                    service: ['eMBB', 'uRLLC', 'mMTC'][Math.floor(Math.random() * 3)]
+                });
+            }
+            recompute();
+            addLog(`👥 ${users.length} utilisateurs générés (${clusterCount} zones)`, 'green');
+            toast(`${users.length} utilisateurs générés`, 'success');
+        }
+
+        // ---------- COVERAGE ----------
+        function recompute() {
+            stations.forEach(s => s.users = 0);
+
+            users.forEach(u => {
+                let best = null,
+                    bestRsrp = -999;
+                stations.forEach(s => {
+                    const r = rsrpAt(s, [u.lat, u.lng]);
+                    if (r > bestRsrp) { bestRsrp = r;
+                        best = s; }
+                });
+                u.rsrp = stations.length ? Math.round(bestRsrp) : null;
+                u.status = stations.length ? classify(bestRsrp) : 'none';
+                u.stationId = (u.status !== 'none' && best) ? best.id : null;
+                if (u.stationId) {
+                    const st = stations.find(s => s.id === u.stationId);
+                    if (st) st.users++;
                 }
             });
 
-            const avgLat = sumLat / count + (Math.random() - 0.5) * 0.003;
-            const avgLng = sumLng / count + (Math.random() - 0.5) * 0.003;
-
-            // Ajouter la station IA
-            const newStation = {
-                id: `gNB-${String(stationIdCounter++).padStart(3, '0')}`,
-                name: `🤖 IA-${stations.length + 1}`,
-                lat: avgLat.toFixed(4),
-                lng: avgLng.toFixed(4),
-                power: 45,
-                frequency: 3.5,
-                users: 0
-            };
-            stations.push(newStation);
-            calculateCoverage();
-            updateUI();
-
-            container.innerHTML = `
-                <div class="suggestion-box" style="border-color:#e37400;background:#fef7e0;">
-                    <div class="title">📡 Nouvelle station recommandée</div>
-                    <div class="desc">📍 ${avgLat.toFixed(4)}, ${avgLng.toFixed(4)}</div>
-                    <div class="desc">👥 ${poor.length} utilisateurs mal couverts</div>
-                    <div style="margin-top:6px;font-size:12px;color:#34a853;">✅ Station ajoutée automatiquement</div>
-                </div>
-            `;
-
-            addLog(`🤖 IA : ${poor.length} utilisateurs mal couverts → station ajoutée`, 'orange');
-            toast(`🤖 Station IA ajoutée ! ${poor.length} utilisateurs mieux couverts.`, 'success');
+            drawRings();
+            drawUsers();
+            refreshSidebar();
+            updateKPIs();
         }
 
-        // ---- EFFACER TOUT ----
-        function clearAll() {
-            if (confirm('⚠️ Supprimer toutes les stations et utilisateurs ?')) {
-                stations = [];
-                users = [];
-                coverageData = [];
-                stationIdCounter = 1;
-                updateUI();
-                document.getElementById('suggestionsContainer').innerHTML =
-                    `<div class="empty-msg">En attente d'analyse...</div>`;
-                document.getElementById('logContainer').innerHTML =
-                    `<div class="log-line"><span class="time">[Reset]</span> <span class="orange">Tout a été effacé</span></div>`;
-                toast('🗑️ Tout a été effacé', 'warning');
-            }
+        function drawRings() {
+            ringsLayer.clearLayers();
+            stations.forEach(st => {
+                const rGood = radiusForThreshold(st, RSRP_GOOD);
+                const rOk = radiusForThreshold(st, RSRP_OK);
+                const rPoor = radiusForThreshold(st, RSRP_MIN);
+                L.circle([st.lat, st.lng], { radius: rPoor, color: COLORS.poor, weight: 0, fillOpacity: 0.08 })
+                    .addTo(ringsLayer);
+                L.circle([st.lat, st.lng], { radius: rOk, color: COLORS.ok, weight: 0, fillOpacity: 0.10 })
+                    .addTo(ringsLayer);
+                L.circle([st.lat, st.lng], { radius: rGood, color: COLORS.good, weight: 0, fillOpacity: 0.12 })
+                    .addTo(ringsLayer);
+                const el = document.getElementById('icon-' + st.id);
+                if (el) el.classList.toggle('sat', st.users > CAPACITY_PER_STATION * 0.9);
+                if (st.marker) { st.marker.setPopupContent(popupHTML(st)); }
+            });
         }
 
-        // ============================================================
-        //  MISE À JOUR UI
-        // ============================================================
-        function updateUI() {
-            // Stats
-            document.getElementById('statStations').textContent = stations.length;
-            document.getElementById('statUsers').textContent = users.length;
+        function drawUsers() {
+            usersLayer.clearLayers();
+            users.forEach(u => {
+                L.circleMarker([u.lat, u.lng], {
+                    radius: 3.5,
+                    color: COLORS[u.status],
+                    fillColor: COLORS[u.status],
+                    fillOpacity: 0.85,
+                    weight: 1,
+                    opacity: 0.9
+                }).bindTooltip(`${u.id} · ${u.rsrp ?? '—'} dBm`, { direction: 'top', opacity: 0.9 })
+                    .addTo(usersLayer);
+            });
+        }
 
-            const covPct = getCoveragePercent();
-            document.getElementById('statCoverage').textContent = covPct + '%';
+        // ---------- KPIs ----------
+        function updateKPIs() {
+            document.getElementById('kStations').textContent = stations.length;
+            document.getElementById('kUsers').textContent = users.length;
 
-            const latency = Math.round(10 + (100 - covPct) * 0.5);
-            document.getElementById('statLatency').textContent = latency + 'ms';
+            const covered = users.filter(u => u.status === 'good' || u.status === 'ok').length;
+            const coveragePct = users.length ? Math.round(covered / users.length * 100) : 0;
+            document.getElementById('kCoverage').textContent = coveragePct + '%';
 
-            const capacity = Math.min(30 + users.length * 1.5 + stations.length * 3, 95);
-            document.getElementById('statCapacity').textContent = Math.round(capacity) + '%';
+            const latency = users.length ? Math.round(4 + (100 - coveragePct) * 0.16) : 0;
+            document.getElementById('kLatency').textContent = latency + ' ms';
 
-            const saturated = stations.filter(s => (s.users || 0) > 15).length;
-            document.getElementById('statSaturated').textContent = saturated;
+            const avgLoad = stations.length ? Math.round(stations.reduce((a, s) => a + Math.min(s.users / CAPACITY_PER_STATION *
+                100, 100), 0) / stations.length) : 0;
+            document.getElementById('kCapacity').textContent = avgLoad + '%';
 
-            // Liste des stations
-            const listDiv = document.getElementById('stationsList');
+            const saturated = stations.filter(s => s.users > CAPACITY_PER_STATION * 0.9).length;
+            document.getElementById('kSaturated').textContent = saturated;
+        }
+
+        // ---------- SIDEBAR ----------
+        function refreshSidebar() {
+            document.getElementById('cntStations').textContent = stations.length;
+            const list = document.getElementById('stationsList');
             if (stations.length === 0) {
-                listDiv.innerHTML = `<div class="empty-msg">Aucune station. Cliquez sur "Ajouter station"</div>`;
-            } else {
-                listDiv.innerHTML = stations.map(s => `
-                    <div class="station-item" style="border-left-color: ${(s.users||0)>15 ? '#ea4335' : '#1a73e8'}">
-                        <div>
-                            <span class="name">${s.name}</span>
-                            <span class="info">📶 ${s.frequency}GHz ⚡${s.power}dBm 👥${s.users||0}</span>
-                        </div>
-                        <button class="del" onclick="deleteStation('${s.id}')">✕</button>
-                    </div>
-                `).join('');
+                list.innerHTML =
+                    `<div class="empty">Aucune station.<br>Cliquez sur « Ajouter station » puis sur la carte.</div>`;
+                return;
             }
+            list.innerHTML = stations.map(s => {
+                const sat = s.users > CAPACITY_PER_STATION * 0.9;
+                return `<div class="station-row ${sat ? 'sat' : ''}" onclick="focusStation('${s.id}')">
+              <span class="dot">${s.ai ? '🤖' : '📡'}</span>
+              <div class="meta">
+                <div class="name">${s.name}</div>
+                <div class="sub">${s.power} dBm · 👥 ${s.users}/${CAPACITY_PER_STATION} ${sat ? '⚠️ Saturée' : ''}</div>
+              </div>
+              <button class="del" onclick="event.stopPropagation(); deleteStation('${s.id}')">✕</button>
+            </div>`;
+            }).join('');
         }
 
-        function getCoveragePercent() {
-            if (users.length === 0 || coverageData.length === 0) return 0;
-            const covered = coverageData.filter(c => c.status !== 'none').length;
-            return Math.round(covered / users.length * 100);
+        function focusStation(id) {
+            const st = stations.find(s => s.id === id);
+            if (st) { map.panTo([st.lat, st.lng]);
+                st.marker.openPopup(); }
         }
+        window.focusStation = focusStation;
 
-        // ============================================================
-        //  TOAST & LOG
-        // ============================================================
-        function toast(msg, type) {
-            const el = document.getElementById('toast');
-            el.textContent = msg;
-            el.className = 'toast show ' + (type || '');
-            clearTimeout(el._timer);
-            el._timer = setTimeout(() => el.classList.remove('show'), 3000);
-        }
+        // ---------- AI OPTIMIZER ----------
+        function optimizeNetwork() {
+            if (stations.length === 0) { toast("Ajoutez au moins une station d'abord", 'warning'); return; }
+            if (users.length === 0) { toast("Générez des utilisateurs d'abord", 'warning'); return; }
 
-        function addLog(msg, color) {
-            const container = document.getElementById('logContainer');
-            const time = new Date().toLocaleTimeString();
-            const div = document.createElement('div');
-            div.className = 'log-line';
-            div.innerHTML = `<span class="time">[${time}]</span> <span class="${color || 'blue'}">${msg}</span>`;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
+            const suggestions = [];
 
-        // ============================================================
-        //  INITIALISATION
-        // ============================================================
-        // Ajouter des stations au démarrage
-        setTimeout(() => {
-            addStation();
-            addStation();
-            generateUsers();
-            addLog('🚀 5G Smart Planner démarré avec succès', 'green');
-        }, 300);
-    </script>
-
-</body>
-</html>
+            // 1) Grid scan for coverage gaps
+            const bounds = map.getBounds();
+            const steps = 14;
+            const gridPoints = [];
+            for (let i = 0; i <= steps; i++) {
+                for (let j = 0; j <= steps; j++) {
+                    const lat = bounds.getSouth() + (bounds.getNorth() - bounds.getSouth()) * i / steps;
+                    const lng = bounds.getWest()

@@ -3,687 +3,381 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>5G Smart Planner - Casablanca</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-    </script>
+    <title>5G Smart Planner</title>
     <style>
-        /* ===== RESET & BASE ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
         body {
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f0f4f8;
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f7fa;
             color: #1a2332;
-            height: 100vh;
-            overflow: hidden;
+            padding: 20px;
         }
 
-        /* ===== HEADER ===== */
-        .header {
-            background: linear-gradient(135deg, #ffffff, #f8faff);
-            border-bottom: 2px solid #e8edf5;
-            padding: 10px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 64px;
-            flex-shrink: 0;
-            z-index: 1000;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
         }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-left .logo {
-            font-size: 28px;
-        }
-        .header-left h1 {
-            font-size: 20px;
-            font-weight: 700;
+
+        h1 {
+            font-size: 24px;
             color: #0b1a33;
-            letter-spacing: -0.5px;
+            margin-bottom: 6px;
         }
-        .header-left .badge {
-            font-size: 11px;
-            background: #e8f0fe;
-            color: #1a73e8;
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-weight: 600;
+        .subtitle {
+            color: #5f6b7a;
+            font-size: 14px;
+            margin-bottom: 20px;
         }
-        .header-actions {
+
+        .buttons {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
+            margin-bottom: 25px;
         }
+
         .btn {
-            padding: 7px 18px;
+            padding: 10px 22px;
             border: none;
             border-radius: 8px;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            transition: all 0.2s;
         }
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        .btn:active {
-            transform: scale(0.96);
-        }
-        .btn-primary {
-            background: #1a73e8;
-            color: #fff;
-        }
-        .btn-primary:hover {
-            background: #1557b0;
-        }
-        .btn-success {
+        .btn-green {
             background: #34a853;
-            color: #fff;
+            color: white;
         }
-        .btn-success:hover {
-            background: #2d8f47;
+        .btn-blue {
+            background: #1a73e8;
+            color: white;
         }
-        .btn-warning {
+        .btn-orange {
             background: #fbbc04;
             color: #1a2332;
         }
-        .btn-warning:hover {
-            background: #e5a800;
-        }
-        .btn-danger {
+        .btn-red {
             background: #ea4335;
-            color: #fff;
+            color: white;
         }
-        .btn-danger:hover {
-            background: #d33426;
-        }
-        .btn-outline {
-            background: transparent;
-            color: #5f6b7a;
-            border: 1.5px solid #d0d7e2;
-        }
-        .btn-outline:hover {
-            background: #f0f4f8;
-            border-color: #1a73e8;
-            color: #1a73e8;
+        .btn-purple {
+            background: #7c3aed;
+            color: white;
         }
 
-        /* ===== APP ===== */
-        .app {
-            display: flex;
-            height: calc(100vh - 64px);
-        }
-
-        /* ===== MAP ===== */
-        .map-wrapper {
-            flex: 1;
-            position: relative;
-            background: #e8edf5;
-        }
-        #map {
-            width: 100%;
-            height: 100%;
-            background: #e8edf5;
-        }
-        #map .leaflet-tile-pane {
-            filter: brightness(1) contrast(1);
-        }
-
-        /* ===== OVERLAY MAP ===== */
-        .map-overlay {
-            position: absolute;
-            bottom: 24px;
-            left: 24px;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 0, 0, 0.06);
-            border-radius: 14px;
-            padding: 14px 24px;
-            display: flex;
-            gap: 32px;
-            z-index: 500;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-        }
-        .map-overlay .item {
-            text-align: center;
-        }
-        .map-overlay .item .val {
-            font-size: 20px;
-            font-weight: 700;
-            color: #0b1a33;
-        }
-        .map-overlay .item .val.green {
-            color: #34a853;
-        }
-        .map-overlay .item .val.orange {
-            color: #e37400;
-        }
-        .map-overlay .item .val.blue {
-            color: #1a73e8;
-        }
-        .map-overlay .item .val.red {
-            color: #ea4335;
-        }
-        .map-overlay .item .lbl {
-            font-size: 10px;
-            color: #5f6b7a;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            margin-top: 2px;
-        }
-
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            width: 360px;
-            min-width: 320px;
-            background: #ffffff;
-            border-left: 1px solid #e8edf5;
-            padding: 18px 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .sidebar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .sidebar::-webkit-scrollbar-track {
-            background: #f0f4f8;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #d0d7e2;
-            border-radius: 4px;
-        }
-
-        .section {
-            background: #f8faff;
-            border-radius: 12px;
-            padding: 14px 16px;
-            border: 1px solid #e8edf5;
-        }
-        .section h3 {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #5f6b7a;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        /* ===== METRICS ===== */
-        .metrics {
+        .stats {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
         }
-        .metric {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 10px 12px;
+
+        .stat-card {
+            background: #f8faff;
+            border-radius: 10px;
+            padding: 14px 16px;
             text-align: center;
             border: 1px solid #e8edf5;
-            transition: all 0.2s;
         }
-        .metric:hover {
-            border-color: #1a73e8;
-            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.06);
-        }
-        .metric .num {
-            font-size: 20px;
+        .stat-card .number {
+            font-size: 26px;
             font-weight: 700;
             color: #0b1a33;
         }
-        .metric .num.green {
+        .stat-card .number.green {
             color: #34a853;
         }
-        .metric .num.orange {
-            color: #e37400;
-        }
-        .metric .num.blue {
+        .stat-card .number.blue {
             color: #1a73e8;
         }
-        .metric .num.red {
+        .stat-card .number.orange {
+            color: #e37400;
+        }
+        .stat-card .number.red {
             color: #ea4335;
         }
-        .metric .lbl {
-            font-size: 9px;
+        .stat-card .label {
+            font-size: 11px;
             color: #5f6b7a;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
-            margin-top: 3px;
-        }
-        .metric .bar {
-            width: 100%;
-            height: 4px;
-            background: #e8edf5;
-            border-radius: 2px;
-            margin-top: 6px;
-            overflow: hidden;
-        }
-        .metric .bar .fill {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.8s ease;
-        }
-        .metric .bar .fill.green {
-            background: #34a853;
-        }
-        .metric .bar .fill.orange {
-            background: #fbbc04;
-        }
-        .metric .bar .fill.blue {
-            background: #1a73e8;
-        }
-        .metric .bar .fill.red {
-            background: #ea4335;
+            margin-top: 4px;
         }
 
-        /* ===== STATIONS LIST ===== */
-        .stations-list {
-            max-height: 160px;
-            overflow-y: auto;
+        .section {
+            background: #f8faff;
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-bottom: 15px;
+            border: 1px solid #e8edf5;
         }
-        .stations-list::-webkit-scrollbar {
-            width: 3px;
+        .section h3 {
+            font-size: 13px;
+            color: #5f6b7a;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .stations-list::-webkit-scrollbar-thumb {
-            background: #d0d7e2;
-            border-radius: 4px;
-        }
+
         .station-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 10px;
-            background: #ffffff;
+            padding: 8px 12px;
+            background: white;
             border-radius: 6px;
-            font-size: 12px;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
             border-left: 3px solid #1a73e8;
-            transition: all 0.2s;
-            border: 1px solid #e8edf5;
-            border-left-width: 3px;
-        }
-        .station-item:hover {
-            background: #f8faff;
+            font-size: 13px;
         }
         .station-item .name {
             font-weight: 600;
-            color: #0b1a33;
         }
         .station-item .info {
             color: #5f6b7a;
-            font-size: 10px;
+            font-size: 12px;
         }
         .station-item .del {
             background: none;
             border: none;
             color: #b0b8c4;
             cursor: pointer;
-            font-size: 14px;
-            padding: 0 4px;
-            transition: color 0.2s;
+            font-size: 16px;
         }
         .station-item .del:hover {
             color: #ea4335;
         }
-        .station-item.overloaded {
-            border-left-color: #ea4335;
-            background: #fef6f5;
-        }
 
-        /* ===== SUGGESTIONS ===== */
-        .suggestion {
-            background: #f0f7ff;
+        .suggestion-box {
+            background: #e8f0fe;
+            border-radius: 8px;
+            padding: 12px 16px;
             border-left: 3px solid #1a73e8;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-bottom: 4px;
+            font-size: 13px;
         }
-        .suggestion .title {
+        .suggestion-box .title {
             font-weight: 600;
             color: #0b1a33;
         }
-        .suggestion .desc {
+        .suggestion-box .desc {
             color: #5f6b7a;
-            font-size: 11px;
+            font-size: 12px;
             margin-top: 2px;
         }
-        .suggestion .badge {
-            font-size: 9px;
-            padding: 1px 10px;
-            border-radius: 12px;
-            font-weight: 700;
-            display: inline-block;
-            margin-top: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        .suggestion .badge.high {
-            background: #fce8e6;
-            color: #ea4335;
-        }
-        .suggestion .badge.ok {
-            background: #e6f4ea;
-            color: #34a853;
-        }
-        .suggestion .badge.medium {
-            background: #fef7e0;
-            color: #e37400;
-        }
 
-        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            background: #ffffff;
-            border: 1px solid #e8edf5;
-            border-radius: 12px;
+            background: #1a2332;
+            color: white;
             padding: 14px 24px;
-            color: #0b1a33;
-            font-size: 13px;
-            z-index: 9999;
+            border-radius: 10px;
+            font-size: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
             transform: translateY(80px);
             opacity: 0;
             transition: all 0.4s ease;
-            max-width: 400px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
-            font-weight: 500;
+            z-index: 999;
         }
         .toast.show {
             transform: translateY(0);
             opacity: 1;
         }
         .toast.success {
-            border-left: 4px solid #34a853;
+            background: #34a853;
         }
         .toast.warning {
-            border-left: 4px solid #fbbc04;
+            background: #e37400;
         }
         .toast.error {
-            border-left: 4px solid #ea4335;
+            background: #ea4335;
         }
 
-        /* ===== IMAGE DE FOND ===== */
-        .map-bg-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 0;
-            opacity: 0.06;
-            pointer-events: none;
+        .empty-msg {
+            color: #b0b8c4;
+            font-size: 13px;
+            text-align: center;
+            padding: 10px 0;
         }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 300px;
-                min-width: 260px;
-                padding: 14px;
-            }
+        .log-container {
+            background: #0b1a33;
+            color: #a8c7fa;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 120px;
+            overflow-y: auto;
+            margin-top: 10px;
         }
-        @media (max-width: 768px) {
-            .app {
-                flex-direction: column;
+        .log-container .log-line {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .log-container .log-line .time {
+            color: #5f6b7a;
+            margin-right: 10px;
+        }
+        .log-container .log-line .green {
+            color: #34a853;
+        }
+        .log-container .log-line .orange {
+            color: #fbbc04;
+        }
+        .log-container .log-line .red {
+            color: #ea4335;
+        }
+        .log-container .log-line .blue {
+            color: #60a5fa;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
             }
-            .sidebar {
-                width: 100%;
-                min-width: unset;
-                max-height: 45vh;
-                border-left: none;
-                border-top: 1px solid #e8edf5;
-                padding: 14px;
-            }
-            .map-wrapper {
-                height: 55vh;
-            }
-            .header {
-                flex-wrap: wrap;
-                height: auto;
-                padding: 8px 14px;
-                gap: 6px;
-            }
-            .header-actions .btn {
-                font-size: 10px;
-                padding: 4px 10px;
-            }
-            .metrics {
+            .stats {
                 grid-template-columns: 1fr 1fr 1fr;
             }
-            .map-overlay {
-                padding: 10px 16px;
-                gap: 18px;
-                bottom: 12px;
-                left: 12px;
-                flex-wrap: wrap;
-            }
-            .map-overlay .item .val {
-                font-size: 16px;
-            }
-        }
-        @media (max-width: 480px) {
-            .metrics {
-                grid-template-columns: 1fr 1fr;
-            }
-            .sidebar {
-                max-height: 50vh;
-            }
-            .header-left h1 {
-                font-size: 16px;
-            }
-            .map-overlay {
-                gap: 12px;
+            .buttons .btn {
+                font-size: 11px;
                 padding: 8px 14px;
             }
-            .map-overlay .item .val {
-                font-size: 14px;
+            .stat-card .number {
+                font-size: 20px;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== TOAST ===== -->
-    <div class="toast" id="toast"></div>
+    <div class="container">
 
-    <!-- ===== HEADER ===== -->
-    <header class="header">
-        <div class="header-left">
-            <span class="logo">📡</span>
-            <h1>5G Smart Planner</h1>
-            <span class="badge">Casablanca</span>
-            <span class="badge" style="background:#e6f4ea;color:#34a853;">● Live</span>
+        <h1>📡 5G Smart Planner</h1>
+        <div class="subtitle">Casablanca • Planification réseau 5G</div>
+
+        <!-- BOUTONS -->
+        <div class="buttons">
+            <button class="btn btn-green" onclick="generateUsers()">👥 Générer utilisateurs</button>
+            <button class="btn btn-blue" onclick="addStation()">📡 Ajouter station</button>
+            <button class="btn btn-orange" onclick="optimizeNetwork()">🤖 Optimiser (IA)</button>
+            <button class="btn btn-red" onclick="clearAll()">🗑️ Tout effacer</button>
         </div>
-        <div class="header-actions">
-            <button class="btn btn-success" onclick="generateUsers()">👥 Générer UE</button>
-            <button class="btn btn-primary" onclick="addRandomStation()">📡 Ajouter gNB</button>
-            <button class="btn btn-warning" onclick="optimizeNetwork()">🤖 IA Optimiser</button>
-            <button class="btn btn-danger" onclick="clearAll()">🗑️ Reset</button>
-        </div>
-    </header>
 
-    <!-- ===== APP ===== -->
-    <div class="app">
-
-        <!-- MAP -->
-        <div class="map-wrapper">
-            <!-- Image de fond (casablanca) -->
-            <svg class="map-bg-image" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
-                <rect width="800" height="600" fill="#f0f4f8"/>
-                <circle cx="400" cy="300" r="200" fill="#e0e8f5" opacity="0.3"/>
-                <circle cx="400" cy="300" r="120" fill="#d5e0f0" opacity="0.3"/>
-                <circle cx="400" cy="300" r="60" fill="#c8d8ec" opacity="0.3"/>
-                <text x="400" y="300" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="28" fill="#c0d0e0" opacity="0.5" font-weight="300">CASABLANCA</text>
-                <text x="400" y="330" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" fill="#c8d8ec" opacity="0.4">🌍 Maroc</text>
-            </svg>
-
-            <div id="map"></div>
-
-            <!-- Overlay -->
-            <div class="map-overlay">
-                <div class="item"><div class="val green" id="ovCoverage">0%</div><div class="lbl">Couverture</div></div>
-                <div class="item"><div class="val blue" id="ovUsers">0</div><div class="lbl">Utilisateurs</div></div>
-                <div class="item"><div class="val blue" id="ovStations">0</div><div class="lbl">Stations</div></div>
-                <div class="item"><div class="val orange" id="ovLatency">0ms</div><div class="lbl">Latence</div></div>
+        <!-- STATS -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number blue" id="statStations">0</div>
+                <div class="label">Stations</div>
+            </div>
+            <div class="stat-card">
+                <div class="number blue" id="statUsers">0</div>
+                <div class="label">Utilisateurs</div>
+            </div>
+            <div class="stat-card">
+                <div class="number green" id="statCoverage">0%</div>
+                <div class="label">Couverture</div>
+            </div>
+            <div class="stat-card">
+                <div class="number orange" id="statLatency">0ms</div>
+                <div class="label">Latence</div>
+            </div>
+            <div class="stat-card">
+                <div class="number orange" id="statCapacity">0%</div>
+                <div class="label">Capacité</div>
+            </div>
+            <div class="stat-card">
+                <div class="number red" id="statSaturated">0</div>
+                <div class="label">Saturées</div>
             </div>
         </div>
 
-        <!-- SIDEBAR -->
-        <div class="sidebar">
-
-            <!-- KPIs -->
-            <div class="section">
-                <h3>📊 Indicateurs temps réel</h3>
-                <div class="metrics" id="metricsContainer">
-                    <div class="metric"><div class="num blue" id="kpiCoverage">0%</div><div class="lbl">Couverture</div><div class="bar"><div class="fill blue" id="kpiCoverageBar" style="width:0%"></div></div></div>
-                    <div class="metric"><div class="num green" id="kpiLatency">0ms</div><div class="lbl">Latence</div></div>
-                    <div class="metric"><div class="num orange" id="kpiCapacity">0%</div><div class="lbl">Capacité</div><div class="bar"><div class="fill orange" id="kpiCapacityBar" style="width:0%"></div></div></div>
-                    <div class="metric"><div class="num blue" id="kpiUsers">0</div><div class="lbl">UE connectés</div></div>
-                    <div class="metric"><div class="num blue" id="kpiStations">0</div><div class="lbl">gNodeB actifs</div></div>
-                    <div class="metric"><div class="num red" id="kpiSaturated">0</div><div class="lbl">Saturées</div></div>
-                </div>
+        <!-- STATIONS -->
+        <div class="section">
+            <h3>📡 Stations gNodeB</h3>
+            <div id="stationsList">
+                <div class="empty-msg">Aucune station. Cliquez sur "Ajouter station"</div>
             </div>
-
-            <!-- Stations -->
-            <div class="section">
-                <h3>📡 Stations gNodeB</h3>
-                <div class="stations-list" id="stationsList">
-                    <div style="color:#b0b8c4;font-size:12px;text-align:center;padding:12px 0;">Aucune station</div>
-                </div>
-            </div>
-
-            <!-- Suggestions -->
-            <div class="section">
-                <h3>🤖 Suggestions IA</h3>
-                <div id="suggestionsContainer">
-                    <div style="color:#b0b8c4;font-size:12px;text-align:center;padding:8px 0;">En attente d'analyse...</div>
-                </div>
-            </div>
-
         </div>
+
+        <!-- SUGGESTIONS -->
+        <div class="section">
+            <h3>🤖 Suggestions IA</h3>
+            <div id="suggestionsContainer">
+                <div class="empty-msg">En attente d'analyse...</div>
+            </div>
+        </div>
+
+        <!-- LOG -->
+        <div class="section" style="background:#0b1a33;border-color:#1a2332;">
+            <h3 style="color:#5f6b7a;">📋 Journal d'activité</h3>
+            <div class="log-container" id="logContainer">
+                <div class="log-line"><span class="time">[Démarrage]</span> <span class="blue">Application 5G Smart Planner prête</span></div>
+            </div>
+        </div>
+
     </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
 
     <script>
         // ============================================================
-        //  5G SMART PLANNER - APPLICATION COMPLÈTE
-        //  TOUS LES BOUTONS FONCTIONNENT !
+        //  DONNÉES
         // ============================================================
-
-        // ---- DONNÉES ----
         let stations = [];
         let users = [];
         let coverageData = [];
         let stationIdCounter = 1;
-        let map = null;
-        let mapMarkers = { stations: [], users: [] };
-        let mapCircles = [];
 
-        // ---- CONSTANTES ----
-        const CENTER = [33.5731, -7.5898];
-        const BOUNDS = [
-            [33.52, -7.65],
-            [33.62, -7.50]
-        ];
-
-        // ---- INIT MAP ----
-        function initMap() {
-            map = L.map('map', {
-                center: CENTER,
-                zoom: 12,
-                zoomControl: false
-            });
-
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '© OpenStreetMap',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
-
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
-            map.fitBounds(BOUNDS);
-
-            // Points d'intérêt
-            const landmarks = [
-                { name: "🕌 Mosquée Hassan II", lat: 33.6085, lng: -7.6330 },
-                { name: "🏛️ Place Mohammed V", lat: 33.5961, lng: -7.6156 },
-                { name: "🌊 Ain Diab", lat: 33.5880, lng: -7.7180 },
-                { name: "⚓ Casa Port", lat: 33.5950, lng: -7.6000 },
-                { name: "🛍️ Maarif", lat: 33.5850, lng: -7.6030 }
-            ];
-            landmarks.forEach(lm => {
-                L.marker([lm.lat, lm.lng], {
-                    icon: L.divIcon({
-                        html: `<div style="font-size:16px;">📍</div>`,
-                        className: '',
-                        iconSize: [20, 20],
-                        iconAnchor: [10, 20]
-                    })
-                }).addTo(map).bindPopup(`<b>${lm.name}</b>`);
-            });
-
-            // Stations initiales
-            setTimeout(() => {
-                addStation(33.5731, -7.5898);
-                addStation(33.5850, -7.6200);
-                addStation(33.5600, -7.5750);
-                generateUsers();
-            }, 400);
-        }
+        // ============================================================
+        //  FONCTIONS PRINCIPALES
+        // ============================================================
 
         // ---- AJOUTER STATION ----
-        function addStation(lat, lng) {
-            if (!lat || !lng) {
-                lat = 33.54 + Math.random() * 0.08;
-                lng = -7.68 + Math.random() * 0.12;
-            }
-            const s = {
+        function addStation() {
+            const lat = 33.54 + Math.random() * 0.08;
+            const lng = -7.68 + Math.random() * 0.12;
+
+            const station = {
                 id: `gNB-${String(stationIdCounter++).padStart(3, '0')}`,
                 name: `gNodeB-${stations.length + 1}`,
-                lat: lat,
-                lng: lng,
+                lat: lat.toFixed(4),
+                lng: lng.toFixed(4),
                 power: 40 + Math.floor(Math.random() * 10),
                 frequency: 3.5,
                 users: 0
             };
-            stations.push(s);
+            stations.push(station);
             calculateCoverage();
-            updateAll();
-            toast(`📡 ${s.name} ajoutée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'success');
-            return s;
-        }
-
-        function addRandomStation() {
-            const lat = 33.54 + Math.random() * 0.08;
-            const lng = -7.68 + Math.random() * 0.12;
-            addStation(lat, lng);
+            updateUI();
+            addLog(`📡 ${station.name} ajoutée à (${station.lat}, ${station.lng})`, 'blue');
+            toast(`📡 Station ajoutée !`, 'success');
         }
 
         // ---- SUPPRIMER STATION ----
         function deleteStation(id) {
+            const station = stations.find(s => s.id === id);
             stations = stations.filter(s => s.id !== id);
             calculateCoverage();
-            updateAll();
+            updateUI();
+            addLog(`🗑️ ${station ? station.name : 'Station'} supprimée`, 'red');
             toast(`🗑️ Station supprimée`, 'warning');
         }
 
@@ -694,15 +388,16 @@
             for (let i = 0; i < count; i++) {
                 users.push({
                     id: `UE-${String(i + 1).padStart(3, '0')}`,
-                    lat: 33.53 + Math.random() * 0.12,
-                    lng: -7.70 + Math.random() * 0.16,
+                    lat: (33.53 + Math.random() * 0.12).toFixed(4),
+                    lng: (-7.70 + Math.random() * 0.16).toFixed(4),
                     service: ['eMBB', 'uRLLC', 'mMTC'][Math.floor(Math.random() * 3)],
-                    dataRate: 50 + Math.random() * 150
+                    dataRate: Math.round(50 + Math.random() * 150)
                 });
             }
             calculateCoverage();
-            updateAll();
-            toast(`👥 ${users.length} utilisateurs générés`, 'success');
+            updateUI();
+            addLog(`👥 ${users.length} utilisateurs générés`, 'green');
+            toast(`👥 ${users.length} utilisateurs créés !`, 'success');
         }
 
         // ---- CALCUL COUVERTURE ----
@@ -713,14 +408,17 @@
             users.forEach(user => {
                 let bestRsrp = -200;
                 let bestStation = null;
+
                 stations.forEach(station => {
-                    const dist = haversine(user.lat, user.lng, station.lat, station.lng);
+                    const dist = haversine(parseFloat(user.lat), parseFloat(user.lng),
+                        parseFloat(station.lat), parseFloat(station.lng));
                     const rsrp = station.power - 28 * Math.log10(dist * 1000 + 10);
                     if (rsrp > bestRsrp) {
                         bestRsrp = rsrp;
                         bestStation = station.id;
                     }
                 });
+
                 const status = bestRsrp > -80 ? 'good' : bestRsrp > -100 ? 'poor' : 'none';
                 coverageData.push({
                     userId: user.id,
@@ -762,146 +460,150 @@
 
             if (poor.length === 0) {
                 container.innerHTML = `
-                    <div class="suggestion" style="border-color:#34a853;background:#e6f4ea;">
+                    <div class="suggestion-box" style="border-color:#34a853;background:#e6f4ea;">
                         <div class="title">✅ Réseau optimal</div>
                         <div class="desc">La couverture est excellente. Aucune amélioration nécessaire.</div>
-                        <span class="badge ok">Parfait</span>
                     </div>
                 `;
-                toast('✅ Réseau optimisé !', 'success');
+                toast('✅ Réseau déjà optimal !', 'success');
+                addLog('✅ Réseau optimal - aucune amélioration nécessaire', 'green');
                 return;
             }
 
+            // Calcul du centroïde des zones mal couvertes
             let sumLat = 0,
                 sumLng = 0,
                 count = 0;
             poor.forEach(p => {
                 const u = users.find(u => u.id === p.userId);
                 if (u) {
-                    sumLat += u.lat;
-                    sumLng += u.lng;
+                    sumLat += parseFloat(u.lat);
+                    sumLng += parseFloat(u.lng);
                     count++;
                 }
             });
 
             const avgLat = sumLat / count + (Math.random() - 0.5) * 0.003;
             const avgLng = sumLng / count + (Math.random() - 0.5) * 0.003;
-            const newStation = addStation(avgLat, avgLng);
-            newStation.name = `🤖 IA-${stations.length}`;
+
+            // Ajouter la station IA
+            const newStation = {
+                id: `gNB-${String(stationIdCounter++).padStart(3, '0')}`,
+                name: `🤖 IA-${stations.length + 1}`,
+                lat: avgLat.toFixed(4),
+                lng: avgLng.toFixed(4),
+                power: 45,
+                frequency: 3.5,
+                users: 0
+            };
+            stations.push(newStation);
+            calculateCoverage();
+            updateUI();
 
             container.innerHTML = `
-                <div class="suggestion" style="border-color:#e37400;background:#fef7e0;">
+                <div class="suggestion-box" style="border-color:#e37400;background:#fef7e0;">
                     <div class="title">📡 Nouvelle station recommandée</div>
                     <div class="desc">📍 ${avgLat.toFixed(4)}, ${avgLng.toFixed(4)}</div>
                     <div class="desc">👥 ${poor.length} utilisateurs mal couverts</div>
-                    <span class="badge high">Priorité haute</span>
-                    <div style="margin-top:4px;font-size:11px;color:#34a853;">✅ Station ajoutée automatiquement</div>
+                    <div style="margin-top:6px;font-size:12px;color:#34a853;">✅ Station ajoutée automatiquement</div>
                 </div>
             `;
 
-            calculateCoverage();
-            updateAll();
+            addLog(`🤖 IA : ${poor.length} utilisateurs mal couverts → station ajoutée`, 'orange');
             toast(`🤖 Station IA ajoutée ! ${poor.length} utilisateurs mieux couverts.`, 'success');
         }
 
-        // ---- EFFACER ----
+        // ---- EFFACER TOUT ----
         function clearAll() {
             if (confirm('⚠️ Supprimer toutes les stations et utilisateurs ?')) {
                 stations = [];
                 users = [];
                 coverageData = [];
                 stationIdCounter = 1;
-                updateAll();
-                document.getElementById('suggestionsContainer').innerHTML = `
-                    <div style="color:#b0b8c4;font-size:12px;text-align:center;padding:8px 0;">En attente d'analyse...</div>
-                `;
+                updateUI();
+                document.getElementById('suggestionsContainer').innerHTML =
+                    `<div class="empty-msg">En attente d'analyse...</div>`;
+                document.getElementById('logContainer').innerHTML =
+                    `<div class="log-line"><span class="time">[Reset]</span> <span class="orange">Tout a été effacé</span></div>`;
                 toast('🗑️ Tout a été effacé', 'warning');
             }
         }
 
-        // ---- UPDATE MAP ----
-        function updateMap() {
-            if (!map) return;
-            mapMarkers.stations.forEach(m => map.removeLayer(m));
-            mapMarkers.users.forEach(m => map.removeLayer(m));
-            mapCircles.forEach(c => map.removeLayer(c));
-            mapMarkers.stations = [];
-            mapMarkers.users = [];
-            mapCircles = [];
+        // ============================================================
+        //  MISE À JOUR UI
+        // ============================================================
+        function updateUI() {
+            // Stats
+            document.getElementById('statStations').textContent = stations.length;
+            document.getElementById('statUsers').textContent = users.length;
 
-            // Stations
-            stations.forEach(s => {
-                const isOverloaded = (s.users || 0) > 15;
+            const covPct = getCoveragePercent();
+            document.getElementById('statCoverage').textContent = covPct + '%';
 
-                // Icône station
-                const icon = L.divIcon({
-                    html: `
-                        <div style="
-                            background: ${isOverloaded ? '#ea4335' : '#1a73e8'};
-                            width: ${isOverloaded ? 16 : 14}px;
-                            height: ${isOverloaded ? 16 : 14}px;
-                            border-radius: 50%;
-                            border: 2px solid ${isOverloaded ? '#f5c6c2' : '#a8c7fa'};
-                            box-shadow: 0 0 16px ${isOverloaded ? 'rgba(234,67,53,0.3)' : 'rgba(26,115,232,0.25)'};
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 8px;
-                            color: white;
-                            font-weight: 700;
-                        ">
-                            ${isOverloaded ? '!' : ''}
+            const latency = Math.round(10 + (100 - covPct) * 0.5);
+            document.getElementById('statLatency').textContent = latency + 'ms';
+
+            const capacity = Math.min(30 + users.length * 1.5 + stations.length * 3, 95);
+            document.getElementById('statCapacity').textContent = Math.round(capacity) + '%';
+
+            const saturated = stations.filter(s => (s.users || 0) > 15).length;
+            document.getElementById('statSaturated').textContent = saturated;
+
+            // Liste des stations
+            const listDiv = document.getElementById('stationsList');
+            if (stations.length === 0) {
+                listDiv.innerHTML = `<div class="empty-msg">Aucune station. Cliquez sur "Ajouter station"</div>`;
+            } else {
+                listDiv.innerHTML = stations.map(s => `
+                    <div class="station-item" style="border-left-color: ${(s.users||0)>15 ? '#ea4335' : '#1a73e8'}">
+                        <div>
+                            <span class="name">${s.name}</span>
+                            <span class="info">📶 ${s.frequency}GHz ⚡${s.power}dBm 👥${s.users||0}</span>
                         </div>
-                    `,
-                    className: '',
-                    iconSize: [isOverloaded ? 16 : 14, isOverloaded ? 16 : 14],
-                    iconAnchor: [isOverloaded ? 8 : 7, isOverloaded ? 8 : 7]
-                });
+                        <button class="del" onclick="deleteStation('${s.id}')">✕</button>
+                    </div>
+                `).join('');
+            }
+        }
 
-                const marker = L.marker([s.lat, s.lng], { icon: icon })
-                    .addTo(map)
-                    .bindPopup(`
-                        <div style="color:#0b1a33;font-family:Segoe UI,sans-serif;min-width:150px;">
-                            <div style="font-weight:700;font-size:14px;">${s.name}</div>
-                            <div style="color:#5f6b7a;font-size:11px;margin:2px 0;">📶 ${s.frequency} GHz | ⚡ ${s.power} dBm</div>
-                            <div style="color:#5f6b7a;font-size:11px;">👥 ${s.users || 0} utilisateurs</div>
-                            <div style="color:#b0b8c4;font-size:10px;">📍 ${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</div>
-                            <button onclick="deleteStation('${s.id}')" style="margin-top:6px;background:#ea4335;color:#fff;border:none;border-radius:4px;padding:3px 14px;cursor:pointer;font-size:11px;font-family:inherit;">🗑️ Supprimer</button>
-                        </div>
-                    `);
-                mapMarkers.stations.push(marker);
+        function getCoveragePercent() {
+            if (users.length === 0 || coverageData.length === 0) return 0;
+            const covered = coverageData.filter(c => c.status !== 'none').length;
+            return Math.round(covered / users.length * 100);
+        }
 
-                // Cercle de couverture
-                const radius = 100 + (s.power - 40) * 15;
-                const circle = L.circle([s.lat, s.lng], {
-                    radius: radius,
-                    color: '#1a73e8',
-                    fillColor: '#1a73e8',
-                    fillOpacity: 0.05,
-                    weight: 1.5,
-                    opacity: 0.15
-                }).addTo(map);
-                mapCircles.push(circle);
-            });
+        // ============================================================
+        //  TOAST & LOG
+        // ============================================================
+        function toast(msg, type) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = 'toast show ' + (type || '');
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => el.classList.remove('show'), 3000);
+        }
 
-            // Utilisateurs
-            users.forEach(u => {
-                const cov = coverageData.find(c => c.userId === u.id);
-                const isCovered = cov && cov.status !== 'none';
-                const icon = L.divIcon({
-                    html: `
-                        <div style="
-                            background: ${isCovered ? '#34a853' : '#ea4335'};
-                            width: 8px;
-                            height: 8px;
-                            border-radius: 50%;
-                            border: 1px solid ${isCovered ? 'rgba(52,168,83,0.3)' : 'rgba(234,67,53,0.3)'};
-                            box-shadow: 0 0 8px ${isCovered ? 'rgba(52,168,83,0.2)' : 'rgba(234,67,53,0.2)'};
-                        "></div>
-                    `,
-                    className: '',
-                    iconSize: [8, 8],
-                    iconAnchor: [4, 4]
-                });
-                const marker = L.marker([u.lat, u.lng], { icon: icon })
-                    .addTo(map
+        function addLog(msg, color) {
+            const container = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            div.innerHTML = `<span class="time">[${time}]</span> <span class="${color || 'blue'}">${msg}</span>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ============================================================
+        //  INITIALISATION
+        // ============================================================
+        // Ajouter des stations au démarrage
+        setTimeout(() => {
+            addStation();
+            addStation();
+            generateUsers();
+            addLog('🚀 5G Smart Planner démarré avec succès', 'green');
+        }, 300);
+    </script>
+
+</body>
+</html>

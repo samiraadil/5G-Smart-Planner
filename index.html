@@ -1,972 +1,844 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>5G Smart Planner</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        /* ============================================================
-           STYLE CLAIR & PROFESSIONNEL
-           ============================================================ */
-        :root {
-            --bg: #f0f4f9;
-            --panel: #ffffff;
-            --panel-2: #f8faff;
-            --line: #e2e8f0;
-            --text: #0b1a33;
-            --text-dim: #5f6b7a;
-            --text-mute: #9aa6b5;
-            --blue: #1a73e8;
-            --blue-light: #e8f0fe;
-            --green: #34a853;
-            --green-light: #e6f4ea;
-            --yellow: #e37400;
-            --yellow-light: #fef7e0;
-            --red: #ea4335;
-            --red-light: #fce8e6;
-            --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-            --radius: 12px;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>5G Smart Planner — Étude de Couverture</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- Blueprint drafting palette ---- */
+    --bp:#0a3556;            /* blueprint base */
+    --bp-2:#0e4370;          /* panel */
+    --bp-3:#124d80;          /* panel elevated / hover */
+    --line:#2c6a99;          /* rules & borders */
+    --line-soft:rgba(191,227,245,0.14);
+    --ink:#eaf4fb;           /* primary text (drafting ink) */
+    --ink-dim:#9dc3dd;
+    --ink-mute:#5f8bab;
+    --paper:#eef6fb;         /* paper accents */
+    --amber:#f2a65a;         /* AI / optimisation accent */
+    --amber-dim:#b97a37;
+    --good:#7fd9a8;
+    --ok:#f2c94c;
+    --poor:#ef8477;
+    --none:#3c6a8c;
+    --radius:3px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, var(--line-soft) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--line-soft) 0 1px, transparent 1px 28px),
+      radial-gradient(ellipse at 20% -10%, rgba(191,227,245,0.06), transparent 55%),
+      var(--bp);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    display:flex; flex-direction:column;
+  }
+  ::selection{background:rgba(242,166,90,0.35);}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        html,
-        body {
-            height: 100%;
-        }
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-        }
-        ::selection {
-            background: rgba(26, 115, 232, 0.15);
-        }
+  /* corner tick — drafting-sheet mark */
+  .ticks{position:relative;}
+  .ticks::before, .ticks::after{
+    content:''; position:absolute; width:9px; height:9px; pointer-events:none;
+    border-color:var(--ink-mute); opacity:.55;
+  }
+  .ticks::before{top:6px; left:6px; border-top:1px solid; border-left:1px solid;}
+  .ticks::after{bottom:6px; right:6px; border-bottom:1px solid; border-right:1px solid;}
 
-        /* ---------- HEADER ---------- */
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 28px;
-            background: #ffffff;
-            border-bottom: 1px solid var(--line);
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            flex-shrink: 0;
-        }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .brand .mark {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--blue), #1557b0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #fff;
-            box-shadow: 0 4px 14px rgba(26, 115, 232, 0.25);
-        }
-        .brand h1 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text);
-            letter-spacing: -0.3px;
-        }
-        .brand .tag {
-            font-size: 11px;
-            color: var(--text-dim);
-            font-weight: 500;
-            margin-top: 1px;
-        }
-        nav {
-            display: flex;
-            gap: 4px;
-            background: var(--bg);
-            border-radius: 10px;
-            padding: 4px;
-        }
-        nav button {
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-dim);
-            background: none;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 7px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        nav button.active {
-            background: #ffffff;
-            color: var(--blue);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-        nav button:hover:not(.active) {
-            color: var(--text);
-        }
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px; border-bottom:1px solid var(--line);
+    background:rgba(9,45,74,0.85); backdrop-filter:blur(6px);
+    position:sticky; top:0; z-index:50;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .mark{
+    width:36px; height:36px; border:1.5px solid var(--amber); border-radius:2px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; color:var(--amber);
+    letter-spacing:0.5px; position:relative;
+  }
+  .brand .mark::after{content:''; position:absolute; inset:4px; border:1px solid rgba(242,166,90,0.35); border-radius:1px;}
+  .brand h1{font-family:'Space Grotesk',sans-serif; font-size:16.5px; letter-spacing:0.3px; font-weight:700;}
+  .brand .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim); letter-spacing:0.6px; margin-top:3px;}
+  nav{display:flex; gap:2px; background:rgba(0,0,0,0.15); border:1px solid var(--line); border-radius:4px; padding:3px;}
+  nav button{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; color:var(--ink-dim);
+    background:none; border:none; padding:8px 13px; border-radius:2px; cursor:pointer;
+    letter-spacing:0.3px; text-transform:uppercase; transition:all .15s;
+  }
+  nav button.active{background:var(--bp-3); color:var(--amber);}
+  nav button:hover:not(.active){color:var(--ink);}
 
-        /* ---------- LAYOUT ---------- */
-        main {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 360px;
-            gap: 0;
-            min-height: 0;
-        }
-        .map-col {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            background: #e8edf5;
-        }
-        #map {
-            flex: 1;
-            background: #e8edf5;
-        }
-        .leaflet-container {
-            background: #e8edf5 !important;
-        }
+  /* ---------- LAYOUT ---------- */
+  main{flex:1; display:grid; grid-template-columns:1fr 350px; gap:0; min-height:0;}
+  .map-col{display:flex; flex-direction:column; min-width:0;}
+  #map{flex:1; background:#082a45;}
 
-        /* ---------- TOOLBAR ---------- */
-        .toolbar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 18px;
-            background: #ffffff;
-            border-bottom: 1px solid var(--line);
-            flex-wrap: wrap;
-            flex-shrink: 0;
-        }
-        .btn {
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
-            background: var(--bg);
-            color: var(--text);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.15s;
-        }
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--shadow);
-        }
-        .btn:active {
-            transform: scale(0.97);
-        }
-        .btn.primary {
-            background: var(--blue);
-            color: #fff;
-        }
-        .btn.primary:hover {
-            background: #1557b0;
-        }
-        .btn.ai {
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            color: #fff;
-        }
-        .btn.ai:hover {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-        }
-        .btn.ghost {
-            background: transparent;
-            color: var(--text-dim);
-        }
-        .btn.ghost:hover {
-            background: var(--bg);
-            color: var(--text);
-        }
-        .btn.danger:hover {
-            color: var(--red);
-            background: var(--red-light);
-        }
-        .btn.success {
-            background: var(--green);
-            color: #fff;
-        }
-        .btn.success:hover {
-            background: #2d8f47;
-        }
-        .btn.on {
-            outline: 2px solid var(--blue);
-            outline-offset: 2px;
-        }
-        .spacer {
-            flex: 1;
-        }
-        .hint {
-            font-size: 12px;
-            color: var(--blue);
-            background: var(--blue-light);
-            padding: 5px 14px;
-            border-radius: 20px;
-            display: none;
-            font-weight: 500;
-        }
-        .hint.show {
-            display: block;
-            animation: pulse-hint 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse-hint {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.6;
-            }
-        }
+  .toolbar{
+    display:flex; align-items:center; gap:8px; padding:10px 16px;
+    border-bottom:1px solid var(--line); flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; letter-spacing:0.3px;
+    padding:9px 14px; border-radius:2px; border:1px solid var(--line);
+    background:var(--bp-2); color:var(--ink); cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:all .15s; text-transform:uppercase;
+  }
+  .btn .tag-ico{
+    display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px;
+    border:1px solid currentColor; border-radius:1px; font-size:9px; font-weight:700; flex-shrink:0;
+  }
+  .btn:hover{border-color:var(--amber); transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn.primary{background:linear-gradient(135deg,#1c6ea4,#134f7c); color:var(--paper); border:1px solid var(--line);}
+  .btn.ai{background:linear-gradient(135deg,#b97a37,#8a5a26); color:var(--paper); border:1px solid var(--amber-dim);}
+  .btn.ghost{background:transparent;}
+  .btn.danger:hover{border-color:var(--poor); color:var(--poor);}
+  .btn.on{outline:1.5px solid var(--amber); outline-offset:1px;}
+  .spacer{flex:1;}
+  .hint{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--amber);
+    padding:5px 10px; border:1px dashed var(--amber-dim); border-radius:2px; display:none;
+  }
+  .hint.show{display:block;}
 
-        /* ---------- KPI STRIP ---------- */
-        .kpi-strip {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 0;
-            background: #ffffff;
-            border-top: 1px solid var(--line);
-            flex-shrink: 0;
-        }
-        .kpi {
-            background: #ffffff;
-            padding: 12px 16px;
-            text-align: center;
-            border-right: 1px solid var(--line);
-        }
-        .kpi:last-child {
-            border-right: none;
-        }
-        .kpi .val {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text);
-        }
-        .kpi .lbl {
-            font-size: 10px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            font-weight: 600;
-            margin-top: 2px;
-        }
-        .kpi.c-green .val {
-            color: var(--green);
-        }
-        .kpi.c-yellow .val {
-            color: var(--yellow);
-        }
-        .kpi.c-red .val {
-            color: var(--red);
-        }
-        .kpi.c-blue .val {
-            color: var(--blue);
-        }
+  /* KPI strip under the map */
+  .kpi-strip{
+    display:grid; grid-template-columns:repeat(6,1fr); gap:1px;
+    background:var(--line); border-top:1px solid var(--line);
+  }
+  .kpi{background:var(--bp-2); padding:11px 14px; text-align:left; position:relative;}
+  .kpi .val{font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:700;}
+  .kpi .lbl{font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.7px; margin-top:2px;}
+  .kpi.c-green .val{color:var(--good);}
+  .kpi.c-yellow .val{color:var(--ok);}
+  .kpi.c-red .val{color:var(--poor);}
+  .kpi.c-cyan .val{color:var(--paper);}
 
-        /* ---------- SIDEBAR ---------- */
-        aside {
-            background: #ffffff;
-            border-left: 1px solid var(--line);
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        .panel {
-            border-bottom: 1px solid var(--line);
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        .panel:last-child {
-            border-bottom: none;
-            flex: 1;
-        }
-        .panel-h {
-            padding: 12px 18px 8px;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .panel-h .count {
-            font-family: 'JetBrains Mono', monospace;
-            background: var(--bg);
-            color: var(--blue);
-            padding: 1px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .panel-body {
-            padding: 0 14px 12px;
-            overflow-y: auto;
-        }
-        .panel-body.grow {
-            flex: 1;
-        }
-        .panel-body::-webkit-scrollbar {
-            width: 5px;
-        }
-        .panel-body::-webkit-scrollbar-track {
-            background: var(--bg);
-            border-radius: 4px;
-        }
-        .panel-body::-webkit-scrollbar-thumb {
-            background: var(--line);
-            border-radius: 4px;
-        }
+  /* ---------- SIDEBAR ---------- */
+  aside{
+    background:var(--bp-2); border-left:1px solid var(--line);
+    display:flex; flex-direction:column; min-height:0;
+  }
+  .panel{border-bottom:1px solid var(--line); display:flex; flex-direction:column; min-height:0;}
+  .panel-h{
+    padding:11px 15px 8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; color:var(--ink-dim);
+    text-transform:uppercase; letter-spacing:0.8px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .panel-h .info-btn{
+    font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-mute); background:none;
+    border:1px solid var(--line); border-radius:50%; width:16px; height:16px; cursor:pointer; line-height:1;
+  }
+  .panel-h .info-btn:hover{color:var(--amber); border-color:var(--amber);}
+  .panel-h .count{
+    font-family:'IBM Plex Mono',monospace; background:var(--bp-3); color:var(--paper);
+    padding:1px 7px; border-radius:20px; font-size:10px;
+  }
+  .panel-body{padding:0 12px 12px; overflow-y:auto;}
+  .panel-body.grow{flex:1;}
+  .panel-body::-webkit-scrollbar{width:6px;}
+  .panel-body::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
 
-        /* ---------- STATION ROW ---------- */
-        .station-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            margin-bottom: 4px;
-            background: var(--panel-2);
-            border-radius: 8px;
-            border-left: 3px solid var(--blue);
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .station-row:hover {
-            background: #eef2f7;
-        }
-        .station-row.sat {
-            border-left-color: var(--red);
-            background: var(--red-light);
-        }
-        .station-row .dot {
-            font-size: 16px;
-        }
-        .station-row .meta {
-            flex: 1;
-            min-width: 0;
-        }
-        .station-row .name {
-            font-size: 13px;
-            font-weight: 600;
-        }
-        .station-row .sub {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10.5px;
-            color: var(--text-dim);
-            margin-top: 1px;
-        }
-        .station-row .del {
-            background: none;
-            border: none;
-            color: var(--text-mute);
-            cursor: pointer;
-            font-size: 15px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            transition: all 0.15s;
-        }
-        .station-row .del:hover {
-            background: var(--red-light);
-            color: var(--red);
-        }
+  .station-row{
+    display:flex; align-items:center; gap:8px; padding:9px 10px; margin-bottom:5px;
+    background:var(--bp-3); border-radius:2px; border-left:2px solid var(--amber);
+    cursor:pointer; transition:background .15s;
+  }
+  .station-row:hover{background:#175a8f;}
+  .station-row.sat{border-left-color:var(--poor);}
+  .station-row .dot{
+    font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:var(--amber);
+    border:1px solid currentColor; border-radius:1px; padding:1px 3px; flex-shrink:0;
+  }
+  .station-row .meta{flex:1; min-width:0;}
+  .station-row .name{font-size:12px; font-weight:600; font-family:'IBM Plex Mono',monospace;}
+  .station-row .sub{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim); margin-top:1px;}
+  .station-row .del{background:none; border:none; color:var(--ink-mute); cursor:pointer; font-size:14px; padding:2px 4px;}
+  .station-row .del:hover{color:var(--poor);}
 
-        .empty {
-            color: var(--text-mute);
-            font-size: 13px;
-            text-align: center;
-            padding: 20px 8px;
-            line-height: 1.6;
-        }
+  .empty{color:var(--ink-mute); font-size:11.5px; text-align:center; padding:18px 8px; line-height:1.5; font-family:'IBM Plex Mono',monospace;}
 
-        /* ---------- SUGGESTIONS ---------- */
-        .sugg {
-            background: var(--panel-2);
-            border-radius: 8px;
-            padding: 12px 14px;
-            margin-bottom: 6px;
-            border-left: 3px solid var(--yellow);
-        }
-        .sugg.add {
-            border-left-color: var(--green);
-            background: var(--green-light);
-        }
-        .sugg.remove {
-            border-left-color: var(--red);
-            background: var(--red-light);
-        }
-        .sugg.move {
-            border-left-color: var(--yellow);
-            background: var(--yellow-light);
-        }
-        .sugg.ok {
-            border-left-color: var(--blue);
-            background: var(--blue-light);
-        }
-        .sugg .stitle {
-            font-size: 13px;
-            font-weight: 700;
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-        .sugg .sdesc {
-            font-size: 12px;
-            color: var(--text-dim);
-            margin: 4px 0 10px;
-            line-height: 1.5;
-        }
-        .sugg .apply {
-            font-size: 12px;
-            font-weight: 600;
-            padding: 6px 16px;
-            border-radius: 6px;
-            border: none;
-            background: var(--blue);
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .sugg .apply:hover {
-            background: #1557b0;
-            transform: translateY(-1px);
-        }
+  .sugg{
+    background:var(--bp-3); border-radius:2px; padding:11px 12px; margin-bottom:8px;
+    border-left:2px solid var(--ok);
+  }
+  .sugg.add{border-left-color:var(--good);}
+  .sugg.remove{border-left-color:var(--poor);}
+  .sugg.move{border-left-color:var(--ok);}
+  .sugg.ok{border-left-color:var(--paper);}
+  .sugg .stitle{font-size:12px; font-weight:700; display:flex; gap:6px; align-items:center; font-family:'IBM Plex Mono',monospace;}
+  .sugg .sdesc{font-size:11.5px; color:var(--ink-dim); margin:4px 0 8px; line-height:1.45;}
+  .sugg .score{font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-mute); margin-bottom:6px;}
+  .sugg .apply{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; padding:6px 12px; border-radius:2px; border:1px solid var(--amber);
+    background:transparent; color:var(--amber); cursor:pointer; text-transform:uppercase;
+  }
+  .sugg .apply:hover{background:var(--amber); color:#082238;}
 
-        /* ---------- LOG ---------- */
-        .log {
-            background: #f8faff;
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            max-height: 160px;
-            overflow-y: auto;
-            border: 1px solid var(--line);
-        }
-        .log-line {
-            padding: 3px 0;
-            color: var(--text-dim);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
-        }
-        .log-line .t {
-            color: var(--text-mute);
-            margin-right: 8px;
-        }
-        .log-line.green {
-            color: var(--green);
-        }
-        .log-line.yellow {
-            color: var(--yellow);
-        }
-        .log-line.red {
-            color: var(--red);
-        }
-        .log-line.blue {
-            color: var(--blue);
-        }
+  .log{
+    background:rgba(0,0,0,0.22); border-radius:2px; padding:8px 10px; font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; max-height:150px; overflow-y:auto;
+  }
+  .log-line{padding:2.5px 0; color:var(--ink-dim); border-bottom:1px solid rgba(255,255,255,0.04);}
+  .log-line .t{color:var(--ink-mute); margin-right:6px;}
+  .log-line.green{color:var(--good);} .log-line.yellow{color:var(--ok);}
+  .log-line.red{color:var(--poor);} .log-line.cyan{color:var(--paper);}
 
-        /* ---------- LEAFLET TWEAKS ---------- */
-        .leaflet-popup-content-wrapper {
-            background: #ffffff;
-            color: var(--text);
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 1px solid var(--line);
-        }
-        .leaflet-popup-tip {
-            background: #ffffff;
-        }
-        .leaflet-popup-content {
-            font-size: 13px;
-            margin: 12px 14px;
-        }
-        .leaflet-popup-content b {
-            font-family: 'JetBrains Mono', monospace;
-        }
+  /* leaflet tweaks */
+  .leaflet-container{font-family:'IBM Plex Sans',sans-serif; background:#082a45;}
+  .leaflet-popup-content-wrapper{background:var(--bp-3); color:var(--ink); border-radius:2px; border:1px solid var(--line);}
+  .leaflet-popup-tip{background:var(--bp-3);}
+  .leaflet-popup-content{font-size:12px; margin:10px 12px; font-family:'IBM Plex Sans',sans-serif;}
+  .leaflet-popup-content b{font-family:'IBM Plex Mono',monospace;}
+  .leaflet-popup-content .pl-note{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim); display:block; margin-top:4px;}
+  .gnb-icon{
+    width:26px; height:26px; border-radius:2px; background:var(--bp);
+    border:1.5px solid var(--amber); display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:var(--amber);
+    box-shadow:0 0 10px rgba(242,166,90,0.4); cursor:grab; transform:rotate(45deg);
+  }
+  .gnb-icon span{transform:rotate(-45deg);}
+  .gnb-icon.sat{border-color:var(--poor); box-shadow:0 0 10px rgba(239,132,119,0.5); color:var(--poor);}
+  .popup-del{background:transparent; border:1px solid var(--poor); color:var(--poor); font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; padding:5px 10px; border-radius:2px; cursor:pointer; margin-top:8px; text-transform:uppercase;}
+  .popup-del:hover{background:var(--poor); color:#082238;}
 
-        .gnb-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #e8f0fe, #ffffff);
-            border: 2px solid var(--blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            box-shadow: 0 2px 12px rgba(26, 115, 232, 0.15);
-            cursor: grab;
-            transition: all 0.2s;
-        }
-        .gnb-icon:hover {
-            transform: scale(1.05);
-        }
-        .gnb-icon.sat {
-            border-color: var(--red);
-            box-shadow: 0 2px 12px rgba(234, 67, 53, 0.2);
-        }
+  #toast{
+    position:fixed; bottom:24px; right:24px; background:var(--bp-2); color:var(--ink);
+    border:1px solid var(--line); padding:12px 18px; border-radius:2px; font-size:12.5px;
+    font-family:'IBM Plex Mono',monospace;
+    box-shadow:0 12px 34px rgba(0,0,0,0.45); transform:translateY(90px); opacity:0;
+    transition:all .35s ease; z-index:999; max-width:320px;
+  }
+  #toast.show{transform:translateY(0); opacity:1;}
+  #toast.success{border-color:var(--good); color:var(--good);}
+  #toast.warning{border-color:var(--ok); color:var(--ok);}
+  #toast.error{border-color:var(--poor); color:var(--poor);}
 
-        .popup-del {
-            background: var(--red);
-            border: none;
-            color: #fff;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 5px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 6px;
-            transition: all 0.15s;
-        }
-        .popup-del:hover {
-            background: #d33426;
-        }
+  /* ---------- METHODOLOGY MODAL ---------- */
+  #methOverlay{
+    position:fixed; inset:0; background:rgba(4,20,34,0.72); backdrop-filter:blur(2px);
+    display:none; align-items:center; justify-content:center; z-index:900; padding:24px;
+  }
+  #methOverlay.show{display:flex;}
+  #methModal{
+    background:var(--bp-2); border:1px solid var(--line); border-radius:3px; max-width:640px; width:100%;
+    max-height:82vh; overflow-y:auto; padding:26px 28px;
+  }
+  #methModal h2{font-family:'Space Grotesk',sans-serif; font-size:18px; margin-bottom:4px;}
+  #methModal .sub{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-dim); margin-bottom:18px; letter-spacing:0.4px;}
+  #methModal h3{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--amber); text-transform:uppercase; letter-spacing:0.5px; margin:18px 0 8px;}
+  #methModal p{font-size:13px; line-height:1.65; color:var(--ink-dim); margin-bottom:6px;}
+  #methModal .formula{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; background:rgba(0,0,0,0.25); border-left:2px solid var(--amber);
+    padding:9px 12px; margin:8px 0; color:var(--paper); overflow-x:auto; white-space:pre;
+  }
+  #methModal ul{margin:6px 0 6px 18px; color:var(--ink-dim); font-size:12.5px; line-height:1.6;}
+  #methClose{
+    position:sticky; top:0; float:right; background:none; border:1px solid var(--line); color:var(--ink-dim);
+    width:26px; height:26px; border-radius:2px; cursor:pointer; font-size:14px;
+  }
+  #methClose:hover{color:var(--poor); border-color:var(--poor);}
 
-        /* ---------- TOAST ---------- */
-        #toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #ffffff;
-            color: var(--text);
-            border: 1px solid var(--line);
-            padding: 14px 22px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            transform: translateY(90px);
-            opacity: 0;
-            transition: all 0.35s ease;
-            z-index: 999;
-            max-width: 360px;
-            border-left: 4px solid var(--blue);
-        }
-        #toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        #toast.success {
-            border-left-color: var(--green);
-        }
-        #toast.warning {
-            border-left-color: var(--yellow);
-        }
-        #toast.error {
-            border-left-color: var(--red);
-        }
-
-        /* ---------- RESPONSIVE ---------- */
-        @media (max-width: 880px) {
-            main {
-                grid-template-columns: 1fr;
-            }
-            aside {
-                border-left: none;
-                border-top: 1px solid var(--line);
-            }
-            .kpi-strip {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            header {
-                flex-wrap: wrap;
-                gap: 8px;
-                padding: 12px 16px;
-            }
-            .brand h1 {
-                font-size: 17px;
-            }
-            .toolbar .btn {
-                font-size: 11px;
-                padding: 6px 12px;
-            }
-        }
-        @media (max-width: 480px) {
-            .kpi-strip {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .kpi .val {
-                font-size: 18px;
-            }
-            .sidebar {
-                max-height: 50vh;
-            }
-            nav button {
-                font-size: 11px;
-                padding: 6px 10px;
-            }
-        }
-    </style>
+  @media (max-width:880px){
+    main{grid-template-columns:1fr;}
+    aside{border-left:none; border-top:1px solid var(--line);}
+    .kpi-strip{grid-template-columns:repeat(3,1fr);}
+  }
+</style>
 </head>
 <body>
 
-    <!-- ===== HEADER ===== -->
-    <header>
-        <div class="brand">
-            <div class="mark">📡</div>
-            <div>
-                <h1>5G Smart Planner</h1>
-                <div class="tag">AI-Powered Network Planning — Casablanca</div>
-            </div>
+<header>
+  <div class="brand">
+    <div class="mark">5G</div>
+    <div>
+      <h1>5G Smart Planner</h1>
+      <div class="tag">ÉTUDE DE COUVERTURE — MODÈLE 3GPP TR 38.901 · CASABLANCA</div>
+    </div>
+  </div>
+  <nav>
+    <button class="active">Simulation</button>
+    <button id="navMeth">Méthodologie</button>
+    <button id="navReports">Rapports</button>
+  </nav>
+</header>
+
+<main>
+  <div class="map-col">
+    <div class="toolbar">
+      <button class="btn primary" id="btnAddStation"><span class="tag-ico">+</span>Ajouter station</button>
+      <button class="btn" id="btnGenUsers"><span class="tag-ico">U</span>Générer utilisateurs</button>
+      <button class="btn ai" id="btnOptimize"><span class="tag-ico">∴</span>Optimiser (DBSCAN)</button>
+      <div class="spacer"></div>
+      <span class="hint" id="placeHint">Cliquez sur la carte pour placer la station…</span>
+      <button class="btn ghost danger" id="btnClear"><span class="tag-ico">×</span>Tout effacer</button>
+    </div>
+    <div id="map"></div>
+    <div class="kpi-strip">
+      <div class="kpi c-cyan"><div class="val" id="kStations">0</div><div class="lbl">Stations</div></div>
+      <div class="kpi c-cyan"><div class="val" id="kUsers">0</div><div class="lbl">Utilisateurs</div></div>
+      <div class="kpi c-green"><div class="val" id="kCoverage">0%</div><div class="lbl">Couverture</div></div>
+      <div class="kpi c-yellow"><div class="val" id="kLatency">0 ms</div><div class="lbl">Latence est.</div></div>
+      <div class="kpi c-yellow"><div class="val" id="kCapacity">0%</div><div class="lbl">Charge moy.</div></div>
+      <div class="kpi c-red"><div class="val" id="kSaturated">0</div><div class="lbl">Saturées</div></div>
+    </div>
+  </div>
+
+  <aside>
+    <div class="panel">
+      <div class="panel-h"><span>Stations gNodeB</span><span class="count" id="cntStations">0</span></div>
+      <div class="panel-body" id="stationsList" style="max-height:190px;">
+        <div class="empty">Aucune station.<br>Cliquez « Ajouter station » puis sur la carte.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><span>Optimisation (clustering DBSCAN)</span><button class="info-btn" id="btnAiInfo" title="Comment ça marche ?">i</button></div>
+      <div class="panel-body" id="aiPanel" style="max-height:230px;">
+        <div class="empty">En attente d'analyse. Cliquez « Optimiser ».</div>
+      </div>
+    </div>
+    <div class="panel" style="flex:1;">
+      <div class="panel-h"><span>Journal d'activité</span></div>
+      <div class="panel-body grow">
+        <div class="log" id="logBox">
+          <div class="log-line cyan"><span class="t">[init]</span>Plateforme prête.</div>
         </div>
-        <nav>
-            <button class="active">Simulation</button>
-            <button id="navDash">Dashboard</button>
-            <button id="navReports">Rapports</button>
-        </nav>
-    </header>
+      </div>
+    </div>
+  </aside>
+</main>
 
-    <!-- ===== MAIN ===== -->
-    <main>
-        <div class="map-col">
-            <div class="toolbar">
-                <button class="btn primary" id="btnAddStation">📡 Ajouter station</button>
-                <button class="btn success" id="btnGenUsers">👥 Générer utilisateurs</button>
-                <button class="btn ai" id="btnOptimize">🤖 Optimiser (IA)</button>
-                <div class="spacer"></div>
-                <span class="hint" id="placeHint">📍 Cliquez sur la carte pour placer la station</span>
-                <button class="btn ghost danger" id="btnClear">🗑️ Effacer tout</button>
-            </div>
-            <div id="map"></div>
-            <div class="kpi-strip">
-                <div class="kpi c-blue"><div class="val" id="kStations">0</div><div class="lbl">Stations</div></div>
-                <div class="kpi c-blue"><div class="val" id="kUsers">0</div><div class="lbl">Utilisateurs</div></div>
-                <div class="kpi c-green"><div class="val" id="kCoverage">0%</div><div class="lbl">Couverture</div></div>
-                <div class="kpi c-yellow"><div class="val" id="kLatency">0 ms</div><div class="lbl">Latence</div></div>
-                <div class="kpi c-yellow"><div class="val" id="kCapacity">0%</div><div class="lbl">Charge</div></div>
-                <div class="kpi c-red"><div class="val" id="kSaturated">0</div><div class="lbl">Saturées</div></div>
-            </div>
-        </div>
+<div id="toast"></div>
 
-        <!-- ===== SIDEBAR ===== -->
-        <aside>
-            <div class="panel">
-                <div class="panel-h"><span>Stations gNodeB</span><span class="count" id="cntStations">0</span></div>
-                <div class="panel-body" id="stationsList" style="max-height:200px;">
-                    <div class="empty">Aucune station.<br>Cliquez sur « Ajouter station » puis sur la carte.</div>
-                </div>
-            </div>
-            <div class="panel">
-                <div class="panel-h"><span>Suggestions IA</span></div>
-                <div class="panel-body" id="aiPanel" style="max-height:230px;">
-                    <div class="empty">En attente d'analyse.<br>Cliquez sur « Optimiser (IA) ».</div>
-                </div>
-            </div>
-            <div class="panel">
-                <div class="panel-h"><span>Journal d'activité</span></div>
-                <div class="panel-body grow">
-                    <div class="log" id="logBox">
-                        <div class="log-line blue"><span class="t">[init]</span>Plateforme prête</div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-    </main>
+<div id="methOverlay">
+  <div id="methModal" class="ticks">
+    <button id="methClose">×</button>
+    <h2>Méthodologie de simulation</h2>
+    <div class="sub">CE QUI EST RÉELLEMENT CALCULÉ DANS CETTE MAQUETTE — ET SES LIMITES</div>
 
-    <!-- ===== TOAST ===== -->
-    <div id="toast"></div>
+    <h3>1 · Modèle de propagation radio</h3>
+    <p>Le lien radio utilise le modèle standardisé <b>3GPP TR 38.901</b> pour le scénario <b>UMi — Street Canyon</b> (macro/micro urbain dense), pertinent pour la bande 3.5 GHz (n78), là où le couple Hata / COST-231 Hata historique n'est valide que jusqu'à 2 GHz et ne s'applique donc pas correctement à la 5G mid-band.</p>
+    <div class="formula">P_LOS(d2D) = 1                                    si d2D ≤ 18 m
+P_LOS(d2D) = 18/d2D + e^(-d2D/36)·(1 − 18/d2D)    sinon
 
-    <!-- ===== LEAFLET ===== -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js">
-    </script>
+PL_LOS  = 32.4 + 21·log10(d3D) + 20·log10(fc)
+PL_NLOS = max(PL_LOS, 35.3·log10(d3D) + 22.4 + 21.3·log10(fc) − 0.3·(hUT−1.5))
 
-    <!-- ===== APPLICATION ===== -->
-    <script>
-        /* ============================================================
-           5G SMART PLANNER — MOTEUR COMPLET
-           ============================================================ */
-        const CENTER = [33.5731, -7.5898];
-        const CAPACITY_PER_STATION = 25;
-        const RSRP_GOOD = -85;
-        const RSRP_OK = -100;
-        const RSRP_MIN = -112;
+PL_eff  = P_LOS · PL_LOS + (1 − P_LOS) · PL_NLOS
+RSRP    = EIRP − PL_eff   avec EIRP = Ptx + Gtx(17 dBi, antenne secteur)</div>
+    <p>d3D intègre la différence de hauteur antenne/UE (hBS=10 m, hUT=1.5 m). fc = 3.5 GHz.</p>
 
-        let map, stations = [],
-            users = [];
-        let stationSeq = 1;
-        let placing = false;
-        let markersLayer, ringsLayer, usersLayer, linesLayer;
-        let selectedStationId = null;
+    <h3>2 · Détection des zones blanches — DBSCAN</h3>
+    <p>Un balayage en grille évalue le meilleur RSRP en chaque point de la vue courante. Les points sous le seuil de service sont regroupés par un véritable algorithme <b>DBSCAN</b> (density-based clustering, ε et minPts configurés pour l'échelle de la carte) : chaque cluster de points contigus devient une recommandation d'implantation, positionnée au centroïde du cluster — pas une simple moyenne globale.</p>
 
-        // ---------- INIT MAP ----------
-        function initMap() {
-            map = L.map('map', { zoomControl: true, attributionControl: false }).setView(CENTER, 13);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
+    <h3>3 · Équilibrage de charge — heuristique gloutonne</h3>
+    <p>Les stations à plus de 90 % de leur capacité (25 UE simultanés, hypothèse 3GPP eMBB dense) déclenchent une suggestion de délestage ; les stations en fort recouvrement et sous-chargées sont fusionnées. C'est une <b>heuristique gloutonne</b> — une approximation rapide, exécutable dans le navigateur, de ce qu'un solveur d'optimisation linéaire en nombres entiers (ex. PuLP/CBC côté serveur) calculerait de façon optimale sur un vrai déploiement.</p>
 
-            ringsLayer = L.layerGroup().addTo(map);
-            linesLayer = L.layerGroup().addTo(map);
-            usersLayer = L.layerGroup().addTo(map);
-            markersLayer = L.layerGroup().addTo(map);
+    <h3>Limites assumées</h3>
+    <ul>
+      <li>Pas de tracé de rayons ni de base de données de bâtiments réelle : la probabilité LOS/NLOS est statistique, pas géométrique.</li>
+      <li>Pas d'évanouissement rapide (fast fading) ni de shadowing aléatoire — la carte affiche une moyenne déterministe.</li>
+      <li>Capacité par cellule fixée à 25 UE simultanés à titre indicatif ; la vraie capacité dépend du MIMO, du beamforming et de l'allocation de PRB.</li>
+      <li>Objectif : aide pédagogique à la décision, pas un outil d'ingénierie radio certifié (type Atoll/Forsk ou iBwave).</li>
+    </ul>
+  </div>
+</div>
 
-            map.on('click', (e) => {
-                if (!placing) return;
-                createStation(e.latlng.lat, e.latlng.lng);
-                setPlacing(false);
-            });
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* =========================================================
+   5G SMART PLANNER — moteur de simulation
+   Modèle radio : 3GPP TR 38.901 UMi-Street Canyon (LOS/NLOS)
+   Détection de zones blanches : DBSCAN
+   ========================================================= */
+const CENTER = [33.5731, -7.5898]; // Casablanca
+const CAPACITY_PER_STATION = 25;     // UE simultanés max (hypothèse eMBB dense)
+const RSRP_GOOD = -85;               // seuil "excellente" (dBm)
+const RSRP_OK   = -100;              // seuil "moyenne" (dBm)
+const RSRP_MIN  = -112;              // seuil de perte de service
+const FC_GHZ = 3.5;                  // fréquence porteuse (n78)
+const H_BS = 10, H_UT = 1.5;         // hauteurs antenne / UE (m)
+const ANT_GAIN_DBI = 17;             // gain d'antenne secteur typique
+
+let map, stations = [], users = [];
+let stationSeq = 1;
+let placing = false;
+let markersLayer, ringsLayer, usersLayer, linesLayer;
+let selectedStationId = null;
+
+// ---------- INIT MAP ----------
+function initMap(){
+  map = L.map('map', {zoomControl:true, attributionControl:false}).setView(CENTER, 13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    subdomains:'abcd', maxZoom:19
+  }).addTo(map);
+
+  ringsLayer   = L.layerGroup().addTo(map);
+  linesLayer   = L.layerGroup().addTo(map);
+  usersLayer   = L.layerGroup().addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+
+  map.on('click', (e) => {
+    if(!placing) return;
+    createStation(e.latlng.lat, e.latlng.lng);
+    setPlacing(false);
+  });
+}
+
+// ---------- RADIO MODEL : 3GPP TR 38.901 UMi-Street Canyon ----------
+function losProbability(d2D){
+  if(d2D <= 18) return 1;
+  return (18/d2D) + Math.exp(-d2D/36) * (1 - 18/d2D);
+}
+function pathLoss3gppUMi(d2D){
+  const d3D = Math.sqrt(d2D*d2D + (H_BS-H_UT)*(H_BS-H_UT));
+  const d3Dsafe = Math.max(d3D, 1);
+  const logD = Math.log10(d3Dsafe);
+  const logFc = Math.log10(FC_GHZ);
+  const plLOS = 32.4 + 21*logD + 20*logFc;
+  const plNLOSraw = 35.3*logD + 22.4 + 21.3*logFc - 0.3*(H_UT-1.5);
+  const plNLOS = Math.max(plLOS, plNLOSraw);
+  const pLOS = losProbability(Math.max(d2D,1));
+  return pLOS*plLOS + (1-pLOS)*plNLOS;
+}
+function rsrpAt(station, latlng){
+  const d2D = Math.max(map.distance([station.lat, station.lng], latlng), 1);
+  const eirp = station.power + ANT_GAIN_DBI;
+  return eirp - pathLoss3gppUMi(d2D);
+}
+// distance (m) à laquelle le RSRP tombe à un seuil donné — recherche numérique
+// (le modèle 3GPP n'est pas inversible analytiquement, contrairement au log-distance simple)
+function radiusForThreshold(station, threshold){
+  let lo = 1, hi = 8000;
+  const eirp = station.power + ANT_GAIN_DBI;
+  const rsrpAtD = (d) => eirp - pathLoss3gppUMi(d);
+  if(rsrpAtD(hi) > threshold) return hi;
+  for(let i=0;i<40;i++){
+    const mid = (lo+hi)/2;
+    if(rsrpAtD(mid) > threshold) lo = mid; else hi = mid;
+  }
+  return (lo+hi)/2;
+}
+
+function classify(rsrp){
+  if(rsrp >= RSRP_GOOD) return 'good';
+  if(rsrp >= RSRP_OK) return 'ok';
+  if(rsrp >= RSRP_MIN) return 'poor';
+  return 'none';
+}
+const COLORS = {good:'#7fd9a8', ok:'#f2c94c', poor:'#ef8477', none:'#3c6a8c'};
+
+// ---------- STATIONS ----------
+function createStation(lat, lng, opts={}){
+  const st = {
+    id:'gNB-' + String(stationSeq++).padStart(3,'0'),
+    name: opts.name || `gNodeB-${stations.length+1}`,
+    lat, lng,
+    power: opts.power || 43,   // dBm conduit (Ptx)
+    freq: FC_GHZ,
+    users: 0,
+    ai: !!opts.ai
+  };
+  stations.push(st);
+  buildStationMarker(st);
+  recompute();
+  addLog(`gNodeB ${st.name} placée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'cyan');
+  toast(`Station ${st.name} ajoutée`, 'success');
+  return st;
+}
+
+function buildStationMarker(st){
+  const icon = L.divIcon({
+    className:'',
+    html:`<div class="gnb-icon" id="icon-${st.id}"><span>${st.ai?'AI':'BS'}</span></div>`,
+    iconSize:[26,26], iconAnchor:[13,13]
+  });
+  st.marker = L.marker([st.lat, st.lng], {icon, draggable:true}).addTo(markersLayer);
+  st.marker.bindPopup(popupHTML(st));
+  st.marker.on('dragend', (e) => {
+    const p = e.target.getLatLng();
+    st.lat = p.lat; st.lng = p.lng;
+    recompute();
+    addLog(`${st.name} déplacée`, 'yellow');
+  });
+  st.marker.on('click', () => { selectedStationId = st.id; refreshSidebar(); });
+}
+
+function popupHTML(st){
+  const eirp = st.power + ANT_GAIN_DBI;
+  return `<b>${st.name}</b><br>Ptx ${st.power} dBm · EIRP ${eirp} dBm · ${st.freq} GHz
+    <span class="pl-note">3GPP 38.901 UMi · ${st.users} UE connectés</span>
+    <br><button class="popup-del" onclick="deleteStation('${st.id}')">Supprimer</button>`;
+}
+
+function deleteStation(id){
+  const st = stations.find(s => s.id === id);
+  if(!st) return;
+  map.removeLayer(st.marker);
+  stations = stations.filter(s => s.id !== id);
+  recompute();
+  addLog(`${st.name} supprimée`, 'red');
+  toast(`Station supprimée`, 'warning');
+}
+window.deleteStation = deleteStation; // for popup inline onclick
+
+function moveStation(id, lat, lng){
+  const st = stations.find(s => s.id === id);
+  if(!st) return;
+  st.lat = lat; st.lng = lng;
+  st.marker.setLatLng([lat, lng]);
+  recompute();
+}
+
+// ---------- USERS ----------
+function generateUsers(){
+  users = [];
+  const bounds = map.getBounds();
+  const clusterCount = 3 + Math.floor(Math.random()*2); // zones d'habitation / industrielles
+  const clusters = [];
+  for(let c=0; c<clusterCount; c++){
+    clusters.push({
+      lat: bounds.getSouth() + Math.random()*(bounds.getNorth()-bounds.getSouth()),
+      lng: bounds.getWest() + Math.random()*(bounds.getEast()-bounds.getWest()),
+      spread: 0.006 + Math.random()*0.01
+    });
+  }
+  const total = 60 + Math.floor(Math.random()*40);
+  for(let i=0; i<total; i++){
+    const c = clusters[Math.floor(Math.random()*clusters.length)];
+    const lat = c.lat + (Math.random()-0.5)*c.spread;
+    const lng = c.lng + (Math.random()-0.5)*c.spread;
+    users.push({
+      id:'UE-'+String(i+1).padStart(3,'0'),
+      lat, lng,
+      service:['eMBB','uRLLC','mMTC'][Math.floor(Math.random()*3)]
+    });
+  }
+  recompute();
+  addLog(`${users.length} utilisateurs générés (${clusterCount} zones)`, 'green');
+  toast(`${users.length} utilisateurs générés`, 'success');
+}
+
+// ---------- COVERAGE ENGINE ----------
+function recompute(){
+  stations.forEach(s => s.users = 0);
+
+  users.forEach(u => {
+    let best = null, bestRsrp = -999;
+    stations.forEach(s => {
+      const r = rsrpAt(s, [u.lat, u.lng]);
+      if(r > bestRsrp){ bestRsrp = r; best = s; }
+    });
+    u.rsrp = stations.length ? Math.round(bestRsrp) : null;
+    u.status = stations.length ? classify(bestRsrp) : 'none';
+    u.stationId = (u.status !== 'none' && best) ? best.id : null;
+    if(u.stationId){
+      const st = stations.find(s => s.id === u.stationId);
+      if(st) st.users++;
+    }
+  });
+
+  drawRings();
+  drawUsers();
+  refreshSidebar();
+  updateKPIs();
+}
+
+function drawRings(){
+  ringsLayer.clearLayers();
+  stations.forEach(st => {
+    const rGood = radiusForThreshold(st, RSRP_GOOD);
+    const rOk   = radiusForThreshold(st, RSRP_OK);
+    const rPoor = radiusForThreshold(st, RSRP_MIN);
+    L.circle([st.lat, st.lng], {radius:rPoor, color:COLORS.poor, weight:1, dashArray:'2,4', fillOpacity:0.06}).addTo(ringsLayer);
+    L.circle([st.lat, st.lng], {radius:rOk,   color:COLORS.ok,   weight:1, dashArray:'2,4', fillOpacity:0.09}).addTo(ringsLayer);
+    L.circle([st.lat, st.lng], {radius:rGood, color:COLORS.good, weight:1, dashArray:'2,4', fillOpacity:0.13}).addTo(ringsLayer);
+    const el = document.getElementById('icon-'+st.id);
+    if(el) el.classList.toggle('sat', st.users > CAPACITY_PER_STATION*0.9);
+    if(st.marker){ st.marker.setPopupContent(popupHTML(st)); }
+  });
+}
+
+function drawUsers(){
+  usersLayer.clearLayers();
+  users.forEach(u => {
+    L.circleMarker([u.lat, u.lng], {
+      radius:3.2, color:COLORS[u.status], fillColor:COLORS[u.status],
+      fillOpacity:0.9, weight:1, opacity:0.9
+    }).bindTooltip(`${u.id} · ${u.rsrp ?? '—'} dBm`, {direction:'top', opacity:0.9})
+      .addTo(usersLayer);
+  });
+}
+
+// ---------- KPIs ----------
+function updateKPIs(){
+  document.getElementById('kStations').textContent = stations.length;
+  document.getElementById('kUsers').textContent = users.length;
+
+  const covered = users.filter(u => u.status==='good' || u.status==='ok').length;
+  const coveragePct = users.length ? Math.round(covered/users.length*100) : 0;
+  document.getElementById('kCoverage').textContent = coveragePct + '%';
+
+  const latency = users.length ? Math.round(4 + (100-coveragePct)*0.16) : 0;
+  document.getElementById('kLatency').textContent = latency + ' ms';
+
+  const avgLoad = stations.length
+    ? Math.round(stations.reduce((a,s)=>a+Math.min(s.users/CAPACITY_PER_STATION*100,100),0)/stations.length)
+    : 0;
+  document.getElementById('kCapacity').textContent = avgLoad + '%';
+
+  const saturated = stations.filter(s => s.users > CAPACITY_PER_STATION*0.9).length;
+  document.getElementById('kSaturated').textContent = saturated;
+}
+
+// ---------- SIDEBAR ----------
+function refreshSidebar(){
+  document.getElementById('cntStations').textContent = stations.length;
+  const list = document.getElementById('stationsList');
+  if(stations.length === 0){
+    list.innerHTML = `<div class="empty">Aucune station.<br>Cliquez « Ajouter station » puis sur la carte.</div>`;
+    return;
+  }
+  list.innerHTML = stations.map(s => {
+    const sat = s.users > CAPACITY_PER_STATION*0.9;
+    return `<div class="station-row ${sat?'sat':''}" onclick="focusStation('${s.id}')">
+      <span class="dot">${s.ai?'AI':'BS'}</span>
+      <div class="meta">
+        <div class="name">${s.name}</div>
+        <div class="sub">${s.power}dBm · ${s.users}/${CAPACITY_PER_STATION} UE ${sat?'· SATURÉE':''}</div>
+      </div>
+      <button class="del" onclick="event.stopPropagation(); deleteStation('${s.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function focusStation(id){
+  const st = stations.find(s => s.id === id);
+  if(st){ map.panTo([st.lat, st.lng]); st.marker.openPopup(); }
+}
+window.focusStation = focusStation;
+
+// ---------- DBSCAN (implémentation générique, density-based clustering) ----------
+// eps en mètres, minPts = nombre minimum de points pour former une région dense
+function dbscan(points, eps, minPts, distFn){
+  const labels = new Array(points.length).fill(0); // 0=non visité, -1=bruit, >0=cluster id
+  let clusterId = 0;
+
+  function regionQuery(idx){
+    const neighbors = [];
+    for(let i=0;i<points.length;i++){
+      if(distFn(points[idx], points[i]) <= eps) neighbors.push(i);
+    }
+    return neighbors;
+  }
+
+  for(let i=0;i<points.length;i++){
+    if(labels[i] !== 0) continue;
+    const neighbors = regionQuery(i);
+    if(neighbors.length < minPts){ labels[i] = -1; continue; }
+    clusterId++;
+    labels[i] = clusterId;
+    const queue = [...neighbors];
+    while(queue.length){
+      const q = queue.shift();
+      if(labels[q] === -1) labels[q] = clusterId;
+      if(labels[q] !== 0) continue;
+      labels[q] = clusterId;
+      const qNeighbors = regionQuery(q);
+      if(qNeighbors.length >= minPts) queue.push(...qNeighbors);
+    }
+  }
+  const clusters = {};
+  labels.forEach((lab, idx) => {
+    if(lab <= 0) return;
+    (clusters[lab] = clusters[lab] || []).push(points[idx]);
+  });
+  return Object.values(clusters);
+}
+
+// ---------- AI OPTIMIZER ----------
+function optimizeNetwork(){
+  if(stations.length === 0){ toast("Ajoutez au moins une station d'abord", 'warning'); return; }
+  if(users.length === 0){ toast("Générez des utilisateurs d'abord", 'warning'); return; }
+
+  const suggestions = [];
+
+  // 1) grid scan for coverage gaps, then DBSCAN to find real clusters of weak-signal points
+  const bounds = map.getBounds();
+  const steps = 16;
+  const gridPoints = [];
+  const cellSizeM = map.distance([bounds.getSouth(),bounds.getWest()],[bounds.getSouth(),bounds.getEast()]) / steps;
+  for(let i=0;i<=steps;i++){
+    for(let j=0;j<=steps;j++){
+      const lat = bounds.getSouth() + (bounds.getNorth()-bounds.getSouth())*i/steps;
+      const lng = bounds.getWest() + (bounds.getEast()-bounds.getWest())*j/steps;
+      let bestRsrp = -999;
+      stations.forEach(s => { const r = rsrpAt(s,[lat,lng]); if(r>bestRsrp) bestRsrp=r; });
+      if(classify(bestRsrp) === 'poor' || classify(bestRsrp) === 'none'){
+        gridPoints.push({lat,lng});
+      }
+    }
+  }
+  const eps = Math.max(cellSizeM * 1.6, 60);
+  const clusters = dbscan(gridPoints, eps, 3, (a,b) => map.distance([a.lat,a.lng],[b.lat,b.lng]));
+  clusters
+    .sort((a,b) => b.length - a.length)
+    .slice(0, 3)
+    .forEach(cluster => {
+      const cLat = cluster.reduce((a,p)=>a+p.lat,0)/cluster.length;
+      const cLng = cluster.reduce((a,p)=>a+p.lng,0)/cluster.length;
+      suggestions.push({
+        type:'add', title:'Ajouter une station',
+        desc:`Cluster DBSCAN de ${cluster.length} points de grille sous le seuil de service. Centroïde recommandé : ${cLat.toFixed(4)}, ${cLng.toFixed(4)}.`,
+        score:`densité=${cluster.length} pts · ε=${Math.round(eps)}m · minPts=3`,
+        action:() => createStation(cLat, cLng, {ai:true, power:43})
+      });
+    });
+
+  // 2) saturated stations -> suggest add nearby to offload
+  stations.filter(s => s.users > CAPACITY_PER_STATION*0.9).forEach(s => {
+    const lat = s.lat + (Math.random()-0.5)*0.006;
+    const lng = s.lng + (Math.random()-0.5)*0.006;
+    suggestions.push({
+      type:'add', title:`Délester ${s.name}`,
+      desc:`${s.name} est saturée (${s.users}/${CAPACITY_PER_STATION} UE). Ajouter une station voisine pour répartir la charge.`,
+      score:`heuristique glouton · charge=${Math.round(s.users/CAPACITY_PER_STATION*100)}%`,
+      action:() => createStation(lat, lng, {ai:true, power:40})
+    });
+  });
+
+  // 3) overlapping / redundant stations -> suggest remove the lighter-loaded one
+  for(let i=0;i<stations.length;i++){
+    for(let j=i+1;j<stations.length;j++){
+      const a = stations[i], b = stations[j];
+      const d = map.distance([a.lat,a.lng],[b.lat,b.lng]);
+      const combinedRange = radiusForThreshold(a,RSRP_OK) + radiusForThreshold(b,RSRP_OK);
+      if(d < combinedRange*0.35 && (a.users < CAPACITY_PER_STATION*0.3 || b.users < CAPACITY_PER_STATION*0.3)){
+        const weaker = a.users <= b.users ? a : b;
+        suggestions.push({
+          type:'remove', title:`Supprimer ${weaker.name}`,
+          desc:`${a.name} et ${b.name} se chevauchent fortement (${Math.round(d)} m) alors que ${weaker.name} ne sert que ${weaker.users} UE. Fusionner la couverture.`,
+          score:`recouvrement=${Math.round((1-d/combinedRange)*100)}%`,
+          action:() => deleteStation(weaker.id)
+        });
+      }
+    }
+  }
+
+  // 4) isolated low-load station far from any user -> suggest move to centroid of nearby uncovered users
+  stations.forEach(s => {
+    if(s.users === 0 && users.length){
+      let nearestD = Infinity;
+      users.forEach(u => { const d = map.distance([s.lat,s.lng],[u.lat,u.lng]); if(d<nearestD) nearestD=d; });
+      if(nearestD > radiusForThreshold(s,RSRP_MIN)*1.5){
+        const poorUsers = users.filter(u => u.status==='poor' || u.status==='none');
+        if(poorUsers.length){
+          const cLat = poorUsers.reduce((a,p)=>a+p.lat,0)/poorUsers.length;
+          const cLng = poorUsers.reduce((a,p)=>a+p.lng,0)/poorUsers.length;
+          suggestions.push({
+            type:'move', title:`Déplacer ${s.name}`,
+            desc:`${s.name} ne sert aucun utilisateur et est isolée du trafic. La déplacer vers une zone mal couverte.`,
+            score:`heuristique glouton · dist. UE la + proche=${Math.round(nearestD)}m`,
+            action:() => { moveStation(s.id, cLat, cLng); addLog(`${s.name} déplacée par l'optimiseur`, 'yellow'); }
+          });
         }
+      }
+    }
+  });
 
-        // ---------- RADIO MODEL ----------
-        function rsrpAt(station, latlng) {
-            const d = Math.max(map.distance([station.lat, station.lng], latlng), 1);
-            const n = 3.2;
-            return station.power - 10 * n * Math.log10(d);
-        }
+  renderSuggestions(suggestions);
+  addLog(`Analyse : ${clusters.length} cluster(s) DBSCAN, ${suggestions.length} recommandation(s)`, 'cyan');
+  toast(suggestions.length ? `${suggestions.length} recommandation(s)` : 'Réseau déjà optimal', 'success');
+}
 
-        function radiusForThreshold(station, threshold) {
-            const n = 3.2;
-            return Math.pow(10, (station.power - threshold) / (10 * n));
-        }
+function renderSuggestions(list){
+  const panel = document.getElementById('aiPanel');
+  if(list.length === 0){
+    panel.innerHTML = `<div class="sugg ok"><div class="stitle">✓ Réseau optimal</div>
+      <div class="sdesc">Couverture, charge et placement des stations sont satisfaisants selon l'analyse DBSCAN. Aucune action recommandée.</div></div>`;
+    return;
+  }
+  panel.innerHTML = list.map((s, idx) => `
+    <div class="sugg ${s.type}">
+      <div class="stitle">${s.type==='add'?'+':s.type==='remove'?'−':'↔'} ${s.title}</div>
+      <div class="sdesc">${s.desc}</div>
+      <div class="score">${s.score||''}</div>
+      <button class="apply" onclick="applySuggestion(${idx})">Appliquer</button>
+    </div>`).join('');
+  window.__suggestions = list;
+}
+function applySuggestion(idx){
+  const s = window.__suggestions[idx];
+  if(!s) return;
+  s.action();
+  toast('Recommandation appliquée', 'success');
+  setTimeout(optimizeNetwork, 250);
+}
+window.applySuggestion = applySuggestion;
 
-        function classify(rsrp) {
-            if (rsrp >= RSRP_GOOD) return 'good';
-            if (rsrp >= RSRP_OK) return 'ok';
-            if (rsrp >= RSRP_MIN) return 'poor';
-            return 'none';
-        }
-        const COLORS = { good: '#34a853', ok: '#fbbc04', poor: '#ea4335', none: '#c5cdd8' };
+// ---------- UI HELPERS ----------
+function setPlacing(v){
+  placing = v;
+  document.getElementById('placeHint').classList.toggle('show', v);
+  document.getElementById('btnAddStation').classList.toggle('on', v);
+  document.getElementById('map').style.cursor = v ? 'crosshair' : '';
+}
 
-        // ---------- STATIONS ----------
-        function createStation(lat, lng, opts = {}) {
-            const st = {
-                id: 'gNB-' + String(stationSeq++).padStart(3, '0'),
-                name: opts.name || `gNodeB-${stations.length + 1}`,
-                lat,
-                lng,
-                power: opts.power || 43,
-                freq: 3.5,
-                users: 0,
-                ai: !!opts.ai
-            };
-            stations.push(st);
-            buildStationMarker(st);
-            recompute();
-            addLog(`📡 ${st.name} ajoutée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'blue');
-            toast(`Station ${st.name} ajoutée`, 'success');
-            return st;
-        }
+function clearAll(){
+  if(!confirm('Supprimer toutes les stations et utilisateurs ?')) return;
+  stations.forEach(s => map.removeLayer(s.marker));
+  stations = []; users = []; stationSeq = 1;
+  ringsLayer.clearLayers(); usersLayer.clearLayers();
+  refreshSidebar(); updateKPIs();
+  document.getElementById('aiPanel').innerHTML = `<div class="empty">En attente d'analyse. Cliquez « Optimiser ».</div>`;
+  addLog('Scénario réinitialisé', 'red');
+  toast('Tout a été effacé', 'warning');
+}
 
-        function buildStationMarker(st) {
-            const icon = L.divIcon({
-                className: '',
-                html: `<div class="gnb-icon" id="icon-${st.id}">${st.ai ? '🤖' : '📡'}</div>`,
-                iconSize: [34, 34],
-                iconAnchor: [17, 17]
-            });
-            st.marker = L.marker([st.lat, st.lng], { icon, draggable: true }).addTo(markersLayer);
-            st.marker.bindPopup(popupHTML(st));
-            st.marker.on('dragend', (e) => {
-                const p = e.target.getLatLng();
-                st.lat = p.lat;
-                st.lng = p.lng;
-                recompute();
-                addLog(`↔️ ${st.name} déplacée`, 'yellow');
-            });
-            st.marker.on('click', () => { selectedStationId = st.id;
-                refreshSidebar(); });
-        }
+function toast(msg, type){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (type||'');
+  el.id = 'toast';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'), 2800);
+}
 
-        function popupHTML(st) {
-            return `<b>${st.name}</b><br>${st.power} dBm • ${st.freq} GHz<br>👥 <span id="pu-${st.id}">${st.users}</span> connectés
-            <br><button class="popup-del" onclick="deleteStation('${st.id}')">🗑️ Supprimer</button>`;
-        }
+function addLog(msg, color){
+  const box = document.getElementById('logBox');
+  const time = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'log-line ' + (color||'');
+  div.innerHTML = `<span class="t">[${time}]</span>${msg}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
 
-        function deleteStation(id) {
-            const st = stations.find(s => s.id === id);
-            if (!st) return;
-            map.removeLayer(st.marker);
-            stations = stations.filter(s => s.id !== id);
-            recompute();
-            addLog(`🗑️ ${st.name} supprimée`, 'red');
-            toast(`Station supprimée`, 'warning');
-        }
-        window.deleteStation = deleteStation;
+// ---------- WIRING ----------
+document.getElementById('btnAddStation').addEventListener('click', () => setPlacing(!placing));
+document.getElementById('btnGenUsers').addEventListener('click', generateUsers);
+document.getElementById('btnOptimize').addEventListener('click', optimizeNetwork);
+document.getElementById('btnClear').addEventListener('click', clearAll);
+document.getElementById('navMeth').addEventListener('click', () => document.getElementById('methOverlay').classList.add('show'));
+document.getElementById('btnAiInfo').addEventListener('click', () => document.getElementById('methOverlay').classList.add('show'));
+document.getElementById('methClose').addEventListener('click', () => document.getElementById('methOverlay').classList.remove('show'));
+document.getElementById('methOverlay').addEventListener('click', (e) => { if(e.target.id === 'methOverlay') e.currentTarget.classList.remove('show'); });
+document.getElementById('navReports').addEventListener('click', () => toast('Les rapports exportables arrivent dans une prochaine itération', 'warning'));
 
-        function moveStation(id, lat, lng) {
-            const st = stations.find(s => s.id === id);
-            if (!st) return;
-            st.lat = lat;
-            st.lng = lng;
-            st.marker.setLatLng([lat, lng]);
-            recompute();
-        }
-
-        // ---------- USERS ----------
-        function generateUsers() {
-            users = [];
-            const bounds = map.getBounds();
-            const clusterCount = 3 + Math.floor(Math.random() * 2);
-            const clusters = [];
-            for (let c = 0; c < clusterCount; c++) {
-                clusters.push({
-                    lat: bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth()),
-                    lng: bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest()),
-                    spread: 0.006 + Math.random() * 0.01
-                });
-            }
-            const total = 60 + Math.floor(Math.random() * 40);
-            for (let i = 0; i < total; i++) {
-                const c = clusters[Math.floor(Math.random() * clusters.length)];
-                const lat = c.lat + (Math.random() - 0.5) * c.spread;
-                const lng = c.lng + (Math.random() - 0.5) * c.spread;
-                users.push({
-                    id: 'UE-' + String(i + 1).padStart(3, '0'),
-                    lat,
-                    lng,
-                    service: ['eMBB', 'uRLLC', 'mMTC'][Math.floor(Math.random() * 3)]
-                });
-            }
-            recompute();
-            addLog(`👥 ${users.length} utilisateurs générés (${clusterCount} zones)`, 'green');
-            toast(`${users.length} utilisateurs générés`, 'success');
-        }
-
-        // ---------- COVERAGE ----------
-        function recompute() {
-            stations.forEach(s => s.users = 0);
-
-            users.forEach(u => {
-                let best = null,
-                    bestRsrp = -999;
-                stations.forEach(s => {
-                    const r = rsrpAt(s, [u.lat, u.lng]);
-                    if (r > bestRsrp) { bestRsrp = r;
-                        best = s; }
-                });
-                u.rsrp = stations.length ? Math.round(bestRsrp) : null;
-                u.status = stations.length ? classify(bestRsrp) : 'none';
-                u.stationId = (u.status !== 'none' && best) ? best.id : null;
-                if (u.stationId) {
-                    const st = stations.find(s => s.id === u.stationId);
-                    if (st) st.users++;
-                }
-            });
-
-            drawRings();
-            drawUsers();
-            refreshSidebar();
-            updateKPIs();
-        }
-
-        function drawRings() {
-            ringsLayer.clearLayers();
-            stations.forEach(st => {
-                const rGood = radiusForThreshold(st, RSRP_GOOD);
-                const rOk = radiusForThreshold(st, RSRP_OK);
-                const rPoor = radiusForThreshold(st, RSRP_MIN);
-                L.circle([st.lat, st.lng], { radius: rPoor, color: COLORS.poor, weight: 0, fillOpacity: 0.08 })
-                    .addTo(ringsLayer);
-                L.circle([st.lat, st.lng], { radius: rOk, color: COLORS.ok, weight: 0, fillOpacity: 0.10 })
-                    .addTo(ringsLayer);
-                L.circle([st.lat, st.lng], { radius: rGood, color: COLORS.good, weight: 0, fillOpacity: 0.12 })
-                    .addTo(ringsLayer);
-                const el = document.getElementById('icon-' + st.id);
-                if (el) el.classList.toggle('sat', st.users > CAPACITY_PER_STATION * 0.9);
-                if (st.marker) { st.marker.setPopupContent(popupHTML(st)); }
-            });
-        }
-
-        function drawUsers() {
-            usersLayer.clearLayers();
-            users.forEach(u => {
-                L.circleMarker([u.lat, u.lng], {
-                    radius: 3.5,
-                    color: COLORS[u.status],
-                    fillColor: COLORS[u.status],
-                    fillOpacity: 0.85,
-                    weight: 1,
-                    opacity: 0.9
-                }).bindTooltip(`${u.id} · ${u.rsrp ?? '—'} dBm`, { direction: 'top', opacity: 0.9 })
-                    .addTo(usersLayer);
-            });
-        }
-
-        // ---------- KPIs ----------
-        function updateKPIs() {
-            document.getElementById('kStations').textContent = stations.length;
-            document.getElementById('kUsers').textContent = users.length;
-
-            const covered = users.filter(u => u.status === 'good' || u.status === 'ok').length;
-            const coveragePct = users.length ? Math.round(covered / users.length * 100) : 0;
-            document.getElementById('kCoverage').textContent = coveragePct + '%';
-
-            const latency = users.length ? Math.round(4 + (100 - coveragePct) * 0.16) : 0;
-            document.getElementById('kLatency').textContent = latency + ' ms';
-
-            const avgLoad = stations.length ? Math.round(stations.reduce((a, s) => a + Math.min(s.users / CAPACITY_PER_STATION *
-                100, 100), 0) / stations.length) : 0;
-            document.getElementById('kCapacity').textContent = avgLoad + '%';
-
-            const saturated = stations.filter(s => s.users > CAPACITY_PER_STATION * 0.9).length;
-            document.getElementById('kSaturated').textContent = saturated;
-        }
-
-        // ---------- SIDEBAR ----------
-        function refreshSidebar() {
-            document.getElementById('cntStations').textContent = stations.length;
-            const list = document.getElementById('stationsList');
-            if (stations.length === 0) {
-                list.innerHTML =
-                    `<div class="empty">Aucune station.<br>Cliquez sur « Ajouter station » puis sur la carte.</div>`;
-                return;
-            }
-            list.innerHTML = stations.map(s => {
-                const sat = s.users > CAPACITY_PER_STATION * 0.9;
-                return `<div class="station-row ${sat ? 'sat' : ''}" onclick="focusStation('${s.id}')">
-              <span class="dot">${s.ai ? '🤖' : '📡'}</span>
-              <div class="meta">
-                <div class="name">${s.name}</div>
-                <div class="sub">${s.power} dBm · 👥 ${s.users}/${CAPACITY_PER_STATION} ${sat ? '⚠️ Saturée' : ''}</div>
-              </div>
-              <button class="del" onclick="event.stopPropagation(); deleteStation('${s.id}')">✕</button>
-            </div>`;
-            }).join('');
-        }
-
-        function focusStation(id) {
-            const st = stations.find(s => s.id === id);
-            if (st) { map.panTo([st.lat, st.lng]);
-                st.marker.openPopup(); }
-        }
-        window.focusStation = focusStation;
-
-        // ---------- AI OPTIMIZER ----------
-        function optimizeNetwork() {
-            if (stations.length === 0) { toast("Ajoutez au moins une station d'abord", 'warning'); return; }
-            if (users.length === 0) { toast("Générez des utilisateurs d'abord", 'warning'); return; }
-
-            const suggestions = [];
-
-            // 1) Grid scan for coverage gaps
-            const bounds = map.getBounds();
-            const steps = 14;
-            const gridPoints = [];
-            for (let i = 0; i <= steps; i++) {
-                for (let j = 0; j <= steps; j++) {
-                    const lat = bounds.getSouth() + (bounds.getNorth() - bounds.getSouth()) * i / steps;
-                    const lng = bounds.getWest()
+// ---------- BOOTSTRAP ----------
+initMap();
+setTimeout(() => {
+  createStation(33.5731, -7.5898);
+  createStation(33.582, -7.615);
+  generateUsers();
+  addLog('5G Smart Planner initialisé — modèle 3GPP TR 38.901 UMi actif', 'green');
+}, 350);
+</script>
+</body>
+</html>

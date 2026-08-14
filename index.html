@@ -1,575 +1,1323 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>5G Smart Planner — Étude de Couverture</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- Blueprint drafting palette ---- */
+    --bp:#0a3556;            /* blueprint base */
+    --bp-2:#0e4370;          /* panel */
+    --bp-3:#124d80;          /* panel elevated / hover */
+    --line:#dfe3e8;          /* rules & borders */
+    --line-soft:rgba(191,227,245,0.14);
+    --ink:#172033;           /* primary text (drafting ink) */
+    --ink-dim:#667085;
+    --ink-mute:#5f8bab;
+    --paper:#eef6fb;         /* paper accents */
+    --amber:#f2a65a;         /* AI / optimisation accent */
+    --amber-dim:#b97a37;
+    --good:#168a5b;
+    --ok:#f2c94c;
+    --poor:#ef8477;
+    --none:#3c6a8c;
+    --radius:3px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, var(--line-soft) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--line-soft) 0 1px, transparent 1px 28px),
+      radial-gradient(ellipse at 20% -10%, rgba(191,227,245,0.06), transparent 55%),
+      var(--bp);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    display:flex; flex-direction:column;
+  }
+  ::selection{background:rgba(242,166,90,0.35);}
 
-    <title>5G Smart Planner</title>
+  /* corner tick — drafting-sheet mark */
+  .ticks{position:relative;}
+  .ticks::before, .ticks::after{
+    content:''; position:absolute; width:9px; height:9px; pointer-events:none;
+    border-color:var(--ink-mute); opacity:.55;
+  }
+  .ticks::before{top:6px; left:6px; border-top:1px solid; border-left:1px solid;}
+  .ticks::after{bottom:6px; right:6px; border-bottom:1px solid; border-right:1px solid;}
 
-    <link rel="stylesheet" href="style.css">
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px; border-bottom:1px solid var(--line);
+    background:rgba(9,45,74,0.85); backdrop-filter:blur(6px);
+    position:sticky; top:0; z-index:50;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .mark{
+    width:36px; height:36px; border:1.5px solid var(--amber); border-radius:2px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; color:var(--amber);
+    letter-spacing:0.5px; position:relative;
+  }
+  .brand .mark::after{content:''; position:absolute; inset:4px; border:1px solid rgba(242,166,90,0.35); border-radius:1px;}
+  .brand h1{font-family:'Space Grotesk',sans-serif; font-size:16.5px; letter-spacing:0.3px; font-weight:700;}
+  .brand .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim); letter-spacing:0.6px; margin-top:3px;}
+  nav{display:flex; gap:2px; background:rgba(0,0,0,0.15); border:1px solid var(--line); border-radius:4px; padding:3px;}
+  nav button{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; color:var(--ink-dim);
+    background:none; border:none; padding:8px 13px; border-radius:2px; cursor:pointer;
+    letter-spacing:0.3px; text-transform:uppercase; transition:all .15s;
+  }
+  nav button.active{background:var(--bp-3); color:var(--amber);}
+  nav button:hover:not(.active){color:var(--ink);}
 
-    <!-- Leaflet : carte interactive -->
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
+  /* ---------- LAYOUT ---------- */
+  main{flex:1; display:grid; grid-template-columns:1fr 350px; gap:0; min-height:0;}
+  .map-col{display:flex; flex-direction:column; min-width:0;}
+  #map{flex:1; background:#082a45;}
+
+  .toolbar{
+    display:flex; align-items:center; gap:8px; padding:10px 16px;
+    border-bottom:1px solid var(--line); flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; letter-spacing:0.3px;
+    padding:9px 14px; border-radius:2px; border:1px solid var(--line);
+    background:var(--bp-2); color:var(--ink); cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:all .15s; text-transform:uppercase;
+  }
+  .btn .tag-ico{
+    display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px;
+    border:1px solid currentColor; border-radius:1px; font-size:9px; font-weight:700; flex-shrink:0;
+  }
+  .btn:hover{border-color:var(--amber); transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn.primary{background:linear-gradient(135deg,#1c6ea4,#134f7c); color:var(--paper); border:1px solid var(--line);}
+  .btn.ai{background:linear-gradient(135deg,#b97a37,#8a5a26); color:var(--paper); border:1px solid var(--amber-dim);}
+  .btn.ghost{background:transparent;}
+  .btn.danger:hover{border-color:var(--poor); color:var(--poor);}
+  .btn.on{outline:1.5px solid var(--amber); outline-offset:1px;}
+  .spacer{flex:1;}
+  .hint{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--amber);
+    padding:5px 10px; border:1px dashed var(--amber-dim); border-radius:2px; display:none;
+  }
+  .hint.show{display:block;}
+
+  /* KPI strip under the map */
+  .kpi-strip{
+    display:grid; grid-template-columns:repeat(6,1fr); gap:1px;
+    background:var(--line); border-top:1px solid var(--line);
+  }
+  .kpi{background:var(--bp-2); padding:11px 14px; text-align:left; position:relative;}
+  .kpi .val{font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:700;}
+  .kpi .lbl{font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.7px; margin-top:2px;}
+  .kpi.c-green .val{color:var(--good);}
+  .kpi.c-yellow .val{color:var(--ok);}
+  .kpi.c-red .val{color:var(--poor);}
+  .kpi.c-cyan .val{color:var(--paper);}
+
+  /* ---------- SIDEBAR ---------- */
+  aside{
+    background:var(--bp-2); border-left:1px solid var(--line);
+    display:flex; flex-direction:column; min-height:0;
+  }
+  .panel{border-bottom:1px solid var(--line); display:flex; flex-direction:column; min-height:0;}
+  .panel-h{
+    padding:11px 15px 8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; color:var(--ink-dim);
+    text-transform:uppercase; letter-spacing:0.8px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .panel-h .info-btn{
+    font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-mute); background:none;
+    border:1px solid var(--line); border-radius:50%; width:16px; height:16px; cursor:pointer; line-height:1;
+  }
+  .panel-h .info-btn:hover{color:var(--amber); border-color:var(--amber);}
+  .panel-h .count{
+    font-family:'IBM Plex Mono',monospace; background:var(--bp-3); color:var(--paper);
+    padding:1px 7px; border-radius:20px; font-size:10px;
+  }
+  .panel-body{padding:0 12px 12px; overflow-y:auto;}
+  .panel-body.grow{flex:1;}
+  .panel-body::-webkit-scrollbar{width:6px;}
+  .panel-body::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+
+  .station-row{
+    display:flex; align-items:center; gap:8px; padding:9px 10px; margin-bottom:5px;
+    background:var(--bp-3); border-radius:2px; border-left:2px solid var(--amber);
+    cursor:pointer; transition:background .15s;
+  }
+  .station-row:hover{background:#175a8f;}
+  .station-row.sat{border-left-color:var(--poor);}
+  .station-row .dot{
+    font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:var(--amber);
+    border:1px solid currentColor; border-radius:1px; padding:1px 3px; flex-shrink:0;
+  }
+  .station-row .meta{flex:1; min-width:0;}
+  .station-row .name{font-size:12px; font-weight:600; font-family:'IBM Plex Mono',monospace;}
+  .station-row .sub{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim); margin-top:1px;}
+  .station-row .del{background:none; border:none; color:var(--ink-mute); cursor:pointer; font-size:14px; padding:2px 4px;}
+  .station-row .del:hover{color:var(--poor);}
+
+  .empty{color:var(--ink-mute); font-size:11.5px; text-align:center; padding:18px 8px; line-height:1.5; font-family:'IBM Plex Mono',monospace;}
+
+  .sugg{
+    background:var(--bp-3); border-radius:2px; padding:11px 12px; margin-bottom:8px;
+    border-left:2px solid var(--ok);
+  }
+  .sugg.add{border-left-color:var(--good);}
+  .sugg.remove{border-left-color:var(--poor);}
+  .sugg.move{border-left-color:var(--ok);}
+  .sugg.ok{border-left-color:var(--paper);}
+  .sugg .stitle{font-size:12px; font-weight:700; display:flex; gap:6px; align-items:center; font-family:'IBM Plex Mono',monospace;}
+  .sugg .sdesc{font-size:11.5px; color:var(--ink-dim); margin:4px 0 8px; line-height:1.45;}
+  .sugg .score{font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-mute); margin-bottom:6px;}
+  .sugg .apply{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; padding:6px 12px; border-radius:2px; border:1px solid var(--amber);
+    background:transparent; color:var(--amber); cursor:pointer; text-transform:uppercase;
+  }
+  .sugg .apply:hover{background:var(--amber); color:#082238;}
+
+  .log{
+    background:rgba(0,0,0,0.22); border-radius:2px; padding:8px 10px; font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; max-height:150px; overflow-y:auto;
+  }
+  .log-line{padding:2.5px 0; color:var(--ink-dim); border-bottom:1px solid rgba(255,255,255,0.04);}
+  .log-line .t{color:var(--ink-mute); margin-right:6px;}
+  .log-line.green{color:var(--good);} .log-line.yellow{color:var(--ok);}
+  .log-line.red{color:var(--poor);} .log-line.cyan{color:var(--paper);}
+
+  /* leaflet tweaks */
+  .leaflet-container{font-family:'IBM Plex Sans',sans-serif; background:#082a45;}
+  .leaflet-popup-content-wrapper{background:var(--bp-3); color:var(--ink); border-radius:2px; border:1px solid var(--line);}
+  .leaflet-popup-tip{background:var(--bp-3);}
+  .leaflet-popup-content{font-size:12px; margin:10px 12px; font-family:'IBM Plex Sans',sans-serif;}
+  .leaflet-popup-content b{font-family:'IBM Plex Mono',monospace;}
+  .leaflet-popup-content .pl-note{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim); display:block; margin-top:4px;}
+  .gnb-icon{
+    width:26px; height:26px; border-radius:2px; background:var(--bp);
+    border:1.5px solid var(--amber); display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:var(--amber);
+    box-shadow:0 0 10px rgba(242,166,90,0.4); cursor:grab; transform:rotate(45deg);
+  }
+  .gnb-icon span{transform:rotate(-45deg);}
+  .gnb-icon.sat{border-color:var(--poor); box-shadow:0 0 10px rgba(239,132,119,0.5); color:var(--poor);}
+  .popup-del{background:transparent; border:1px solid var(--poor); color:var(--poor); font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700; padding:5px 10px; border-radius:2px; cursor:pointer; margin-top:8px; text-transform:uppercase;}
+  .popup-del:hover{background:var(--poor); color:#082238;}
+
+  .model-status{
+    position:fixed; left:24px; bottom:24px; z-index:998;
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    background:rgba(10,53,86,.94); border:1px solid var(--line);
+    padding:8px 11px; border-radius:2px; font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px; color:var(--ink-dim); box-shadow:0 12px 34px rgba(0,0,0,.3);
+  }
+  .model-status span:first-child{color:var(--good);}
+  @media (max-width:560px){
+    .model-status{left:10px; right:10px; bottom:10px; font-size:8.5px;}
+  }
+
+  #toast{
+    position:fixed; bottom:24px; right:24px; background:var(--bp-2); color:var(--ink);
+    border:1px solid var(--line); padding:12px 18px; border-radius:2px; font-size:12.5px;
+    font-family:'IBM Plex Mono',monospace;
+    box-shadow:0 12px 34px rgba(0,0,0,0.45); transform:translateY(90px); opacity:0;
+    transition:all .35s ease; z-index:999; max-width:320px;
+  }
+  #toast.show{transform:translateY(0); opacity:1;}
+  #toast.success{border-color:var(--good); color:var(--good);}
+  #toast.warning{border-color:var(--ok); color:var(--ok);}
+  #toast.error{border-color:var(--poor); color:var(--poor);}
+
+  /* ---------- METHODOLOGY MODAL ---------- */
+  #methOverlay{
+    position:fixed; inset:0; background:rgba(4,20,34,0.72); backdrop-filter:blur(2px);
+    display:none; align-items:center; justify-content:center; z-index:900; padding:24px;
+  }
+  #methOverlay.show{display:flex;}
+  #methModal{
+    background:var(--bp-2); border:1px solid var(--line); border-radius:3px; max-width:640px; width:100%;
+    max-height:82vh; overflow-y:auto; padding:26px 28px;
+  }
+  #methModal h2{font-family:'Space Grotesk',sans-serif; font-size:18px; margin-bottom:4px;}
+  #methModal .sub{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-dim); margin-bottom:18px; letter-spacing:0.4px;}
+  #methModal h3{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--amber); text-transform:uppercase; letter-spacing:0.5px; margin:18px 0 8px;}
+  #methModal p{font-size:13px; line-height:1.65; color:var(--ink-dim); margin-bottom:6px;}
+  #methModal .formula{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; background:rgba(0,0,0,0.25); border-left:2px solid var(--amber);
+    padding:9px 12px; margin:8px 0; color:var(--paper); overflow-x:auto; white-space:pre;
+  }
+  #methModal ul{margin:6px 0 6px 18px; color:var(--ink-dim); font-size:12.5px; line-height:1.6;}
+  #methClose{
+    position:sticky; top:0; float:right; background:none; border:1px solid var(--line); color:var(--ink-dim);
+    width:26px; height:26px; border-radius:2px; cursor:pointer; font-size:14px;
+  }
+  #methClose:hover{color:var(--poor); border-color:var(--poor);}
+
+  @media (max-width:880px){
+    main{grid-template-columns:1fr;}
+    aside{border-left:none; border-top:1px solid var(--line);}
+    .kpi-strip{grid-template-columns:repeat(3,1fr);}
+    #map{min-height:52vh;}
+  }
+  @media (max-width:560px){
+    header{padding:10px 12px; align-items:flex-start; gap:10px; flex-wrap:wrap;}
+    .brand .tag{font-size:8.5px; line-height:1.25;}
+    nav{width:100%; overflow-x:auto;}
+    nav button{flex:1; min-width:105px;}
+    .toolbar{padding:8px 10px;}
+    .toolbar .btn{font-size:10px; padding:8px 10px;}
+    .kpi-strip{grid-template-columns:repeat(2,1fr);}
+  }
+
+  /* =========================================================
+     WHITE PROFESSIONAL THEME — VISUAL ONLY
+     No simulation logic, map logic or application features changed.
+     ========================================================= */
+  body{
+    background:#f5f7fa;
+    color:#172033;
+  }
+  header{
+    background:#ffffff;
+    border-bottom:1px solid #dfe3e8;
+  }
+  .brand .tag{color:#667085;}
+  nav button{
+    color:#667085;
+    border-color:transparent;
+    background:transparent;
+  }
+  nav button:hover{
+    color:#374151;
+    background:#f1f5f9;
+  }
+  nav button.active{
+    color:#374151;
+    border-color:#cfd5dc;
+    background:#f7f9fc;
+  }
+  .toolbar{
+    background:#ffffff;
+    border-bottom:1px solid #dfe3e8;
+  }
+  .btn{
+    background:#ffffff;
+    color:#172033;
+    border-color:#cfd5dc;
+  }
+  .btn:hover{
+    background:#f7f9fc;
+    border-color:#374151;
+  }
+  .btn.primary{
+    background:#374151;
+    border-color:#374151;
+    color:#ffffff;
+  }
+  .btn.primary:hover{
+    background:#1f2937;
+    border-color:#1f2937;
+  }
+  .btn.orange{
+    background:#9a6a32;
+    border-color:#9a6a32;
+    color:#ffffff;
+  }
+  .btn.orange:hover{
+    background:#7a5227;
+    border-color:#7a5227;
+  }
+  .btn.danger{
+    background:#fff5f6;
+    border-color:#e8aab2;
+    color:#b42333;
+  }
+  main{
+    background:#f5f7fa;
+  }
+  aside{
+    background:#ffffff;
+    border-left:1px solid #dfe3e8;
+  }
+  .panel{
+    background:#ffffff;
+    border:1px solid #dfe3e8;
+    box-shadow:0 3px 14px rgba(16,24,40,.05);
+  }
+  .panel-title{
+    color:#172033;
+    border-bottom-color:#e4e9ef;
+  }
+  .panel-title .badge{
+    background:#f3f4f6;
+    color:#374151;
+    border-color:#d1d5db;
+  }
+  .field label{
+    color:#667085;
+  }
+  .field input,
+  .field select{
+    background:#ffffff;
+    color:#172033;
+    border-color:#cfd5dc;
+  }
+  .field input:focus,
+  .field select:focus{
+    border-color:#374151;
+    box-shadow:0 0 0 3px rgba(11,94,168,.08);
+  }
+  .kpi-strip{
+    background:#ffffff;
+    border-top-color:#dfe3e8;
+    box-shadow:0 -3px 14px rgba(16,24,40,.04);
+  }
+  .kpi{
+    border-right-color:#e4e9ef;
+  }
+  .kpi .v{
+    color:#172033;
+  }
+  .kpi .l{
+    color:#667085;
+  }
+  .kpi .v.good{color:#168a5b;}
+  .kpi .v.warn{color:#b7791f;}
+  .kpi .v.bad{color:#c83b4b;}
+  .station-card{
+    background:#ffffff;
+    border-color:#dfe3e8;
+  }
+  .station-card:hover{
+    border-color:#9ca3af;
+    background:#f9fbfd;
+  }
+  .station-card .name{
+    color:#172033;
+  }
+  .station-card .meta{
+    color:#667085;
+  }
+  .progress{
+    background:#edf1f5;
+  }
+  .log{
+    background:#f8fafc;
+    border-color:#dfe3e8;
+  }
+  .log-line{
+    border-bottom-color:#e6ebf1;
+  }
+  .log-line .time{
+    color:#8a94a6;
+  }
+  .log-line .msg{
+    color:#344054;
+  }
+  .empty{
+    color:#98a2b3;
+  }
+  .model-status{
+    background:rgba(255,255,255,.96);
+    border-color:#dfe3e8;
+    color:#667085;
+    box-shadow:0 8px 26px rgba(16,24,40,.10);
+  }
+  .model-status span:first-child{color:#168a5b;}
+  #toast{
+    background:#ffffff;
+    color:#172033;
+    border-color:#dfe3e8;
+    box-shadow:0 12px 34px rgba(16,24,40,.14);
+  }
+  .leaflet-control-zoom a{
+    background:#ffffff !important;
+    color:#172033 !important;
+    border-color:#dfe3e8 !important;
+  }
+  .leaflet-control-zoom a:hover{
+    background:#f5f7fa !important;
+    color:#374151 !important;
+  }
+  .leaflet-control-attribution{
+    background:rgba(255,255,255,.9) !important;
+    color:#667085 !important;
+  }
+  @media (max-width:880px){
+    aside{border-top-color:#dfe3e8;}
+  }
+
+
+  /* Humanised engineering dashboard: restrained, neutral, no AI-heavy visual language */
+  .btn.ai{background:#ffffff;color:#344054;border-color:#cfd5dc;box-shadow:none;}
+  .btn.ai:hover{background:#f7f9fc;color:#374151;border-color:#9fb3c8;}
+  .panel-h .info-btn{color:#667085;border-color:#cfd5dc;background:#fff;}
+  .sugg{border-left-width:3px;box-shadow:none;}
+  .sugg .score{font-family:'IBM Plex Mono',monospace;color:#667085;}
+  .station-row .dot{font-weight:600;letter-spacing:.2px;}
+  .brand .mark{box-shadow:none;}
+
+
+  /* ---------- REPORT PREVIEW ---------- */
+  .report-overlay{
+    display:none; position:fixed; inset:0; z-index:2000;
+    background:rgba(15,23,42,.38); backdrop-filter:blur(3px);
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .report-overlay.show{display:flex;}
+  .report-modal{
+    width:min(720px, 100%); max-height:88vh; overflow:auto;
+    background:#fff; border:1px solid #dfe3e8; border-radius:8px;
+    box-shadow:0 24px 70px rgba(15,23,42,.22); padding:26px;
+    color:#172033; position:relative;
+  }
+  .report-close{
+    position:absolute; right:14px; top:10px; border:0; background:none;
+    color:#667085; font-size:25px; cursor:pointer;
+  }
+  .report-kicker{
+    font-size:10px; letter-spacing:.14em; color:#6b7280;
+    font-weight:700; margin-bottom:7px;
+  }
+  .report-modal h2{font-size:22px; margin-bottom:5px;}
+  .report-sub{color:#667085; font-size:13px; margin-bottom:18px;}
+  .report-preview{
+    background:#f8fafc; border:1px solid #e5e7eb; border-radius:6px;
+    padding:15px; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    line-height:1.7; white-space:pre-wrap; color:#374151;
+    max-height:330px; overflow:auto;
+  }
+  .report-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:16px; flex-wrap:wrap;}
+  .report-location{margin-top:12px; color:#8a94a6; font-size:10px;}
+
+
+  /* ---------- PROFESSIONAL WORDMARK ---------- */
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .brand-mark{
+    width:34px;
+    height:34px;
+    border:1px solid #cfd5dc;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f8fafc;
+    color:#374151;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.04em;
+  }
+  .brand-copy h1{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:18px;
+    line-height:1.1;
+    font-weight:600;
+    letter-spacing:-.02em;
+    color:#172033;
+  }
+  .brand-copy .tag{
+    margin-top:4px;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:8.5px;
+    line-height:1.2;
+    letter-spacing:.08em;
+    color:#7b8491;
+    font-weight:500;
+  }
+  @media (max-width:560px){
+    .brand-mark{width:31px;height:31px;font-size:11px;}
+    .brand-copy h1{font-size:16px;}
+    .brand-copy .tag{font-size:7.5px;}
+  }
+
+</style>
 </head>
-
 <body>
 
-    <!-- ================= HEADER ================= -->
+<header>
+  <div class="brand">
+    <div class="brand-mark" aria-label="5G Smart Planner">5SP</div>
+    <div class="brand-copy">
+      <h1>5G Smart Planner</h1>
+      
+    </div>
+  </div>
+  <nav>
+    <button class="active">Simulation</button>
+    <button id="navMeth">Méthodologie</button>
+    <button id="navReports">Rapports</button>
+  </nav>
+</header>
 
-    <header class="header">
+<main>
+  <div class="map-col">
+    <div class="toolbar">
+      <button class="btn primary" id="btnAddStation"><span class="tag-ico">+</span>Ajouter station</button>
+      <button class="btn" id="btnGenUsers"><span class="tag-ico">U</span>Générer utilisateurs</button>
+      <button class="btn ai" id="btnOptimize"><span class="tag-ico">∴</span>Analyser et optimiser</button>
+      <div class="spacer"></div>
+      <span class="hint" id="placeHint">Cliquez sur la carte pour placer la station…</span>
+      <button class="btn ghost danger" id="btnClear"><span class="tag-ico">×</span>Tout effacer</button>
+    </div>
+    <div id="map"></div>
+    <div class="kpi-strip">
+      <div class="kpi c-cyan"><div class="val" id="kStations">0</div><div class="lbl">Stations</div></div>
+      <div class="kpi c-cyan"><div class="val" id="kUsers">0</div><div class="lbl">Utilisateurs</div></div>
+      <div class="kpi c-green"><div class="val" id="kCoverage">0%</div><div class="lbl">Couverture</div></div>
+      <div class="kpi c-yellow"><div class="val" id="kLatency">0 ms</div><div class="lbl">Latence est.</div></div>
+      <div class="kpi c-yellow"><div class="val" id="kCapacity">0%</div><div class="lbl">Charge moy.</div></div>
+      <div class="kpi c-red"><div class="val" id="kSaturated">0</div><div class="lbl">Saturées</div></div>
+    </div>
+  </div>
 
-        <div class="logo-container">
-            <div class="logo-icon">5G</div>
-
-            <div>
-                <h1>5G Smart Planner</h1>
-                <p>Plateforme intelligente de planification réseau</p>
-            </div>
+  <aside>
+    <div class="panel">
+      <div class="panel-h"><span>Stations gNodeB</span><span class="count" id="cntStations">0</span></div>
+      <div class="panel-body" id="stationsList" style="max-height:190px;">
+        <div class="empty">Aucune station.<br>Cliquez « Ajouter station » puis sur la carte.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><span>Recommandations réseau</span><button class="info-btn" id="btnAiInfo" title="Comment ça marche ?">i</button></div>
+      <div class="panel-body" id="aiPanel" style="max-height:230px;">
+        <div class="empty">Aucune analyse pour le moment. Cliquez « Analyser et optimiser ».</div>
+      </div>
+    </div>
+    <div class="panel" style="flex:1;">
+      <div class="panel-h"><span>Journal d'activité</span></div>
+      <div class="panel-body grow">
+        <div class="log" id="logBox">
+          <div class="log-line cyan"><span class="t">[init]</span>Plateforme prête.</div>
         </div>
-
-        <nav>
-            <a href="#dashboard">Dashboard</a>
-            <a href="#simulation">Simulation</a>
-            <a href="#optimization">Optimisation</a>
-            <a href="#about">À propos</a>
-        </nav>
-
-    </header>
-
-
-    <!-- ================= HERO ================= -->
-
-    <section class="hero">
-
-        <div class="hero-content">
-
-            <span class="badge">PLATEFORME 5G INTELLIGENTE</span>
-
-            <h2>
-                Planifiez votre réseau 5G
-                <span>plus intelligemment</span>
-            </h2>
-
-            <p>
-                Simulez la couverture réseau, analysez les performances
-                et identifiez les meilleurs emplacements pour vos
-                nouvelles stations 5G.
-            </p>
-
-            <div class="hero-buttons">
-
-                <button class="primary-button" onclick="scrollToSimulation()">
-                    Commencer la simulation
-                </button>
-
-                <button class="secondary-button" onclick="showProjectInfo()">
-                    Découvrir le projet
-                </button>
-
-            </div>
-
-        </div>
-
-        <div class="hero-card">
-
-            <div class="signal-animation">
-
-                <div class="signal-circle circle-1"></div>
-                <div class="signal-circle circle-2"></div>
-                <div class="signal-circle circle-3"></div>
-
-                <div class="signal-center">
-                    📡
-                </div>
-
-            </div>
-
-            <h3>Optimisation intelligente</h3>
-
-            <p>
-                Analyse automatique des zones à faible couverture
-                et recommandation de nouveaux sites.
-            </p>
-
-        </div>
-
-    </section>
-
-
-    <!-- ================= DASHBOARD ================= -->
-
-    <section id="dashboard" class="section">
-
-        <div class="section-title">
-
-            <span>ANALYSE DU RÉSEAU</span>
-
-            <h2>Tableau de bord</h2>
-
-            <p>
-                Visualisez rapidement les indicateurs principaux
-                de votre réseau 5G.
-            </p>
-
-        </div>
-
-
-        <div class="statistics">
-
-            <div class="stat-card">
-
-                <div class="stat-icon">📡</div>
-
-                <div>
-                    <p>Stations 5G</p>
-                    <h3 id="stationCount">24</h3>
-                </div>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <div class="stat-icon">📶</div>
-
-                <div>
-                    <p>Couverture</p>
-                    <h3 id="coverageValue">78%</h3>
-                </div>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <div class="stat-icon">⚡</div>
-
-                <div>
-                    <p>Débit moyen</p>
-                    <h3>842 Mbps</h3>
-                </div>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <div class="stat-icon">💰</div>
-
-                <div>
-                    <p>Coût estimé</p>
-                    <h3 id="costValue">1.24 M DH</h3>
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- ================= SIMULATION ================= -->
-
-    <section id="simulation" class="section simulation-section">
-
-        <div class="section-title">
-
-            <span>SIMULATION</span>
-
-            <h2>Planification du réseau</h2>
-
-            <p>
-                Configurez les paramètres du réseau puis lancez
-                une simulation de couverture.
-            </p>
-
-        </div>
-
-
-        <div class="simulation-layout">
-
-
-            <!-- PARAMÈTRES -->
-
-            <div class="control-panel">
-
-                <h3>⚙ Paramètres de simulation</h3>
-
-
-                <div class="form-group">
-
-                    <label for="technology">
-                        Technologie
-                    </label>
-
-                    <select id="technology">
-
-                        <option value="5g">5G</option>
-                        <option value="5g-plus">5G+</option>
-                        <option value="4g">4G / LTE</option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="frequency">
-                        Fréquence
-                    </label>
-
-                    <select id="frequency">
-
-                        <option value="700">700 MHz</option>
-                        <option value="3500" selected>3.5 GHz</option>
-                        <option value="26000">26 GHz</option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="stations">
-                        Nombre de stations :
-                        <strong id="stationsDisplay">10</strong>
-                    </label>
-
-                    <input
-                        type="range"
-                        id="stations"
-                        min="1"
-                        max="50"
-                        value="10"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="power">
-                        Puissance d'émission :
-                        <strong id="powerDisplay">40 W</strong>
-                    </label>
-
-                    <input
-                        type="range"
-                        id="power"
-                        min="10"
-                        max="100"
-                        value="40"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="radius">
-                        Rayon de couverture :
-                        <strong id="radiusDisplay">500 m</strong>
-                    </label>
-
-                    <input
-                        type="range"
-                        id="radius"
-                        min="100"
-                        max="2000"
-                        value="500"
-                    >
-
-                </div>
-
-
-                <button
-                    class="simulation-button"
-                    onclick="runSimulation()"
-                >
-                    🚀 Lancer la simulation
-                </button>
-
-            </div>
-
-
-            <!-- CARTE -->
-
-            <div class="map-container">
-
-                <div id="map"></div>
-
-                <div class="map-overlay">
-
-                    <div class="map-status">
-
-                        <span class="status-dot"></span>
-
-                        Simulation active
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- ================= OPTIMISATION ================= -->
-
-    <section id="optimization" class="section">
-
-        <div class="section-title">
-
-            <span>INTELLIGENCE ARTIFICIELLE</span>
-
-            <h2>Optimisation des emplacements</h2>
-
-            <p>
-                Le système analyse la couverture actuelle et propose
-                les meilleures positions pour les nouvelles stations.
-            </p>
-
-        </div>
-
-
-        <div class="optimization-container">
-
-
-            <div class="optimization-card">
-
-                <div class="optimization-icon">
-                    🤖
-                </div>
-
-                <h3>Analyse intelligente</h3>
-
-                <p>
-                    Identification automatique des zones présentant
-                    une faible qualité de signal.
-                </p>
-
-            </div>
-
-
-            <div class="optimization-card">
-
-                <div class="optimization-icon">
-                    📍
-                </div>
-
-                <h3>Position optimale</h3>
-
-                <p>
-                    Proposition des meilleurs emplacements pour
-                    installer de nouvelles stations.
-                </p>
-
-            </div>
-
-
-            <div class="optimization-card">
-
-                <div class="optimization-icon">
-                    💰
-                </div>
-
-                <h3>Réduction des coûts</h3>
-
-                <p>
-                    Comparaison des scénarios afin de trouver
-                    le meilleur compromis entre couverture et coût.
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="recommendation-panel">
-
-            <div>
-
-                <span class="recommendation-label">
-                    RECOMMANDATION DU SYSTÈME
-                </span>
-
-                <h3>
-                    3 nouveaux sites recommandés
-                </h3>
-
-                <p>
-                    L'analyse indique trois zones présentant
-                    actuellement une couverture insuffisante.
-                </p>
-
-            </div>
-
-            <button
-                class="primary-button"
-                onclick="generateRecommendation()"
-            >
-                Générer l'analyse
-            </button>
-
-        </div>
-
-    </section>
-
-
-    <!-- ================= RESULTS ================= -->
-
-    <section class="section results-section">
-
-        <div class="section-title">
-
-            <span>RÉSULTATS</span>
-
-            <h2>Résultats de simulation</h2>
-
-        </div>
-
-
-        <div class="results-grid">
-
-            <div class="result-card">
-
-                <h3>Couverture</h3>
-
-                <div class="progress">
-
-                    <div
-                        id="coverageProgress"
-                        class="progress-bar"
-                        style="width: 78%"
-                    ></div>
-
-                </div>
-
-                <strong id="resultCoverage">
-                    78%
-                </strong>
-
-            </div>
-
-
-            <div class="result-card">
-
-                <h3>Qualité du signal</h3>
-
-                <div class="progress">
-
-                    <div
-                        id="signalProgress"
-                        class="progress-bar"
-                        style="width: 82%"
-                    ></div>
-
-                </div>
-
-                <strong>Bonne</strong>
-
-            </div>
-
-
-            <div class="result-card">
-
-                <h3>Efficacité</h3>
-
-                <div class="progress">
-
-                    <div
-                        id="efficiencyProgress"
-                        class="progress-bar"
-                        style="width: 74%"
-                    ></div>
-
-                </div>
-
-                <strong>74%</strong>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- ================= ABOUT ================= -->
-
-    <section id="about" class="about-section">
-
-        <div class="about-content">
-
-            <span>À PROPOS DU PROJET</span>
-
-            <h2>5G Smart Planner</h2>
-
-            <p>
-                5G Smart Planner est une plateforme web destinée
-                à aider les ingénieurs télécoms dans la planification
-                et l'optimisation des réseaux 5G.
-            </p>
-
-            <p>
-                L'objectif est de simuler différents scénarios,
-                visualiser la couverture réseau et proposer des
-                emplacements optimaux pour les stations 5G.
-            </p>
-
-        </div>
-
-        <div class="technology-list">
-
-            <div>HTML5</div>
-            <div>CSS3</div>
-            <div>JavaScript</div>
-            <div>Leaflet</div>
-            <div>5G</div>
-            <div>IA</div>
-
-        </div>
-
-    </section>
-
-
-    <!-- ================= FOOTER ================= -->
-
-    <footer>
-
-        <div>
-
-            <strong>📡 5G Smart Planner</strong>
-
-            <p>
-                Plateforme intelligente de planification 5G
-            </p>
-
-        </div>
-
-        <p>
-            © 2026 5G Smart Planner — Projet académique
-        </p>
-
-    </footer>
-
-
-    <!-- Leaflet -->
-
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-    </script>
-
-    <!-- Notre JavaScript -->
-
-    <script src="script.js"></script>
-
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div id="modelStatus" class="model-status" aria-live="polite">
+  <span>● SIMULATION ACTIVE</span>
+  <span>3.5 GHz · n78</span>
+  <span>3GPP 38.901 · UMi</span>
+</div>
+
+<div id="toast"></div>
+
+<div id="reportOverlay" class="report-overlay" aria-hidden="true">
+  <div class="report-modal">
+    <button class="report-close" id="reportClose" aria-label="Fermer">×</button>
+    <div class="report-kicker">RAPPORT DE SIMULATION</div>
+    <h2>Rapport 5G Smart Planner</h2>
+    <p class="report-sub">Synthèse du scénario courant et des principaux indicateurs réseau.</p>
+    <div id="reportPreview" class="report-preview"></div>
+    <div class="report-actions">
+      <button class="btn" id="reportDownload">Télécharger le rapport (.txt)</button>
+      <button class="btn primary" id="reportClose2">Fermer</button>
+    </div>
+    <div class="report-location">Le fichier téléchargé sera enregistré dans le dossier <b>Téléchargements / Downloads</b> de votre navigateur.</div>
+  </div>
+</div>
+
+
+<div id="methOverlay">
+  <div id="methModal" class="ticks">
+    <button id="methClose">×</button>
+    <h2>Méthodologie de simulation</h2>
+    <div class="sub">CE QUI EST RÉELLEMENT CALCULÉ DANS CETTE MAQUETTE — ET SES LIMITES</div>
+
+    <h3>1 · Modèle de propagation radio</h3>
+    <p>Le lien radio utilise le modèle standardisé <b>3GPP TR 38.901</b> pour le scénario <b>UMi — Street Canyon</b> (macro/micro urbain dense), pertinent pour la bande 3.5 GHz (n78), là où le couple Hata / COST-231 Hata historique n'est valide que jusqu'à 2 GHz et ne s'applique donc pas correctement à la 5G mid-band.</p>
+    <div class="formula">P_LOS(d2D) = 1                                    si d2D ≤ 18 m
+P_LOS(d2D) = 18/d2D + e^(-d2D/36)·(1 − 18/d2D)    sinon
+
+PL_LOS  = 32.4 + 21·log10(d3D) + 20·log10(fc)
+PL_NLOS = max(PL_LOS, 35.3·log10(d3D) + 22.4 + 21.3·log10(fc) − 0.3·(hUT−1.5))
+
+PL_eff  = P_LOS · PL_LOS + (1 − P_LOS) · PL_NLOS
+RSRP    = EIRP − PL_eff   avec EIRP = Ptx + Gtx(17 dBi, antenne secteur)</div>
+    <p>d3D intègre la différence de hauteur antenne/UE (hBS=10 m, hUT=1.5 m). fc = 3.5 GHz.</p>
+
+    <h3>2 · Détection des zones blanches — DBSCAN</h3>
+    <p>Un balayage en grille évalue le meilleur RSRP en chaque point de la vue courante. Les points sous le seuil de service sont regroupés par un véritable algorithme <b>DBSCAN</b> (density-based clustering, ε et minPts configurés pour l'échelle de la carte) : chaque cluster de points contigus devient une recommandation d'implantation, positionnée au centroïde du cluster — pas une simple moyenne globale.</p>
+
+    <h3>3 · Équilibrage de charge — heuristique gloutonne</h3>
+    <p>Les stations à plus de 90 % de leur capacité (25 UE simultanés, hypothèse 3GPP eMBB dense) déclenchent une suggestion de délestage ; les stations en fort recouvrement et sous-chargées sont fusionnées. C'est une <b>heuristique gloutonne</b> — une approximation rapide, exécutable dans le navigateur, de ce qu'un solveur d'optimisation linéaire en nombres entiers (ex. PuLP/CBC côté serveur) calculerait de façon optimale sur un vrai déploiement.</p>
+
+    <h3>Limites assumées</h3>
+    <ul>
+      <li>Pas de tracé de rayons ni de base de données de bâtiments réelle : la probabilité LOS/NLOS est statistique, pas géométrique.</li>
+      <li>Pas d'évanouissement rapide (fast fading) ni de shadowing aléatoire — la carte affiche une moyenne déterministe.</li>
+      <li>Capacité par cellule fixée à 25 UE simultanés à titre indicatif ; la vraie capacité dépend du MIMO, du beamforming et de l'allocation de PRB.</li>
+      <li>Objectif : aide pédagogique à la décision, pas un outil d'ingénierie radio certifié (type Atoll/Forsk ou iBwave).</li>
+    </ul>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* =========================================================
+   5G SMART PLANNER — moteur de simulation
+   Modèle radio : 3GPP TR 38.901 UMi-Street Canyon (LOS/NLOS)
+   Détection de zones blanches : DBSCAN
+   ========================================================= */
+const CENTER = [33.5731, -7.5898]; // Casablanca
+const CAPACITY_PER_STATION = 25;     // UE simultanés max (hypothèse eMBB dense)
+const RSRP_GOOD = -85;               // seuil "excellente" (dBm)
+const RSRP_OK   = -100;              // seuil "moyenne" (dBm)
+const RSRP_MIN  = -112;              // seuil de perte de service
+const FC_GHZ = 3.5;                  // fréquence porteuse (n78)
+const H_BS = 10, H_UT = 1.5;         // hauteurs antenne / UE (m)
+const ANT_GAIN_DBI = 17;             // gain d'antenne secteur typique
+
+let map, stations = [], users = [];
+let stationSeq = 1;
+let placing = false;
+let markersLayer, ringsLayer, usersLayer, linesLayer;
+let selectedStationId = null;
+
+// ---------- INIT MAP ----------
+function initMap(){
+  map = L.map('map', {zoomControl:true, attributionControl:false}).setView(CENTER, 13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    subdomains:'abcd', maxZoom:19
+  }).addTo(map);
+
+  ringsLayer   = L.layerGroup().addTo(map);
+  linesLayer   = L.layerGroup().addTo(map);
+  usersLayer   = L.layerGroup().addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+
+  map.on('click', (e) => {
+    if(!placing) return;
+    createStation(e.latlng.lat, e.latlng.lng);
+    setPlacing(false);
+  });
+}
+
+// ---------- RADIO MODEL : 3GPP TR 38.901 UMi-Street Canyon ----------
+function losProbability(d2D){
+  if(d2D <= 18) return 1;
+  return (18/d2D) + Math.exp(-d2D/36) * (1 - 18/d2D);
+}
+function pathLoss3gppUMi(d2D){
+  const d3D = Math.sqrt(d2D*d2D + (H_BS-H_UT)*(H_BS-H_UT));
+  const d3Dsafe = Math.max(d3D, 1);
+  const logD = Math.log10(d3Dsafe);
+  const logFc = Math.log10(FC_GHZ);
+  const plLOS = 32.4 + 21*logD + 20*logFc;
+  const plNLOSraw = 35.3*logD + 22.4 + 21.3*logFc - 0.3*(H_UT-1.5);
+  const plNLOS = Math.max(plLOS, plNLOSraw);
+  const pLOS = losProbability(Math.max(d2D,1));
+  return pLOS*plLOS + (1-pLOS)*plNLOS;
+}
+function rsrpAt(station, latlng){
+  const d2D = Math.max(map.distance([station.lat, station.lng], latlng), 1);
+  const eirp = station.power + ANT_GAIN_DBI;
+  return eirp - pathLoss3gppUMi(d2D);
+}
+// distance (m) à laquelle le RSRP tombe à un seuil donné — recherche numérique
+// (le modèle 3GPP n'est pas inversible analytiquement, contrairement au log-distance simple)
+function radiusForThreshold(station, threshold){
+  let lo = 1, hi = 8000;
+  const eirp = station.power + ANT_GAIN_DBI;
+  const rsrpAtD = (d) => eirp - pathLoss3gppUMi(d);
+  if(rsrpAtD(hi) > threshold) return hi;
+  for(let i=0;i<40;i++){
+    const mid = (lo+hi)/2;
+    if(rsrpAtD(mid) > threshold) lo = mid; else hi = mid;
+  }
+  return (lo+hi)/2;
+}
+
+function classify(rsrp){
+  if(rsrp >= RSRP_GOOD) return 'good';
+  if(rsrp >= RSRP_OK) return 'ok';
+  if(rsrp >= RSRP_MIN) return 'poor';
+  return 'none';
+}
+const COLORS = {good:'#7fd9a8', ok:'#f2c94c', poor:'#ef8477', none:'#3c6a8c'};
+
+// ---------- STATIONS ----------
+function createStation(lat, lng, opts={}){
+  const st = {
+    id:'gNB-' + String(stationSeq++).padStart(3,'0'),
+    name: opts.name || `gNodeB-${stations.length+1}`,
+    lat, lng,
+    power: opts.power || 43,   // dBm conduit (Ptx)
+    freq: FC_GHZ,
+    users: 0,
+    ai: !!opts.ai
+  };
+  stations.push(st);
+  buildStationMarker(st);
+  recompute();
+  addLog(`gNodeB ${st.name} placée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'cyan');
+  toast(`Station ${st.name} ajoutée`, 'success');
+  return st;
+}
+
+function buildStationMarker(st){
+  const icon = L.divIcon({
+    className:'',
+    html:`<div class="gnb-icon" id="icon-${st.id}"><span>${st.ai?'OPT':'BS'}</span></div>`,
+    iconSize:[26,26], iconAnchor:[13,13]
+  });
+  st.marker = L.marker([st.lat, st.lng], {icon, draggable:true}).addTo(markersLayer);
+  st.marker.bindPopup(popupHTML(st));
+  st.marker.on('dragend', (e) => {
+    const p = e.target.getLatLng();
+    st.lat = p.lat; st.lng = p.lng;
+    recompute();
+    addLog(`${st.name} déplacée`, 'yellow');
+  });
+  st.marker.on('click', () => { selectedStationId = st.id; refreshSidebar(); });
+}
+
+function popupHTML(st){
+  const eirp = st.power + ANT_GAIN_DBI;
+  return `<b>${st.name}</b><br>Ptx ${st.power} dBm · EIRP ${eirp} dBm · ${st.freq} GHz
+    <span class="pl-note">3GPP 38.901 UMi · ${st.users} UE connectés</span>
+    <br><button class="popup-del" onclick="deleteStation('${st.id}')">Supprimer</button>`;
+}
+
+function deleteStation(id){
+  const st = stations.find(s => s.id === id);
+  if(!st) return;
+  map.removeLayer(st.marker);
+  stations = stations.filter(s => s.id !== id);
+  recompute();
+  addLog(`${st.name} supprimée`, 'red');
+  toast(`Station supprimée`, 'warning');
+}
+window.deleteStation = deleteStation; // for popup inline onclick
+
+function moveStation(id, lat, lng){
+  const st = stations.find(s => s.id === id);
+  if(!st) return;
+  st.lat = lat; st.lng = lng;
+  st.marker.setLatLng([lat, lng]);
+  recompute();
+}
+
+// ---------- USERS ----------
+function generateUsers(){
+  users = [];
+  const bounds = map.getBounds();
+  const clusterCount = 3 + Math.floor(Math.random()*2); // zones d'habitation / industrielles
+  const clusters = [];
+  for(let c=0; c<clusterCount; c++){
+    clusters.push({
+      lat: bounds.getSouth() + Math.random()*(bounds.getNorth()-bounds.getSouth()),
+      lng: bounds.getWest() + Math.random()*(bounds.getEast()-bounds.getWest()),
+      spread: 0.006 + Math.random()*0.01
+    });
+  }
+  const total = 60 + Math.floor(Math.random()*40);
+  for(let i=0; i<total; i++){
+    const c = clusters[Math.floor(Math.random()*clusters.length)];
+    const lat = c.lat + (Math.random()-0.5)*c.spread;
+    const lng = c.lng + (Math.random()-0.5)*c.spread;
+    users.push({
+      id:'UE-'+String(i+1).padStart(3,'0'),
+      lat: Math.max(bounds.getSouth(), Math.min(bounds.getNorth(), lat)),
+      lng: Math.max(bounds.getWest(), Math.min(bounds.getEast(), lng)),
+      service:['eMBB','uRLLC','mMTC'][Math.floor(Math.random()*3)]
+    });
+  }
+  recompute();
+  addLog(`${users.length} utilisateurs générés (${clusterCount} zones)`, 'green');
+  toast(`${users.length} utilisateurs générés`, 'success');
+}
+
+// ---------- COVERAGE ENGINE ----------
+function recompute(){
+  stations.forEach(s => s.users = 0);
+
+  users.forEach(u => {
+    let best = null, bestRsrp = -999;
+    stations.forEach(s => {
+      const r = rsrpAt(s, [u.lat, u.lng]);
+      if(r > bestRsrp){ bestRsrp = r; best = s; }
+    });
+    u.rsrp = stations.length ? Math.round(bestRsrp) : null;
+    u.status = stations.length ? classify(bestRsrp) : 'none';
+    u.stationId = (u.status !== 'none' && best) ? best.id : null;
+    if(u.stationId){
+      const st = stations.find(s => s.id === u.stationId);
+      if(st) st.users++;
+    }
+  });
+
+  drawRings();
+  drawUsers();
+  refreshSidebar();
+  updateKPIs();
+}
+
+function drawRings(){
+  ringsLayer.clearLayers();
+  stations.forEach(st => {
+    const rGood = radiusForThreshold(st, RSRP_GOOD);
+    const rOk   = radiusForThreshold(st, RSRP_OK);
+    const rPoor = radiusForThreshold(st, RSRP_MIN);
+    L.circle([st.lat, st.lng], {radius:rPoor, color:COLORS.poor, weight:1, dashArray:'2,4', fillOpacity:0.06}).addTo(ringsLayer);
+    L.circle([st.lat, st.lng], {radius:rOk,   color:COLORS.ok,   weight:1, dashArray:'2,4', fillOpacity:0.09}).addTo(ringsLayer);
+    L.circle([st.lat, st.lng], {radius:rGood, color:COLORS.good, weight:1, dashArray:'2,4', fillOpacity:0.13}).addTo(ringsLayer);
+    const el = document.getElementById('icon-'+st.id);
+    if(el) el.classList.toggle('sat', st.users > CAPACITY_PER_STATION*0.9);
+    if(st.marker){ st.marker.setPopupContent(popupHTML(st)); }
+  });
+}
+
+function drawUsers(){
+  usersLayer.clearLayers();
+  users.forEach(u => {
+    L.circleMarker([u.lat, u.lng], {
+      radius:3.2, color:COLORS[u.status], fillColor:COLORS[u.status],
+      fillOpacity:0.9, weight:1, opacity:0.9
+    }).bindTooltip(`${u.id} · ${u.rsrp ?? '—'} dBm`, {direction:'top', opacity:0.9})
+      .addTo(usersLayer);
+  });
+}
+
+// ---------- KPIs ----------
+function updateKPIs(){
+  document.getElementById('kStations').textContent = stations.length;
+  document.getElementById('kUsers').textContent = users.length;
+
+  const covered = users.filter(u => u.status==='good' || u.status==='ok').length;
+  const coveragePct = users.length ? Math.round(covered/users.length*100) : 0;
+  document.getElementById('kCoverage').textContent = coveragePct + '%';
+
+  const latency = users.length ? Math.round(4 + (100-coveragePct)*0.16) : 0;
+  document.getElementById('kLatency').textContent = latency + ' ms';
+
+  const avgLoad = stations.length
+    ? Math.round(stations.reduce((a,s)=>a+Math.min(s.users/CAPACITY_PER_STATION*100,100),0)/stations.length)
+    : 0;
+  document.getElementById('kCapacity').textContent = avgLoad + '%';
+
+  const saturated = stations.filter(s => s.users > CAPACITY_PER_STATION*0.9).length;
+  document.getElementById('kSaturated').textContent = saturated;
+}
+
+// ---------- SIDEBAR ----------
+function refreshSidebar(){
+  document.getElementById('cntStations').textContent = stations.length;
+  const list = document.getElementById('stationsList');
+  if(stations.length === 0){
+    list.innerHTML = `<div class="empty">Aucune station.<br>Cliquez « Ajouter station » puis sur la carte.</div>`;
+    return;
+  }
+  list.innerHTML = stations.map(s => {
+    const sat = s.users > CAPACITY_PER_STATION*0.9;
+    return `<div class="station-row ${sat?'sat':''}" onclick="focusStation('${s.id}')">
+      <span class="dot">${s.ai?'OPT':'BS'}</span>
+      <div class="meta">
+        <div class="name">${s.name}</div>
+        <div class="sub">${s.power}dBm · ${s.users}/${CAPACITY_PER_STATION} UE ${sat?'· SATURÉE':''}</div>
+      </div>
+      <button class="del" onclick="event.stopPropagation(); deleteStation('${s.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function focusStation(id){
+  const st = stations.find(s => s.id === id);
+  if(st){ map.panTo([st.lat, st.lng]); st.marker.openPopup(); }
+}
+window.focusStation = focusStation;
+
+// ---------- DBSCAN (implémentation générique, density-based clustering) ----------
+// eps en mètres, minPts = nombre minimum de points pour former une région dense
+function dbscan(points, eps, minPts, distFn){
+  const labels = new Array(points.length).fill(0); // 0=non visité, -1=bruit, >0=cluster id
+  let clusterId = 0;
+
+  function regionQuery(idx){
+    const neighbors = [];
+    for(let i=0;i<points.length;i++){
+      if(distFn(points[idx], points[i]) <= eps) neighbors.push(i);
+    }
+    return neighbors;
+  }
+
+  for(let i=0;i<points.length;i++){
+    if(labels[i] !== 0) continue;
+    const neighbors = regionQuery(i);
+    if(neighbors.length < minPts){ labels[i] = -1; continue; }
+    clusterId++;
+    labels[i] = clusterId;
+    const queue = [...neighbors];
+    while(queue.length){
+      const q = queue.shift();
+      if(labels[q] === -1) labels[q] = clusterId;
+      if(labels[q] !== 0) continue;
+      labels[q] = clusterId;
+      const qNeighbors = regionQuery(q);
+      if(qNeighbors.length >= minPts) queue.push(...qNeighbors);
+    }
+  }
+  const clusters = {};
+  labels.forEach((lab, idx) => {
+    if(lab <= 0) return;
+    (clusters[lab] = clusters[lab] || []).push(points[idx]);
+  });
+  return Object.values(clusters);
+}
+
+// ---------- NETWORK OPTIMIZER ----------
+// L'objectif n'est pas seulement de supprimer une station : on compare
+// plusieurs actions candidates et on retient celles qui améliorent le
+// compromis couverture + qualité radio + charge.
+function networkScore(candidateStations){
+  if(!users.length) return {score:0, covered:0, good:0, avgRsrp:-999, loadStd:0};
+  const loads = candidateStations.map(()=>0);
+  let covered=0, good=0, sum=0;
+  users.forEach(u => {
+    let best=-999, bestIdx=-1;
+    candidateStations.forEach((st,idx)=>{
+      const r=rsrpAt(st,[u.lat,u.lng]);
+      if(r>best){best=r; bestIdx=idx;}
+    });
+    sum += best;
+    if(best>=RSRP_OK) covered++;
+    if(best>=RSRP_GOOD) good++;
+    if(bestIdx>=0 && best>=RSRP_MIN) loads[bestIdx]++;
+  });
+  const avg=loads.reduce((a,b)=>a+b,0)/Math.max(loads.length,1);
+  const variance=loads.reduce((a,b)=>a+Math.pow(b-avg,2),0)/Math.max(loads.length,1);
+  const loadStd=Math.sqrt(variance);
+  const avgRsrp=sum/users.length;
+  const score=covered*5 + good*2 + Math.max(avgRsrp+100,0)*0.8 - loadStd*1.5;
+  return {score, covered, good, avgRsrp, loadStd, loads};
+}
+
+function candidatePositionsForCluster(cluster, limit=7){
+  const cLat=cluster.reduce((a,p)=>a+p.lat,0)/cluster.length;
+  const cLng=cluster.reduce((a,p)=>a+p.lng,0)/cluster.length;
+  const points=[{lat:cLat,lng:cLng}];
+  cluster.slice().sort((a,b)=>a.lat-b.lat).forEach(p=>points.push(p));
+  cluster.slice().sort((a,b)=>b.lng-a.lng).forEach(p=>points.push(p));
+  return points.slice(0,limit);
+}
+
+function bestAddCandidate(cluster){
+  const candidates=candidatePositionsForCluster(cluster);
+  const base=networkScore(stations);
+  let best=null;
+  candidates.forEach(pos=>{
+    // Avoid proposing a site almost co-located with an existing gNodeB.
+    const tooClose=stations.some(s=>map.distance([s.lat,s.lng],[pos.lat,pos.lng])<120);
+    if(tooClose) return;
+    const candidate={id:'candidate',lat:pos.lat,lng:pos.lng,power:43};
+    const result=networkScore(stations.concat(candidate));
+    const gain=result.score-base.score;
+    if(!best || gain>best.gain) best={...pos,gain,result,base};
+  });
+  return best;
+}
+
+function bestMoveCandidate(station, targetPoints){
+  const candidates=candidatePositionsForCluster(targetPoints,8);
+  const base=networkScore(stations);
+  let best=null;
+  candidates.forEach(pos=>{
+    const tooClose=stations.some(s=>s.id!==station.id && map.distance([s.lat,s.lng],[pos.lat,pos.lng])<120);
+    if(tooClose) return;
+    const moved=stations.map(s=>s.id===station.id ? {...s,lat:pos.lat,lng:pos.lng} : s);
+    const result=networkScore(moved);
+    const gain=result.score-base.score;
+    if(!best || gain>best.gain) best={...pos,gain,result,base};
+  });
+  return best;
+}
+
+function optimizeNetwork(){
+  if(stations.length === 0){ toast("Ajoutez au moins une station d'abord", 'warning'); return; }
+  if(users.length === 0){ toast("Générez des utilisateurs d'abord", 'warning'); return; }
+
+  const suggestions=[];
+  const bounds=map.getBounds();
+  const steps=16;
+  const gridPoints=[];
+  const cellSizeM=map.distance([bounds.getSouth(),bounds.getWest()],[bounds.getSouth(),bounds.getEast()])/steps;
+  for(let i=0;i<=steps;i++){
+    for(let j=0;j<=steps;j++){
+      const lat=bounds.getSouth()+(bounds.getNorth()-bounds.getSouth())*i/steps;
+      const lng=bounds.getWest()+(bounds.getEast()-bounds.getWest())*j/steps;
+      let bestRsrp=-999;
+      stations.forEach(s=>{const r=rsrpAt(s,[lat,lng]);if(r>bestRsrp)bestRsrp=r;});
+      if(classify(bestRsrp)==='poor'||classify(bestRsrp)==='none') gridPoints.push({lat,lng});
+    }
+  }
+  const eps=Math.max(cellSizeM*1.6,60);
+  const clusters=dbscan(gridPoints,eps,3,(a,b)=>map.distance([a.lat,a.lng],[b.lat,b.lng]));
+  const base=networkScore(stations);
+
+  // 1) Coverage: propose the best site among several candidates, not just the centroid.
+  clusters.sort((a,b)=>b.length-a.length).slice(0,3).forEach(cluster=>{
+    const best=bestAddCandidate(cluster);
+    if(!best || best.gain<=0) return;
+    suggestions.push({
+      type:'add', title:'Ajouter une station ici',
+      desc:`Zone de couverture faible regroupant ${cluster.length} points. Parmi plusieurs emplacements testés, celui-ci améliore le mieux la couverture et la répartition de charge.`,
+      score:`gain estimé=${best.gain.toFixed(1)} · couverture ${base.covered}→${best.result.covered} UE · RSRP moyen ${Math.round(base.avgRsrp)}→${Math.round(best.result.avgRsrp)} dBm`,
+      action:()=>createStation(best.lat,best.lng,{ai:true,power:43})
+    });
+  });
+
+  // 2) Capacity: choose a candidate location based on the actual overloaded users.
+  stations.filter(s=>s.users>CAPACITY_PER_STATION*0.9).forEach(s=>{
+    const attached=users.filter(u=>u.stationId===s.id);
+    const targets=attached.length?attached:users.filter(u=>u.status==='poor'||u.status==='none');
+    if(!targets.length)return;
+    const best=bestAddCandidate(targets);
+    if(!best || best.gain<=0)return;
+    suggestions.push({
+      type:'add', title:`Délester ${s.name}`,
+      desc:`${s.name} est à ${Math.round(s.users/CAPACITY_PER_STATION*100)}% de charge. L'emplacement proposé est celui qui donne le meilleur gain simulé parmi plusieurs candidats autour du trafic concerné.`,
+      score:`gain=${best.gain.toFixed(1)} · charge actuelle=${s.users}/${CAPACITY_PER_STATION} UE · position ${best.lat.toFixed(4)}, ${best.lng.toFixed(4)}`,
+      action:()=>createStation(best.lat,best.lng,{ai:true,power:40})
+    });
+  });
+
+  // 3) Redundancy: before deleting, also propose moving the under-used station to a useful area.
+  for(let i=0;i<stations.length;i++){
+    for(let j=i+1;j<stations.length;j++){
+      const a=stations[i],b=stations[j];
+      const d=map.distance([a.lat,a.lng],[b.lat,b.lng]);
+      const combinedRange=radiusForThreshold(a,RSRP_OK)+radiusForThreshold(b,RSRP_OK);
+      if(d<combinedRange*0.35&&(a.users<CAPACITY_PER_STATION*0.3||b.users<CAPACITY_PER_STATION*0.3)){
+        const weak=a.users<=b.users?a:b;
+        const targetUsers=users.filter(u=>u.status==='poor'||u.status==='none');
+        const move=targetUsers.length?bestMoveCandidate(weak,targetUsers):null;
+        if(move && move.gain>0){
+          suggestions.push({
+            type:'move', title:`Déplacer ${weak.name}`,
+            desc:`${weak.name} est peu chargée et très proche d'une autre cellule. Au lieu de la supprimer, cet emplacement alternatif améliore davantage le réseau selon la simulation.`,
+            score:`gain=${move.gain.toFixed(1)} · nouvelle position=${move.lat.toFixed(4)}, ${move.lng.toFixed(4)}`,
+            action:()=>{moveStation(weak.id,move.lat,move.lng);addLog(`${weak.name} déplacée vers un emplacement plus utile`,'yellow');}
+          });
+        }
+        suggestions.push({
+          type:'remove', title:`Supprimer ${weak.name}`,
+          desc:`Option économique : supprimer ${weak.name} car son utilisation est faible et son recouvrement avec une autre station est important.`,
+          score:`distance=${Math.round(d)} m · charge=${Math.round(weak.users/CAPACITY_PER_STATION*100)}%`,
+          action:()=>deleteStation(weak.id)
+        });
+      }
+    }
+  }
+
+  // 4) Move isolated stations toward the best uncovered/weak-signal user area.
+  stations.forEach(s=>{
+    if(s.users!==0)return;
+    const poorUsers=users.filter(u=>u.status==='poor'||u.status==='none');
+    if(!poorUsers.length)return;
+    const nearestD=Math.min(...users.map(u=>map.distance([s.lat,s.lng],[u.lat,u.lng])));
+    if(nearestD<=radiusForThreshold(s,RSRP_MIN)*1.5)return;
+    const best=bestMoveCandidate(s,poorUsers);
+    if(best&&best.gain>0){
+      suggestions.push({
+        type:'move', title:`Déplacer ${s.name}`,
+        desc:`${s.name} est isolée du trafic. L'optimiseur compare plusieurs points dans les zones faibles et propose celui qui améliore le plus le réseau.`,
+        score:`gain=${best.gain.toFixed(1)} · couverture ${base.covered}→${best.result.covered} UE · dist. actuelle=${Math.round(nearestD)} m`,
+        action:()=>{moveStation(s.id,best.lat,best.lng);addLog(`${s.name} déplacée vers un emplacement plus utile`,'yellow');}
+      });
+    }
+  });
+
+  // Remove near-duplicates while keeping the strongest recommendation for each action/location.
+  suggestions.sort((a,b)=>{
+    const ga=parseFloat((a.score.match(/gain=([\d.-]+)/)||[])[1]||'-999');
+    const gb=parseFloat((b.score.match(/gain=([\d.-]+)/)||[])[1]||'-999');
+    return gb-ga;
+  });
+  renderSuggestions(suggestions.slice(0,8));
+  addLog(`Analyse : ${clusters.length} zone(s) faible(s), ${suggestions.length} recommandation(s)`, 'cyan');
+  toast(suggestions.length?`${Math.min(suggestions.length,8)} recommandation(s) proposées`:'Réseau déjà satisfaisant','success');
+}
+
+function renderSuggestions(list){
+  const panel = document.getElementById('aiPanel');
+  if(list.length === 0){
+    panel.innerHTML = `<div class="sugg ok"><div class="stitle">✓ Réseau satisfaisant</div>
+      <div class="sdesc">La simulation ne détecte pas d'action prioritaire sur la couverture, la charge ou le placement des stations.</div></div>`;
+    return;
+  }
+  panel.innerHTML = list.map((s, idx) => `
+    <div class="sugg ${s.type}">
+      <div class="stitle">${s.type==='add'?'+':s.type==='remove'?'−':'↔'} ${s.title}</div>
+      <div class="sdesc">${s.desc}</div>
+      <div class="score">${s.score||''}</div>
+      <button class="apply" onclick="applySuggestion(${idx})">Appliquer</button>
+    </div>`).join('');
+  window.__suggestions = list;
+}
+function applySuggestion(idx){
+  const s = window.__suggestions[idx];
+  if(!s) return;
+  s.action();
+  toast('Recommandation appliquée', 'success');
+  setTimeout(optimizeNetwork, 250);
+}
+window.applySuggestion = applySuggestion;
+
+// ---------- UI HELPERS ----------
+function setPlacing(v){
+  placing = v;
+  document.getElementById('placeHint').classList.toggle('show', v);
+  document.getElementById('btnAddStation').classList.toggle('on', v);
+  document.getElementById('map').style.cursor = v ? 'crosshair' : '';
+}
+
+function clearAll(){
+  if(!confirm('Supprimer toutes les stations et utilisateurs ?')) return;
+  stations.forEach(s => map.removeLayer(s.marker));
+  stations = []; users = []; stationSeq = 1;
+  ringsLayer.clearLayers(); usersLayer.clearLayers();
+  refreshSidebar(); updateKPIs();
+  document.getElementById('aiPanel').innerHTML = `<div class="empty">Aucune analyse pour le moment. Cliquez « Analyser et optimiser ».</div>`;
+  addLog('Scénario réinitialisé', 'red');
+  toast('Tout a été effacé', 'warning');
+}
+
+function toast(msg, type){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (type||'');
+  el.id = 'toast';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'), 2800);
+}
+
+function addLog(msg, color){
+  const box = document.getElementById('logBox');
+  const time = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'log-line ' + (color||'');
+  div.innerHTML = `<span class="t">[${time}]</span>${msg}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+// ---------- WIRING ----------
+document.getElementById('btnAddStation').addEventListener('click', () => setPlacing(!placing));
+document.getElementById('btnGenUsers').addEventListener('click', generateUsers);
+document.getElementById('btnOptimize').addEventListener('click', optimizeNetwork);
+document.getElementById('btnClear').addEventListener('click', clearAll);
+document.getElementById('navMeth').addEventListener('click', () => document.getElementById('methOverlay').classList.add('show'));
+document.getElementById('btnAiInfo').addEventListener('click', () => document.getElementById('methOverlay').classList.add('show'));
+document.getElementById('methClose').addEventListener('click', () => document.getElementById('methOverlay').classList.remove('show'));
+document.getElementById('methOverlay').addEventListener('click', (e) => { if(e.target.id === 'methOverlay') e.currentTarget.classList.remove('show'); });
+function buildReportText(){
+  const covered = users.filter(u => u.status==='good' || u.status==='ok').length;
+  const coveragePct = users.length ? Math.round(covered/users.length*100) : 0;
+  const avgLoad = stations.length
+    ? Math.round(stations.reduce((a,s)=>a+Math.min(s.users/CAPACITY_PER_STATION*100,100),0)/stations.length)
+    : 0;
+  const saturated = stations.filter(s => s.users > CAPACITY_PER_STATION*0.9).length;
+
+  const lines = [
+    '5G SMART PLANNER — RAPPORT DE SIMULATION',
+    '==========================================',
+    `Date : ${new Date().toLocaleString('fr-FR')}`,
+    'Zone : Casablanca',
+    'Modèle : 3GPP TR 38.901 — UMi Street Canyon',
+    'Fréquence : 3.5 GHz (n78)',
+    '',
+    'INDICATEURS',
+    `Stations : ${stations.length}`,
+    `Utilisateurs : ${users.length}`,
+    `Couverture service : ${coveragePct}%`,
+    `Charge moyenne : ${avgLoad}%`,
+    `Stations saturées : ${saturated}`,
+    '',
+    'STATIONS'
+  ];
+
+  stations.forEach(s => {
+    lines.push(`${s.name} | ${s.lat.toFixed(5)}, ${s.lng.toFixed(5)} | Ptx=${s.power} dBm | UE=${s.users}/${CAPACITY_PER_STATION}`);
+  });
+
+  lines.push(
+    '',
+    'LIMITES',
+    'Simulation pédagogique : sans bâtiments réels, ray-tracing, fast fading ou capacité radio détaillée.'
+  );
+  return lines.join('\n');
+}
+
+function openReport(){
+  const preview = document.getElementById('reportPreview');
+  preview.textContent = buildReportText();
+  document.getElementById('reportOverlay').classList.add('show');
+  document.getElementById('reportOverlay').setAttribute('aria-hidden','false');
+}
+
+function closeReport(){
+  document.getElementById('reportOverlay').classList.remove('show');
+  document.getElementById('reportOverlay').setAttribute('aria-hidden','true');
+}
+
+function downloadReport(){
+  const blob = new Blob([buildReportText()], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `5G-Smart-Planner-rapport-${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+  addLog('Rapport de simulation téléchargé', 'green');
+  toast('Rapport téléchargé dans Téléchargements', 'success');
+}
+
+window.exportReport = openReport;
+document.getElementById('navReports').addEventListener('click', openReport);
+document.getElementById('reportClose').addEventListener('click', closeReport);
+document.getElementById('reportClose2').addEventListener('click', closeReport);
+document.getElementById('reportDownload').addEventListener('click', downloadReport);
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeReport(); });
+document.getElementById('reportOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'reportOverlay') closeReport();
+});
+document.getElementById('navReports').addEventListener('click', exportReport);
+
+// ---------- BOOTSTRAP ----------
+initMap();
+setTimeout(() => {
+  createStation(33.5731, -7.5898);
+  createStation(33.582, -7.615);
+  generateUsers();
+  addLog('5G Smart Planner initialisé — modèle 3GPP TR 38.901 UMi actif', 'green');
+}, 350);
+</script>
 </body>
 </html>
+
+<style>
+  .brand-mark{
+    width:36px !important;
+    height:36px !important;
+    border-radius:50% !important;
+    background:#ffffff !important;
+    border:1.5px solid #9ca3af !important;
+    color:#374151 !important;
+    font-family:'IBM Plex Sans',sans-serif !important;
+    font-size:10px !important;
+    font-weight:700 !important;
+    letter-spacing:.03em !important;
+  }
+  .brand-copy .tag{display:none !important;}
+</style>

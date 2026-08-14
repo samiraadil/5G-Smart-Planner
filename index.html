@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>5G Smart Planner Pro - Casablanca</title>
+    <title>5G Smart Planner - Casablanca</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
     <style>
         /* ===== RESET & BASE ===== */
         * {
@@ -15,62 +15,47 @@
             box-sizing: border-box;
         }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0b1120;
-            color: #e8edf5;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f8;
+            color: #1a2332;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1a2332;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #3b82f6;
-            border-radius: 4px;
-        }
-
         /* ===== HEADER ===== */
         .header {
-            background: rgba(16, 24, 40, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-            padding: 12px 28px;
+            background: linear-gradient(135deg, #ffffff, #f8faff);
+            border-bottom: 2px solid #e8edf5;
+            padding: 10px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: relative;
-            z-index: 1000;
-            flex-shrink: 0;
             height: 64px;
+            flex-shrink: 0;
+            z-index: 1000;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
         .header-left {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
         .header-left .logo {
-            font-size: 22px;
+            font-size: 28px;
         }
         .header-left h1 {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #0b1a33;
             letter-spacing: -0.5px;
         }
         .header-left .badge {
-            font-size: 10px;
-            background: rgba(59, 130, 246, 0.2);
-            color: #60a5fa;
-            padding: 2px 10px;
-            border-radius: 12px;
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-size: 11px;
+            background: #e8f0fe;
+            color: #1a73e8;
+            padding: 3px 12px;
+            border-radius: 20px;
             font-weight: 600;
         }
         .header-actions {
@@ -79,329 +64,395 @@
             flex-wrap: wrap;
         }
         .btn {
-            padding: 7px 16px;
+            padding: 7px 18px;
             border: none;
             border-radius: 8px;
             font-weight: 600;
             font-size: 12px;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
+            font-family: inherit;
             display: flex;
             align-items: center;
             gap: 6px;
-            font-family: 'Inter', sans-serif;
         }
         .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
         }
         .btn:active {
             transform: scale(0.96);
         }
         .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background: #1a73e8;
             color: #fff;
         }
         .btn-primary:hover {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            background: #1557b0;
         }
         .btn-success {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
+            background: #34a853;
             color: #fff;
         }
         .btn-success:hover {
-            background: linear-gradient(135deg, #4ade80, #22c55e);
+            background: #2d8f47;
         }
         .btn-warning {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #fff;
+            background: #fbbc04;
+            color: #1a2332;
         }
         .btn-warning:hover {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            background: #e5a800;
         }
         .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
+            background: #ea4335;
             color: #fff;
         }
         .btn-danger:hover {
-            background: linear-gradient(135deg, #f87171, #ef4444);
+            background: #d33426;
         }
         .btn-outline {
             background: transparent;
-            color: #94a3b8;
-            border: 1px solid #334155;
+            color: #5f6b7a;
+            border: 1.5px solid #d0d7e2;
         }
         .btn-outline:hover {
-            background: #1e293b;
-            color: #fff;
-            border-color: #3b82f6;
+            background: #f0f4f8;
+            border-color: #1a73e8;
+            color: #1a73e8;
         }
 
-        /* ===== MAIN LAYOUT ===== */
+        /* ===== APP ===== */
         .app {
             display: flex;
             height: calc(100vh - 64px);
-            gap: 0;
         }
 
         /* ===== MAP ===== */
         .map-wrapper {
             flex: 1;
             position: relative;
-            background: #0f172a;
-            overflow: hidden;
+            background: #e8edf5;
         }
         #map {
             width: 100%;
             height: 100%;
-            background: #0f172a;
+            background: #e8edf5;
         }
         #map .leaflet-tile-pane {
-            filter: brightness(0.85) contrast(1.1);
+            filter: brightness(1) contrast(1);
         }
-        .map-overlay-stats {
+
+        /* ===== OVERLAY MAP ===== */
+        .map-overlay {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(59, 130, 246, 0.15);
-            border-radius: 12px;
-            padding: 14px 20px;
+            bottom: 24px;
+            left: 24px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 14px;
+            padding: 14px 24px;
             display: flex;
-            gap: 28px;
+            gap: 32px;
             z-index: 500;
-            flex-wrap: wrap;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
         }
-        .map-overlay-stats .stat-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .map-overlay .item {
+            text-align: center;
         }
-        .map-overlay-stats .stat-item .value {
+        .map-overlay .item .val {
             font-size: 20px;
             font-weight: 700;
-            color: #f1f5f9;
+            color: #0b1a33;
         }
-        .map-overlay-stats .stat-item .label {
+        .map-overlay .item .val.green {
+            color: #34a853;
+        }
+        .map-overlay .item .val.orange {
+            color: #e37400;
+        }
+        .map-overlay .item .val.blue {
+            color: #1a73e8;
+        }
+        .map-overlay .item .val.red {
+            color: #ea4335;
+        }
+        .map-overlay .item .lbl {
             font-size: 10px;
-            color: #94a3b8;
+            color: #5f6b7a;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-weight: 600;
-        }
-        .map-overlay-stats .stat-item .value.good {
-            color: #4ade80;
-        }
-        .map-overlay-stats .stat-item .value.warning {
-            color: #fbbf24;
-        }
-        .map-overlay-stats .stat-item .value.danger {
-            color: #f87171;
+            margin-top: 2px;
         }
 
         /* ===== SIDEBAR ===== */
         .sidebar {
-            width: 380px;
-            min-width: 340px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
-            border-left: 1px solid rgba(59, 130, 246, 0.08);
-            padding: 20px 22px;
+            width: 360px;
+            min-width: 320px;
+            background: #ffffff;
+            border-left: 1px solid #e8edf5;
+            padding: 18px 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 18px;
-            flex-shrink: 0;
+            gap: 16px;
         }
-        .sidebar-section {
-            background: rgba(30, 41, 59, 0.5);
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: #f0f4f8;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #d0d7e2;
+            border-radius: 4px;
+        }
+
+        .section {
+            background: #f8faff;
             border-radius: 12px;
-            padding: 16px 18px;
-            border: 1px solid rgba(59, 130, 246, 0.06);
+            padding: 14px 16px;
+            border: 1px solid #e8edf5;
         }
-        .sidebar-section h3 {
-            font-size: 12px;
+        .section h3 {
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            color: #94a3b8;
-            font-weight: 600;
+            color: #5f6b7a;
+            font-weight: 700;
             margin-bottom: 12px;
         }
 
-        /* ===== METRICS GRID ===== */
-        .metrics-grid {
+        /* ===== METRICS ===== */
+        .metrics {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
         }
-        .metric-card {
-            background: rgba(15, 23, 42, 0.5);
+        .metric {
+            background: #ffffff;
             border-radius: 8px;
-            padding: 12px 14px;
-            border: 1px solid rgba(59, 130, 246, 0.06);
+            padding: 10px 12px;
+            text-align: center;
+            border: 1px solid #e8edf5;
             transition: all 0.2s;
         }
-        .metric-card:hover {
-            border-color: rgba(59, 130, 246, 0.15);
+        .metric:hover {
+            border-color: #1a73e8;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.06);
         }
-        .metric-card .number {
+        .metric .num {
             font-size: 20px;
             font-weight: 700;
-            color: #f1f5f9;
-            line-height: 1.2;
+            color: #0b1a33;
         }
-        .metric-card .number.green {
-            color: #4ade80;
+        .metric .num.green {
+            color: #34a853;
         }
-        .metric-card .number.orange {
-            color: #fbbf24;
+        .metric .num.orange {
+            color: #e37400;
         }
-        .metric-card .number.red {
-            color: #f87171;
+        .metric .num.blue {
+            color: #1a73e8;
         }
-        .metric-card .number.blue {
-            color: #60a5fa;
+        .metric .num.red {
+            color: #ea4335;
         }
-        .metric-card .label {
-            font-size: 10px;
-            color: #94a3b8;
-            font-weight: 500;
-            margin-top: 2px;
+        .metric .lbl {
+            font-size: 9px;
+            color: #5f6b7a;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 3px;
         }
-        .metric-card .bar {
+        .metric .bar {
             width: 100%;
-            height: 3px;
-            background: #1e293b;
+            height: 4px;
+            background: #e8edf5;
             border-radius: 2px;
             margin-top: 6px;
             overflow: hidden;
         }
-        .metric-card .bar .fill {
+        .metric .bar .fill {
             height: 100%;
             border-radius: 2px;
             transition: width 0.8s ease;
         }
-        .metric-card .bar .fill.green {
-            background: linear-gradient(90deg, #22c55e, #4ade80);
+        .metric .bar .fill.green {
+            background: #34a853;
         }
-        .metric-card .bar .fill.orange {
-            background: linear-gradient(90deg, #d97706, #fbbf24);
+        .metric .bar .fill.orange {
+            background: #fbbc04;
         }
-        .metric-card .bar .fill.red {
-            background: linear-gradient(90deg, #dc2626, #f87171);
+        .metric .bar .fill.blue {
+            background: #1a73e8;
         }
-        .metric-card .bar .fill.blue {
-            background: linear-gradient(90deg, #2563eb, #60a5fa);
+        .metric .bar .fill.red {
+            background: #ea4335;
         }
 
         /* ===== STATIONS LIST ===== */
         .stations-list {
-            max-height: 180px;
+            max-height: 160px;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+        }
+        .stations-list::-webkit-scrollbar {
+            width: 3px;
+        }
+        .stations-list::-webkit-scrollbar-thumb {
+            background: #d0d7e2;
+            border-radius: 4px;
         }
         .station-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 6px 10px;
-            background: rgba(15, 23, 42, 0.4);
+            background: #ffffff;
             border-radius: 6px;
             font-size: 12px;
-            border-left: 3px solid #3b82f6;
+            margin-bottom: 3px;
+            border-left: 3px solid #1a73e8;
             transition: all 0.2s;
+            border: 1px solid #e8edf5;
+            border-left-width: 3px;
         }
         .station-item:hover {
-            background: rgba(30, 41, 59, 0.6);
+            background: #f8faff;
         }
         .station-item .name {
             font-weight: 600;
-            color: #f1f5f9;
+            color: #0b1a33;
         }
-        .station-item .details {
-            color: #94a3b8;
+        .station-item .info {
+            color: #5f6b7a;
             font-size: 10px;
         }
-        .station-item .delete-btn {
+        .station-item .del {
             background: none;
             border: none;
-            color: #64748b;
+            color: #b0b8c4;
             cursor: pointer;
             font-size: 14px;
             padding: 0 4px;
             transition: color 0.2s;
         }
-        .station-item .delete-btn:hover {
-            color: #ef4444;
-        }
-        .station-item.active {
-            border-left-color: #4ade80;
+        .station-item .del:hover {
+            color: #ea4335;
         }
         .station-item.overloaded {
-            border-left-color: #f87171;
-            background: rgba(239, 68, 68, 0.08);
+            border-left-color: #ea4335;
+            background: #fef6f5;
         }
 
         /* ===== SUGGESTIONS ===== */
-        .suggestion-item {
-            background: rgba(59, 130, 246, 0.06);
-            border-left: 3px solid #3b82f6;
-            padding: 10px 12px;
+        .suggestion {
+            background: #f0f7ff;
+            border-left: 3px solid #1a73e8;
+            padding: 10px 14px;
             border-radius: 6px;
             font-size: 12px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
-        .suggestion-item .title {
+        .suggestion .title {
             font-weight: 600;
-            color: #f1f5f9;
+            color: #0b1a33;
         }
-        .suggestion-item .desc {
-            color: #94a3b8;
+        .suggestion .desc {
+            color: #5f6b7a;
+            font-size: 11px;
             margin-top: 2px;
         }
-        .suggestion-item .badge {
+        .suggestion .badge {
             font-size: 9px;
-            padding: 1px 8px;
-            border-radius: 10px;
-            font-weight: 600;
+            padding: 1px 10px;
+            border-radius: 12px;
+            font-weight: 700;
             display: inline-block;
             margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
-        .suggestion-item .badge.high {
-            background: rgba(239, 68, 68, 0.2);
-            color: #f87171;
+        .suggestion .badge.high {
+            background: #fce8e6;
+            color: #ea4335;
         }
-        .suggestion-item .badge.medium {
-            background: rgba(251, 191, 36, 0.2);
-            color: #fbbf24;
+        .suggestion .badge.ok {
+            background: #e6f4ea;
+            color: #34a853;
         }
-        .suggestion-item .badge.low {
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
+        .suggestion .badge.medium {
+            background: #fef7e0;
+            color: #e37400;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #ffffff;
+            border: 1px solid #e8edf5;
+            border-radius: 12px;
+            padding: 14px 24px;
+            color: #0b1a33;
+            font-size: 13px;
+            z-index: 9999;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            max-width: 400px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+            font-weight: 500;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.success {
+            border-left: 4px solid #34a853;
+        }
+        .toast.warning {
+            border-left: 4px solid #fbbc04;
+        }
+        .toast.error {
+            border-left: 4px solid #ea4335;
+        }
+
+        /* ===== IMAGE DE FOND ===== */
+        .map-bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            opacity: 0.06;
+            pointer-events: none;
         }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1024px) {
             .sidebar {
-                width: 320px;
-                min-width: 280px;
-                padding: 16px;
+                width: 300px;
+                min-width: 260px;
+                padding: 14px;
             }
         }
         @media (max-width: 768px) {
             .app {
                 flex-direction: column;
-                height: calc(100vh - 64px);
             }
             .sidebar {
                 width: 100%;
                 min-width: unset;
                 max-height: 45vh;
                 border-left: none;
-                border-top: 1px solid rgba(59, 130, 246, 0.08);
+                border-top: 1px solid #e8edf5;
                 padding: 14px;
             }
             .map-wrapper {
@@ -410,66 +461,44 @@
             .header {
                 flex-wrap: wrap;
                 height: auto;
-                padding: 10px 16px;
-                gap: 8px;
+                padding: 8px 14px;
+                gap: 6px;
             }
             .header-actions .btn {
                 font-size: 10px;
-                padding: 5px 10px;
+                padding: 4px 10px;
             }
-            .map-overlay-stats {
-                padding: 10px 14px;
-                gap: 14px;
-                bottom: 10px;
-                left: 10px;
-            }
-            .map-overlay-stats .stat-item .value {
-                font-size: 14px;
-            }
-            .metrics-grid {
+            .metrics {
                 grid-template-columns: 1fr 1fr 1fr;
+            }
+            .map-overlay {
+                padding: 10px 16px;
+                gap: 18px;
+                bottom: 12px;
+                left: 12px;
+                flex-wrap: wrap;
+            }
+            .map-overlay .item .val {
+                font-size: 16px;
             }
         }
         @media (max-width: 480px) {
-            .metrics-grid {
+            .metrics {
                 grid-template-columns: 1fr 1fr;
             }
             .sidebar {
                 max-height: 50vh;
             }
-        }
-
-        /* ===== TOAST ===== */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 12px;
-            padding: 14px 22px;
-            color: #f1f5f9;
-            font-size: 13px;
-            z-index: 9999;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.4s ease;
-            max-width: 380px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-        }
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        .toast.success {
-            border-color: rgba(74, 222, 128, 0.3);
-        }
-        .toast.warning {
-            border-color: rgba(251, 191, 36, 0.3);
-        }
-        .toast.error {
-            border-color: rgba(248, 113, 113, 0.3);
+            .header-left h1 {
+                font-size: 16px;
+            }
+            .map-overlay {
+                gap: 12px;
+                padding: 8px 14px;
+            }
+            .map-overlay .item .val {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -484,7 +513,7 @@
             <span class="logo">📡</span>
             <h1>5G Smart Planner</h1>
             <span class="badge">Casablanca</span>
-            <span class="badge" style="background:rgba(34,197,94,0.15);color:#4ade80;border-color:rgba(34,197,94,0.2);">● Live</span>
+            <span class="badge" style="background:#e6f4ea;color:#34a853;">● Live</span>
         </div>
         <div class="header-actions">
             <button class="btn btn-success" onclick="generateUsers()">👥 Générer UE</button>
@@ -499,24 +528,24 @@
 
         <!-- MAP -->
         <div class="map-wrapper">
+            <!-- Image de fond (casablanca) -->
+            <svg class="map-bg-image" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+                <rect width="800" height="600" fill="#f0f4f8"/>
+                <circle cx="400" cy="300" r="200" fill="#e0e8f5" opacity="0.3"/>
+                <circle cx="400" cy="300" r="120" fill="#d5e0f0" opacity="0.3"/>
+                <circle cx="400" cy="300" r="60" fill="#c8d8ec" opacity="0.3"/>
+                <text x="400" y="300" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="28" fill="#c0d0e0" opacity="0.5" font-weight="300">CASABLANCA</text>
+                <text x="400" y="330" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" fill="#c8d8ec" opacity="0.4">🌍 Maroc</text>
+            </svg>
+
             <div id="map"></div>
-            <div class="map-overlay-stats" id="overlayStats">
-                <div class="stat-item">
-                    <span class="value" id="overlayCoverage">0%</span>
-                    <span class="label">Couverture</span>
-                </div>
-                <div class="stat-item">
-                    <span class="value" id="overlayUsers">0</span>
-                    <span class="label">Utilisateurs</span>
-                </div>
-                <div class="stat-item">
-                    <span class="value" id="overlayStations">0</span>
-                    <span class="label">Stations</span>
-                </div>
-                <div class="stat-item">
-                    <span class="value" id="overlayLatency">0ms</span>
-                    <span class="label">Latence</span>
-                </div>
+
+            <!-- Overlay -->
+            <div class="map-overlay">
+                <div class="item"><div class="val green" id="ovCoverage">0%</div><div class="lbl">Couverture</div></div>
+                <div class="item"><div class="val blue" id="ovUsers">0</div><div class="lbl">Utilisateurs</div></div>
+                <div class="item"><div class="val blue" id="ovStations">0</div><div class="lbl">Stations</div></div>
+                <div class="item"><div class="val orange" id="ovLatency">0ms</div><div class="lbl">Latence</div></div>
             </div>
         </div>
 
@@ -524,55 +553,31 @@
         <div class="sidebar">
 
             <!-- KPIs -->
-            <div class="sidebar-section">
-                <h3>📊 KPIs Temps Réel</h3>
-                <div class="metrics-grid" id="metricsGrid">
-                    <div class="metric-card">
-                        <div class="number blue" id="kpiCoverage">0%</div>
-                        <div class="label">Couverture</div>
-                        <div class="bar"><div class="fill blue" id="kpiCoverageBar" style="width:0%"></div></div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="number green" id="kpiLatency">0 ms</div>
-                        <div class="label">Latence</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="number orange" id="kpiCapacity">0%</div>
-                        <div class="label">Capacité</div>
-                        <div class="bar"><div class="fill orange" id="kpiCapacityBar" style="width:0%"></div></div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="number blue" id="kpiUsers">0</div>
-                        <div class="label">UE connectés</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="number blue" id="kpiStations">0</div>
-                        <div class="label">gNodeB actifs</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="number red" id="kpiSaturated">0</div>
-                        <div class="label">Saturées</div>
-                    </div>
+            <div class="section">
+                <h3>📊 Indicateurs temps réel</h3>
+                <div class="metrics" id="metricsContainer">
+                    <div class="metric"><div class="num blue" id="kpiCoverage">0%</div><div class="lbl">Couverture</div><div class="bar"><div class="fill blue" id="kpiCoverageBar" style="width:0%"></div></div></div>
+                    <div class="metric"><div class="num green" id="kpiLatency">0ms</div><div class="lbl">Latence</div></div>
+                    <div class="metric"><div class="num orange" id="kpiCapacity">0%</div><div class="lbl">Capacité</div><div class="bar"><div class="fill orange" id="kpiCapacityBar" style="width:0%"></div></div></div>
+                    <div class="metric"><div class="num blue" id="kpiUsers">0</div><div class="lbl">UE connectés</div></div>
+                    <div class="metric"><div class="num blue" id="kpiStations">0</div><div class="lbl">gNodeB actifs</div></div>
+                    <div class="metric"><div class="num red" id="kpiSaturated">0</div><div class="lbl">Saturées</div></div>
                 </div>
             </div>
 
             <!-- Stations -->
-            <div class="sidebar-section">
+            <div class="section">
                 <h3>📡 Stations gNodeB</h3>
                 <div class="stations-list" id="stationsList">
-                    <div style="color:#64748b;font-size:12px;text-align:center;padding:12px 0;">
-                        Aucune station. Cliquez sur "Ajouter gNB"
-                    </div>
+                    <div style="color:#b0b8c4;font-size:12px;text-align:center;padding:12px 0;">Aucune station</div>
                 </div>
             </div>
 
-            <!-- Suggestions IA -->
-            <div class="sidebar-section">
+            <!-- Suggestions -->
+            <div class="section">
                 <h3>🤖 Suggestions IA</h3>
                 <div id="suggestionsContainer">
-                    <div style="color:#64748b;font-size:12px;text-align:center;padding:8px 0;">
-                        En attente d'analyse...
-                    </div>
+                    <div style="color:#b0b8c4;font-size:12px;text-align:center;padding:8px 0;">En attente d'analyse...</div>
                 </div>
             </div>
 
@@ -580,9 +585,10 @@
     </div>
 
     <script>
-        // ========================================================================
-        // 5G SMART PLANNER - APPLICATION COMPLÈTE
-        // ========================================================================
+        // ============================================================
+        //  5G SMART PLANNER - APPLICATION COMPLÈTE
+        //  TOUS LES BOUTONS FONCTIONNENT !
+        // ============================================================
 
         // ---- DONNÉES ----
         let stations = [];
@@ -590,78 +596,68 @@
         let coverageData = [];
         let stationIdCounter = 1;
         let map = null;
-        let markers = { stations: [], users: [] };
-        let circles = [];
+        let mapMarkers = { stations: [], users: [] };
+        let mapCircles = [];
 
-        // ---- CONSTANTES CASABLANCA ----
-        const CASABLANCA_CENTER = [33.5731, -7.5898];
-        const CASABLANCA_BOUNDS = [
+        // ---- CONSTANTES ----
+        const CENTER = [33.5731, -7.5898];
+        const BOUNDS = [
             [33.52, -7.65],
             [33.62, -7.50]
-        ];
-
-        const landmarks = [
-            { name: "Mosquée Hassan II", lat: 33.6085, lng: -7.6330 },
-            { name: "Place Mohammed V", lat: 33.5961, lng: -7.6156 },
-            { name: "Ain Diab", lat: 33.5880, lng: -7.7180 },
-            { name: "Casa Port", lat: 33.5950, lng: -7.6000 },
-            { name: "Maarif", lat: 33.5850, lng: -7.6030 },
-            { name: "Sidi Moumen", lat: 33.5800, lng: -7.5700 },
-            { name: "Derb Sultan", lat: 33.5700, lng: -7.5900 }
         ];
 
         // ---- INIT MAP ----
         function initMap() {
             map = L.map('map', {
-                center: CASABLANCA_CENTER,
+                center: CENTER,
                 zoom: 12,
                 zoomControl: false
             });
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; CartoDB',
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap',
                 subdomains: 'abcd',
                 maxZoom: 19
             }).addTo(map);
 
-            // Contrôle zoom
             L.control.zoom({ position: 'bottomright' }).addTo(map);
+            map.fitBounds(BOUNDS);
 
-            // Marqueurs des landmarks
+            // Points d'intérêt
+            const landmarks = [
+                { name: "🕌 Mosquée Hassan II", lat: 33.6085, lng: -7.6330 },
+                { name: "🏛️ Place Mohammed V", lat: 33.5961, lng: -7.6156 },
+                { name: "🌊 Ain Diab", lat: 33.5880, lng: -7.7180 },
+                { name: "⚓ Casa Port", lat: 33.5950, lng: -7.6000 },
+                { name: "🛍️ Maarif", lat: 33.5850, lng: -7.6030 }
+            ];
             landmarks.forEach(lm => {
-                L.circleMarker([lm.lat, lm.lng], {
-                    radius: 4,
-                    color: '#60a5fa',
-                    fillColor: '#3b82f6',
-                    fillOpacity: 0.3,
-                    weight: 1
-                }).addTo(map).bindPopup(`
-                    <div style="color:#0f172a;font-weight:600;font-size:13px;">${lm.name}</div>
-                    <div style="color:#64748b;font-size:11px;">Point d'intérêt</div>
-                `);
+                L.marker([lm.lat, lm.lng], {
+                    icon: L.divIcon({
+                        html: `<div style="font-size:16px;">📍</div>`,
+                        className: '',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 20]
+                    })
+                }).addTo(map).bindPopup(`<b>${lm.name}</b>`);
             });
 
-            // Ajuster la vue
-            map.fitBounds(CASABLANCA_BOUNDS);
-
-            // Ajouter une station de départ
+            // Stations initiales
             setTimeout(() => {
                 addStation(33.5731, -7.5898);
                 addStation(33.5850, -7.6200);
                 addStation(33.5600, -7.5750);
                 generateUsers();
-            }, 300);
+            }, 400);
         }
 
-        // ---- FONCTIONS ----
-
-        // Ajouter une station
+        // ---- AJOUTER STATION ----
         function addStation(lat, lng) {
             if (!lat || !lng) {
-                lat = 33.55 + (Math.random() - 0.5) * 0.1;
-                lng = -7.65 + (Math.random() - 0.5) * 0.12;
+                lat = 33.54 + Math.random() * 0.08;
+                lng = -7.68 + Math.random() * 0.12;
             }
-            const station = {
+            const s = {
                 id: `gNB-${String(stationIdCounter++).padStart(3, '0')}`,
                 name: `gNodeB-${stations.length + 1}`,
                 lat: lat,
@@ -670,10 +666,11 @@
                 frequency: 3.5,
                 users: 0
             };
-            stations.push(station);
+            stations.push(s);
+            calculateCoverage();
             updateAll();
-            showToast(`📡 ${station.name} ajoutée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'success');
-            return station;
+            toast(`📡 ${s.name} ajoutée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'success');
+            return s;
         }
 
         function addRandomStation() {
@@ -682,14 +679,15 @@
             addStation(lat, lng);
         }
 
-        // Supprimer une station
+        // ---- SUPPRIMER STATION ----
         function deleteStation(id) {
             stations = stations.filter(s => s.id !== id);
+            calculateCoverage();
             updateAll();
-            showToast(`🗑️ Station ${id} supprimée`, 'warning');
+            toast(`🗑️ Station supprimée`, 'warning');
         }
 
-        // Générer des utilisateurs
+        // ---- GÉNÉRER UTILISATEURS ----
         function generateUsers() {
             const count = 20 + Math.floor(Math.random() * 30);
             users = [];
@@ -704,21 +702,17 @@
             }
             calculateCoverage();
             updateAll();
-            showToast(`👥 ${users.length} utilisateurs générés`, 'success');
+            toast(`👥 ${users.length} utilisateurs générés`, 'success');
         }
 
-        // Calcul de la couverture
+        // ---- CALCUL COUVERTURE ----
         function calculateCoverage() {
             coverageData = [];
-            if (stations.length === 0 || users.length === 0) {
-                updateAll();
-                return;
-            }
+            if (stations.length === 0 || users.length === 0) return;
 
             users.forEach(user => {
                 let bestRsrp = -200;
                 let bestStation = null;
-
                 stations.forEach(station => {
                     const dist = haversine(user.lat, user.lng, station.lat, station.lng);
                     const rsrp = station.power - 28 * Math.log10(dist * 1000 + 10);
@@ -727,7 +721,6 @@
                         bestStation = station.id;
                     }
                 });
-
                 const status = bestRsrp > -80 ? 'good' : bestRsrp > -100 ? 'poor' : 'none';
                 coverageData.push({
                     userId: user.id,
@@ -737,13 +730,11 @@
                 });
             });
 
-            // Mettre à jour le nombre d'utilisateurs par station
             stations.forEach(s => {
                 s.users = coverageData.filter(c => c.stationId === s.id && c.status !== 'none').length;
             });
         }
 
-        // Distance Haversine
         function haversine(lat1, lng1, lat2, lng2) {
             const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -754,70 +745,66 @@
             return R * 2 * Math.asin(Math.sqrt(a));
         }
 
-        // Optimisation IA
+        // ---- OPTIMISATION IA ----
         function optimizeNetwork() {
             if (stations.length === 0) {
-                showToast('⚠️ Ajoutez d\'abord des stations !', 'warning');
+                toast('⚠️ Ajoutez des stations d\'abord !', 'warning');
                 return;
             }
             if (users.length === 0) {
-                showToast('⚠️ Générez d\'abord des utilisateurs !', 'warning');
+                toast('⚠️ Générez des utilisateurs d\'abord !', 'warning');
                 return;
             }
 
             calculateCoverage();
             const poor = coverageData.filter(c => c.status === 'poor' || c.status === 'none');
-
             const container = document.getElementById('suggestionsContainer');
 
             if (poor.length === 0) {
                 container.innerHTML = `
-                    <div class="suggestion-item" style="border-color:#4ade80;background:rgba(74,222,128,0.05);">
+                    <div class="suggestion" style="border-color:#34a853;background:#e6f4ea;">
                         <div class="title">✅ Réseau optimal</div>
                         <div class="desc">La couverture est excellente. Aucune amélioration nécessaire.</div>
-                        <span class="badge low">Parfait</span>
+                        <span class="badge ok">Parfait</span>
                     </div>
                 `;
-                showToast('✅ Réseau optimisé !', 'success');
+                toast('✅ Réseau optimisé !', 'success');
                 return;
             }
 
-            // Trouver le centroïde des zones mal couvertes
             let sumLat = 0,
                 sumLng = 0,
                 count = 0;
             poor.forEach(p => {
-                const user = users.find(u => u.id === p.userId);
-                if (user) {
-                    sumLat += user.lat;
-                    sumLng += user.lng;
+                const u = users.find(u => u.id === p.userId);
+                if (u) {
+                    sumLat += u.lat;
+                    sumLng += u.lng;
                     count++;
                 }
             });
 
             const avgLat = sumLat / count + (Math.random() - 0.5) * 0.003;
             const avgLng = sumLng / count + (Math.random() - 0.5) * 0.003;
-
-            // Ajouter une station IA
             const newStation = addStation(avgLat, avgLng);
             newStation.name = `🤖 IA-${stations.length}`;
 
             container.innerHTML = `
-                <div class="suggestion-item" style="border-color:#fbbf24;">
+                <div class="suggestion" style="border-color:#e37400;background:#fef7e0;">
                     <div class="title">📡 Nouvelle station recommandée</div>
                     <div class="desc">📍 ${avgLat.toFixed(4)}, ${avgLng.toFixed(4)}</div>
                     <div class="desc">👥 ${poor.length} utilisateurs mal couverts</div>
                     <span class="badge high">Priorité haute</span>
-                    <div style="margin-top:6px;font-size:11px;color:#4ade80;">✅ Station ajoutée automatiquement</div>
+                    <div style="margin-top:4px;font-size:11px;color:#34a853;">✅ Station ajoutée automatiquement</div>
                 </div>
             `;
 
             calculateCoverage();
             updateAll();
-            showToast(`🤖 Station IA ajoutée ! ${poor.length} utilisateurs mieux couverts.`, 'success');
+            toast(`🤖 Station IA ajoutée ! ${poor.length} utilisateurs mieux couverts.`, 'success');
         }
 
-        // Effacer tout
+        // ---- EFFACER ----
         function clearAll() {
             if (confirm('⚠️ Supprimer toutes les stations et utilisateurs ?')) {
                 stations = [];
@@ -826,77 +813,95 @@
                 stationIdCounter = 1;
                 updateAll();
                 document.getElementById('suggestionsContainer').innerHTML = `
-                    <div style="color:#64748b;font-size:12px;text-align:center;padding:8px 0;">
-                        En attente d'analyse...
-                    </div>
+                    <div style="color:#b0b8c4;font-size:12px;text-align:center;padding:8px 0;">En attente d'analyse...</div>
                 `;
-                showToast('🗑️ Tout a été effacé', 'warning');
+                toast('🗑️ Tout a été effacé', 'warning');
             }
-        }
-
-        // ---- UPDATE ALL ----
-        function updateAll() {
-            updateMap();
-            updateUI();
-            updateMetrics();
-            updateStationsList();
-            updateOverlay();
         }
 
         // ---- UPDATE MAP ----
         function updateMap() {
             if (!map) return;
-
-            // Supprimer les anciens marqueurs
-            markers.stations.forEach(m => map.removeLayer(m));
-            markers.users.forEach(m => map.removeLayer(m));
-            circles.forEach(c => map.removeLayer(c));
-            markers.stations = [];
-            markers.users = [];
-            circles = [];
-
-            // Icône personnalisée pour les stations
-            const stationIcon = L.divIcon({
-                html: `<div style="background:#3b82f6;width:12px;height:12px;border-radius:50%;border:2px solid #60a5fa;box-shadow:0 0 12px rgba(59,130,246,0.5);"></div>`,
-                className: '',
-                iconSize: [12, 12],
-                iconAnchor: [6, 6]
-            });
-
-            const stationIconOverloaded = L.divIcon({
-                html: `<div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:2px solid #f87171;box-shadow:0 0 16px rgba(239,68,68,0.5);animation:pulse 1.5s infinite;"></div>`,
-                className: '',
-                iconSize: [14, 14],
-                iconAnchor: [7, 7]
-            });
-
-            // Ajouter style d'animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes pulse {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.3); }
-                }
-            `;
-            document.head.appendChild(style);
+            mapMarkers.stations.forEach(m => map.removeLayer(m));
+            mapMarkers.users.forEach(m => map.removeLayer(m));
+            mapCircles.forEach(c => map.removeLayer(c));
+            mapMarkers.stations = [];
+            mapMarkers.users = [];
+            mapCircles = [];
 
             // Stations
             stations.forEach(s => {
                 const isOverloaded = (s.users || 0) > 15;
-                const icon = isOverloaded ? stationIconOverloaded : stationIcon;
+
+                // Icône station
+                const icon = L.divIcon({
+                    html: `
+                        <div style="
+                            background: ${isOverloaded ? '#ea4335' : '#1a73e8'};
+                            width: ${isOverloaded ? 16 : 14}px;
+                            height: ${isOverloaded ? 16 : 14}px;
+                            border-radius: 50%;
+                            border: 2px solid ${isOverloaded ? '#f5c6c2' : '#a8c7fa'};
+                            box-shadow: 0 0 16px ${isOverloaded ? 'rgba(234,67,53,0.3)' : 'rgba(26,115,232,0.25)'};
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 8px;
+                            color: white;
+                            font-weight: 700;
+                        ">
+                            ${isOverloaded ? '!' : ''}
+                        </div>
+                    `,
+                    className: '',
+                    iconSize: [isOverloaded ? 16 : 14, isOverloaded ? 16 : 14],
+                    iconAnchor: [isOverloaded ? 8 : 7, isOverloaded ? 8 : 7]
+                });
+
                 const marker = L.marker([s.lat, s.lng], { icon: icon })
                     .addTo(map)
                     .bindPopup(`
-                        <div style="color:#0f172a;font-family:Inter,sans-serif;min-width:160px;">
+                        <div style="color:#0b1a33;font-family:Segoe UI,sans-serif;min-width:150px;">
                             <div style="font-weight:700;font-size:14px;">${s.name}</div>
-                            <div style="color:#64748b;font-size:11px;margin:2px 0;">📶 ${s.frequency} GHz | ⚡ ${s.power} dBm</div>
-                            <div style="color:#64748b;font-size:11px;">👥 ${s.users || 0} utilisateurs</div>
-                            <div style="color:#64748b;font-size:11px;">📍 ${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</div>
-                            <button onclick="deleteStation('${s.id}')" style="margin-top:6px;background:#ef4444;color:#fff;border:none;border-radius:4px;padding:3px 12px;cursor:pointer;font-size:11px;">🗑️ Supprimer</button>
+                            <div style="color:#5f6b7a;font-size:11px;margin:2px 0;">📶 ${s.frequency} GHz | ⚡ ${s.power} dBm</div>
+                            <div style="color:#5f6b7a;font-size:11px;">👥 ${s.users || 0} utilisateurs</div>
+                            <div style="color:#b0b8c4;font-size:10px;">📍 ${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</div>
+                            <button onclick="deleteStation('${s.id}')" style="margin-top:6px;background:#ea4335;color:#fff;border:none;border-radius:4px;padding:3px 14px;cursor:pointer;font-size:11px;font-family:inherit;">🗑️ Supprimer</button>
                         </div>
                     `);
-                markers.stations.push(marker);
+                mapMarkers.stations.push(marker);
 
                 // Cercle de couverture
-                const radius = 150 + (s.power - 40) * 20;
-                const circle =
+                const radius = 100 + (s.power - 40) * 15;
+                const circle = L.circle([s.lat, s.lng], {
+                    radius: radius,
+                    color: '#1a73e8',
+                    fillColor: '#1a73e8',
+                    fillOpacity: 0.05,
+                    weight: 1.5,
+                    opacity: 0.15
+                }).addTo(map);
+                mapCircles.push(circle);
+            });
+
+            // Utilisateurs
+            users.forEach(u => {
+                const cov = coverageData.find(c => c.userId === u.id);
+                const isCovered = cov && cov.status !== 'none';
+                const icon = L.divIcon({
+                    html: `
+                        <div style="
+                            background: ${isCovered ? '#34a853' : '#ea4335'};
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 50%;
+                            border: 1px solid ${isCovered ? 'rgba(52,168,83,0.3)' : 'rgba(234,67,53,0.3)'};
+                            box-shadow: 0 0 8px ${isCovered ? 'rgba(52,168,83,0.2)' : 'rgba(234,67,53,0.2)'};
+                        "></div>
+                    `,
+                    className: '',
+                    iconSize: [8, 8],
+                    iconAnchor: [4, 4]
+                });
+                const marker = L.marker([u.lat, u.lng], { icon: icon })
+                    .addTo(map

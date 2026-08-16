@@ -118,7 +118,11 @@ header{background:#fff;border-bottom:1px solid var(--line);display:flex;align-it
 .impact-kpis>div{background:#f7f8fa;border-radius:5px;padding:5px;font-size:8px;color:#667085}
 .impact-kpis b{display:block;color:#172033;font-size:9px;margin-top:2px}
 .pair-marker{font-weight:900}
-</style>
+
+.pair-history{margin-top:8px;display:grid;gap:5px}.pair-history-row{border:1px solid #e3e7ec;border-radius:6px;padding:6px 7px;background:#fafbfc;font-size:8px;display:flex;justify-content:space-between;gap:8px}.pair-history-row b{font-size:9px}.pair-history-row span{color:#667085}.history-empty{font-size:8px;color:#98a2b3;padding:5px}
+
+.radio-checks{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.radio-checks>div{background:#fafbfc;border:1px solid #e3e7ec;border-radius:6px;padding:7px}.radio-checks span{display:block;font-size:8px;color:#667085;text-transform:uppercase}.radio-checks b{display:block;font-size:10px;margin-top:3px}.pairsteps>div span{display:block}.pairsteps>div strong{font-size:10px}
+.planning-note{margin:7px 10px 0;padding:7px 9px;border:1px solid #e2e6eb;border-left:3px solid #172033;border-radius:6px;background:#fafbfc;font-size:8px;line-height:1.45;color:#475467}.planning-note b{color:#172033}</style>
 </head>
 <body>
 <div class="app">
@@ -134,12 +138,12 @@ header{background:#fff;border-bottom:1px solid var(--line);display:flex;align-it
 <div class="workspace">
 <section class="mapwrap">
   <div class="toolbar">
-    <button class="btn primary" onclick="openStationModal()">+ Ajouter station</button>
+    <button class="btn primary" onclick="openStationModal()">AJOUTER STATION</button>
     <button class="btn" onclick="generateUsers()">Générer UEs</button>
     <button class="btn" onclick="runSimulation()">Recalculer</button>
-    <button class="btn gold" onclick="enablePair5GMode()">+ Paire + 5G au milieu</button>
+    
     <button class="btn" onclick="toggleCoverageCompare()">Comparaison couverture</button>
-    <button class="btn" onclick="optimize()">Recommandation</button>
+    <button class="btn" onclick="show5GCandidate()">Analyse densification 5G</button>
     <span class="spacer"></span>
     <span class="statuspill" id="scenarioPill">Scénario : 2×4G</span>
     <button class="btn danger" onclick="resetScenario()">Réinitialiser</button>
@@ -161,7 +165,7 @@ header{background:#fff;border-bottom:1px solid var(--line);display:flex;align-it
         <div><span>Latence</span><b id="ccLat">—</b></div>
       </div>
       <div class="cc-explain" id="coverageExplain">
-        La couche affiche la couverture prédite par les deux stations 4G avant l'ajout de la 5G.
+        La couche affiche la couverture prédite par les deux stations 4G avant l'ajout manuel de la 5G.
       </div>
     </div>
   </div>
@@ -219,27 +223,37 @@ header{background:#fff;border-bottom:1px solid var(--line);display:flex;align-it
     </div>
   </div>
 
-  <div class="card pair-card">
-    <div class="cardhead"><strong>Placement séquentiel · paire + 5G</strong><span class="badge" id="pairModeBadge">libre</span></div>
+  <div class="card pair-card" style="display:none">
+    <div class="cardhead"><strong>Analyse radio · densification 5G</strong><span class="badge" id="pairModeBadge">planification</span></div>
     <div class="cardbody">
-      <div class="sectionnote" id="pairModeText">Ajoutez une paire de stations : la 5G sera automatiquement placée au milieu exact des deux dernières stations choisies.</div>
-      <div class="pairsteps">
-        <div><b>1</b><span>Station A</span><strong id="pairA">—</strong></div>
-        <div><b>2</b><span>Station B</span><strong id="pairB">—</strong></div>
-        <div><b>3</b><span>gNodeB</span><strong id="pairG">—</strong></div>
+      <div class="sectionnote" id="pairModeText">
+        Utilisez uniquement <b>AJOUTER STATION</b>. La plateforme calcule les distances inter-sites, la couverture et les besoins de densification. Une cellule 5G est proposée seulement lorsque le scénario le justifie.
       </div>
-      <div class="pair-actions">
-        <button class="btn gold" onclick="enablePair5GMode()">Nouvelle paire</button>
-        <button class="btn" onclick="finishPair5GMode()">Terminer la paire</button>
+      <div class="pairsteps">
+        <div><span>Dernière station A</span><strong id="pairA">—</strong></div>
+        <div><span>Dernière station B</span><strong id="pairB">—</strong></div>
+        <div><span>Distance inter-sites</span><strong id="pairDistance">—</strong></div>
+      </div>
+      <div class="radio-checks">
+        <div><span>Zone</span><b id="planningZone">—</b></div>
+        <div><span>Bande</span><b id="planningBand">—</b></div>
+        <div><span>Rayon indicatif</span><b id="planningRadius">—</b></div>
+        <div><span>Densification</span><b id="planningNeed">—</b></div>
+      </div>
+      <div class="sectionnote" id="planningRecommendation">
+        Placez au moins deux stations pour obtenir une analyse inter-sites. La 5G n'est pas ajoutée automatiquement à chaque placement.
       </div>
     </div>
   </div>
 
-  <div class="card impact-card">
-    <div class="cardhead"><strong>Influence de la 5G — paire sélectionnée</strong><span class="badge" id="impactBadge">en attente</span></div>
+<div class="planning-note">
+  <b>Logique de planification :</b> les stations sont ajoutées manuellement. La distance inter-sites, la zone (urbain/périurbain/rural), la bande, le rayon de cellule et la charge déterminent la pertinence d'une densification 5G.
+</div>
+<div class="card impact-card">
+    <div class="cardhead"><strong>Impact de la 5G · analyse de densification</strong><span class="badge" id="impactBadge">en attente</span></div>
     <div class="cardbody">
       <div class="sectionnote" id="impactIntro">
-        La 5G est liée à une paire de stations et reste à son milieu même si vous ajoutez ensuite d'autres stations 2G/3G/4G.
+        L'analyse compare la situation radio avant/après l'ajout d'une cellule 5G proposée. Les autres stations restent inchangées.
       </div>
       <div class="impactgrid" style="margin-top:9px">
         <div class="impactitem"><span>Zone intermédiaire</span><b id="impactDistance">—</b></div>
@@ -291,7 +305,7 @@ header{background:#fff;border-bottom:1px solid var(--line);display:flex;align-it
 <!-- Station modal -->
 <div class="modal" id="stationModal">
 <div class="modalbox">
-  <div class="modalhead"><div><h2>Ajouter une station</h2><div class="sectionnote">Cliquez ensuite sur la carte pour positionner le site.</div></div><button class="close" onclick="closeModal('stationModal')">×</button></div>
+  <div class="modalhead"><div><h2>AJOUTER STATION</h2><div class="sectionnote">Cliquez ensuite sur la carte pour positionner le site.</div></div><button class="close" onclick="closeModal('stationModal')">×</button></div>
   <div class="field"><label>Technologie</label></div>
   <div class="radiochoice">
     <label><input type="radio" name="tech" value="2G" onchange="syncBand()">2G</label>
@@ -313,6 +327,10 @@ header{background:#fff;border-bottom:1px solid var(--line);display:flex;align-it
       <div class="field"><label>Beamforming</label><select id="beam"><option value="1">Activé</option><option value="0">Désactivé</option></select></div>
       <div class="field"><label>Usage principal</label><select id="usage"><option>eMBB</option><option>Couverture</option><option>Capacité</option></select></div>
     </div>
+  </div>
+  <div id="auto5gOption" class="switch" style="display:none;border:1px solid #d9d2f1;background:#faf9ff;border-radius:7px;padding:9px;line-height:1.45">
+    <input id="auto5gMidpoint" type="checkbox" checked>
+    <label for="auto5gMidpoint"><b>Pour la 5G : placer automatiquement la gNodeB exactement au milieu des deux dernières stations de référence</b><br><span style="color:#667085;font-size:9px">Une seule nouvelle station 5G sera créée au point médian exact de ces deux stations.</span></label>
   </div>
   <div class="help">Profils de bandes utilisés dans cette maquette : 2G 900 MHz · 3G 2100 MHz · 4G 800/1800/2600 MHz · 5G 700/2100/3500 MHz. Les paramètres sont configurables pour comparer des scénarios.</div>
   <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:14px"><button class="btn" onclick="closeModal('stationModal')">Annuler</button><button class="btn primary" onclick="activatePlacement()">Placer sur la carte</button></div>
@@ -390,16 +408,53 @@ function syncBand(){
  if(profile && b.list.includes(profile)) sel.value=profile; else sel.value=b.default;
  document.getElementById("bw").innerHTML=b.bw.map(x=>`<option>${x}</option>`).join("");
  document.getElementById("mimoFields").style.display=tech==="5G"?"block":"none";
+ const auto=document.getElementById("auto5gOption");
+ if(auto) auto.style.display=tech==="5G"?"flex":"none";
+}
+function place5GAtLastTwoReferences(){
+ const refs=stations.filter(s=>s.tech!=="5G").slice(-2);
+ if(refs.length<2){
+   alert("Pour placer automatiquement la 5G au milieu, ajoutez d'abord deux stations de référence (2G, 3G ou 4G). La 5G sera placée exactement entre les deux dernières.");
+   return false;
+ }
+ const a=refs[0],b=refs[1];
+ const lat=(Number(a.lat)+Number(b.lat))/2, lng=(Number(a.lng)+Number(b.lng))/2;
+ const band=document.getElementById("band").value;
+ // Only one 5G for this exact pair.
+ const already=stations.find(s=>s.tech==="5G" && s.referencePair && s.referencePair[0]===a.id && s.referencePair[1]===b.id);
+ if(already){
+   map.flyTo([already.lat,already.lng],14);
+   log(`La gNodeB ${already.name} existe déjà au milieu de ${a.name} et ${b.name}.`,"yellow");
+   return false;
+ }
+ const s={id:"S"+String(seq++).padStart(2,"0"),name:"gNodeB-"+String(seq-1).padStart(2,"0"),lat,lng,tech:"5G",band,
+   power:+document.getElementById("power").value,height:+document.getElementById("height").value,
+   azimuth:+document.getElementById("azimuth").value,tilt:+document.getElementById("tilt").value,bw:document.getElementById("bw").value,
+   mimo:+document.getElementById("mimo").value,beam:+document.getElementById("beam").value,usage:document.getElementById("usage").value,users:0,
+   referencePair:[a.id,b.id],referenceNames:[a.name,b.name],central:true};
+ pre5GMetrics=metrics();
+ central5G=s;
+ stations.push(s); renderStation(s);
+ drawCentralInfluence(a,b,s);
+ runSimulation(false); updateCentralImpact();
+ map.flyTo([lat,lng],14); s.marker.openPopup();
+ log(`gNodeB ${s.name} placée automatiquement au milieu exact de ${a.name} et ${b.name} · ${band} MHz · ${s.mimo}T${s.mimo}R · beamforming ${s.beam?"ON":"OFF"}.`,"green");
+ return true;
 }
 function activatePlacement(){
  const tech=document.querySelector('input[name="tech"]:checked').value;
+ const auto5g=tech==="5G" && document.getElementById("auto5gMidpoint") && document.getElementById("auto5gMidpoint").checked;
+ if(auto5g){
+   place5GAtLastTwoReferences();
+   return;
+ }
  pendingConfig={tech,band:document.getElementById("band").value,power:+document.getElementById("power").value,height:+document.getElementById("height").value,azimuth:+document.getElementById("azimuth").value,tilt:+document.getElementById("tilt").value,bw:document.getElementById("bw").value,mimo:tech==="5G"?+document.getElementById("mimo").value:2,beam:tech==="5G"?+document.getElementById("beam").value:0,usage:tech==="5G"?document.getElementById("usage").value:"—"};
  closeModal("stationModal"); placing=true; map.getContainer().style.cursor="crosshair"; log("Mode placement actif : cliquez sur la carte pour positionner le site","yellow");
 }
 function placeStation(latlng){
  const c=pendingConfig||{tech:"4G",band:"1800",power:43,height:30,azimuth:0,tilt:6,bw:"20 MHz",mimo:2,beam:0,usage:"—"};
  const s={id:"S"+String(seq++).padStart(2,"0"),name:(c.tech==="5G"?"gNodeB-":"")+(seq-1).toString().padStart(2,"0"),lat:latlng.lat,lng:latlng.lng,...c,users:0};
- stations.push(s); renderStation(s); runSimulation(); registerNewStationForPair(s); log(`${s.name} ajouté : ${s.tech} ${s.band} MHz`,"green"); pendingConfig=null;
+ stations.push(s); renderStation(s); updateInterSitePlanning(); runSimulation(); log(`${s.name} ajouté : ${s.tech} ${s.band} MHz`,"green"); pendingConfig=null;
 }
 function renderStation(s){
  const html=`<div style="text-align:center;font-weight:800;font-size:10px;color:#172033"><div style="width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:${s.tech==="5G"?"#7c4dff":s.tech==="4G"?"#356ae6":s.tech==="3G"?"#4f6b8a":"#6b7280"};color:#fff;border:2px solid #fff;box-shadow:0 2px 8px #0003">${s.tech}</div><div style="background:#fff;border:1px solid #dfe3e8;border-radius:3px;padding:0 3px;margin-top:1px">${s.name}</div></div>`;
@@ -589,7 +644,7 @@ function captureCoverageLayers(){
         if(d<best){best=d;pair=[fg[i],fg[j]];}
       }
       L.polyline([[pair[0].lat,pair[0].lng],[central5G.lat,central5G.lng],[pair[1].lat,pair[1].lng]],{color:"#168a5b",weight:5,opacity:.55})
-       .bindTooltip("Corridor étudié : impact de l'ajout de la 5G").addTo(gainLayer);
+       .bindTooltip("Corridor étudié : impact de l'ajout manuel de la 5G").addTo(gainLayer);
     }
   }
   if(coverageMode==="before") coverageBeforeLayer.addTo(map);
@@ -618,96 +673,86 @@ function updateCoveragePanel(){
   document.getElementById("ccLat").textContent=m?.lat?m.lat+" ms":"—";
 }
 
+function renderPairHistory(){
+  const el=document.getElementById("pairHistoryView");
+  if(!pairHistory.length){el.innerHTML='<div class="history-empty">Aucune paire créée.</div>';return;}
+  el.innerHTML=pairHistory.map(x=>{
+    const a=stations.find(s=>s.id===x.a),b=stations.find(s=>s.id===x.b),g=stations.find(s=>s.id===x.g);
+    return `<div class="pair-history-row"><b>Paire #${x.id}</b><span>${a?.name||x.a} — <strong>${g?.name||x.g}</strong> — ${b?.name||x.b}</span></div>`;
+  }).join("");
+}
+
+function updateInterSitePlanning(){
+  const recent=stations.filter(s=>s.tech!=="5G").slice(-2);
+  if(recent.length<2) return;
+  const a=recent[0], b=recent[1];
+  const dKm=map.distance([a.lat,a.lng],[b.lat,b.lng])/1000;
+  const zone=envSel();
+  const radius=zone==="Urbain"?"~1–3 km":zone==="Périurbain"?"~2–5 km":"~5–15+ km";
+  let need="Faible";
+  if(zone==="Urbain" && dKm>2) need="Élevé";
+  else if(zone==="Périurbain" && dKm>4) need="Élevé";
+  else if(zone==="Rural" && dKm>10) need="Élevé";
+  else if(dKm>1.5) need="Modéré";
+  document.getElementById("pairA").textContent=a.name;
+  document.getElementById("pairB").textContent=b.name;
+  document.getElementById("pairDistance").textContent=dKm.toFixed(2)+" km";
+  document.getElementById("planningZone").textContent=zone;
+  document.getElementById("planningBand").textContent=`${a.band} / ${b.band} MHz`;
+  document.getElementById("planningRadius").textContent=radius;
+  document.getElementById("planningNeed").textContent=need;
+  document.getElementById("planningRecommendation").innerHTML=
+    `Distance réelle entre <b>${a.name}</b> et <b>${b.name}</b> : <b>${dKm.toFixed(2)} km</b>. `+
+    (need==="Élevé"
+      ? "Une densification intermédiaire 5G peut être étudiée pour renforcer la capacité eMBB dans la zone centrale."
+      : "La distance ne justifie pas automatiquement une nouvelle cellule 5G : la décision doit aussi tenir compte de la charge, de la couverture et de la capacité.");
+}
+
 function enablePair5GMode(){
-  pairMode=true;
-  pairStations=[];
-  document.getElementById("pairModeBadge").textContent="sélection";
-  document.getElementById("pairModeText").textContent="Choisissez maintenant deux nouvelles stations. La première sera A, la deuxième B, puis une gNodeB 5G sera automatiquement placée exactement au milieu.";
-  updatePairUI();
-  log("Mode nouvelle paire activé : placez Station A puis Station B.","yellow");
+  // Legacy compatibility: pairing is no longer used.
+  log("Utilisez uniquement AJOUTER STATION pour construire le réseau.","yellow");
 }
-function finishPair5GMode(){
-  pairMode=false;
-  pairStations=[];
-  document.getElementById("pairModeBadge").textContent="libre";
-  document.getElementById("pairModeText").textContent="Paire terminée. Les stations et la 5G restent sur la carte. Vous pouvez créer une nouvelle paire.";
-  updatePairUI();
-}
-function updatePairUI(){
-  document.getElementById("pairA").textContent=pairStations[0]?.name||"—";
-  document.getElementById("pairB").textContent=pairStations[1]?.name||"—";
-  document.getElementById("pairG").textContent=pairStations[2]?.name||"—";
-}
-function create5GForPair(a,b){
-  const lat=(a.lat+b.lat)/2, lng=(a.lng+b.lng)/2;
-  const env=envSel(), band=profiles[env].defaultBand["5G"]||"3500";
-  const g={
-    id:"G"+String(pairId).padStart(2,"0"),
-    name:`gNodeB-P${pairId}`,
-    lat,lng,tech:"5G",band,power:43,height:30,azimuth:0,tilt:6,
-    bw:band==="3500"?"100 MHz":"20 MHz",mimo:64,beam:1,usage:"eMBB",
-    users:0,central:true,pairId,linkedA:a.id,linkedB:b.id
-  };
-  pre5GMetrics=metrics();
-  central5G=g;
-  stations.push(g);
-  renderStation(g);
-  pairStations.push(g);
-  pairHistory.push({id:pairId,a:a.id,b:b.id,g:g.id,before:pre5GMetrics});
-  drawCentralInfluence(a,b,g);
-  runSimulation(false);
-  updatePairImpact(a,b,g,pre5GMetrics);
-  pairId++;
-  updatePairUI();
-  document.getElementById("pairModeBadge").textContent="5G créée";
-  document.getElementById("pairModeText").textContent=`La 5G ${g.name} reste liée à ${a.name} et ${b.name}. Ajoutez maintenant d'autres stations 2G/3G/4G sans déplacer cette gNodeB.`;
-  log(`${g.name} créée au milieu exact de ${a.name} + ${b.name}.`,"green");
-}
-function updatePairImpact(a,b,g,before){
-  const after=metrics();
-  const dist=map.distance([a.lat,a.lng],[b.lat,b.lng])/1000;
-  document.getElementById("impactBadge").textContent=`Paire #${g.pairId}`;
-  document.getElementById("impactIntro").innerHTML=`<b>${g.name}</b> est exactement au milieu de <b>${a.name}</b> et <b>${b.name}</b> · distance ${dist.toFixed(2)} km · ${g.band} MHz · Massive MIMO 64T64R · NSA.`;
-  document.getElementById("impactDistance").textContent=dist.toFixed(2)+" km";
-  document.getElementById("impactCoverage").textContent=(after.cov-before.cov>=0?"+":"")+(after.cov-before.cov).toFixed(0)+" pts";
-  document.getElementById("impactRate").textContent=(after.rate-before.rate>=0?"+":"")+formatRate(Math.abs(after.rate-before.rate));
-  document.getElementById("impactLatency").textContent=(after.lat-before.lat>=0?"+":"")+(after.lat-before.lat).toFixed(0)+" ms";
-  const fmt=(v,u)=>`${v.toFixed(0)} ${u}`;
-  document.getElementById("impactExplanation").innerHTML=`<b>Effet isolé de la paire :</b> la comparaison AVANT correspond au réseau juste avant l'ajout de ${g.name}. La 5G ne déplace aucune autre station et reste liée à cette paire. Les nouveaux UE peuvent être servis par la cellule 5G lorsque le RSRP/SINR est suffisant.`;
-  // Station-specific qualitative impact from distance to the new gNodeB.
-  function stationImpact(s,prefix){
-    const d=map.distance([s.lat,s.lng],[g.lat,g.lng]);
-    const r=cellRadius(g);
-    const strength=Math.max(0,1-d/r);
-    const rsrpGain=Math.round(2+10*strength);
-    const sinrGain=Math.round(1+7*strength);
-    const rateGain=Math.round(5+35*strength);
-    const loadDrop=Math.round(3+25*strength);
-    document.getElementById(prefix+"Rsrp").textContent=`+${rsrpGain} dB`;
-    document.getElementById(prefix+"Sinr").textContent=`+${sinrGain} dB`;
-    document.getElementById(prefix+"Rate").textContent=`+${rateGain}%`;
-    document.getElementById(prefix+"Load").textContent=`−${loadDrop}%`;
-    return strength;
-  }
-  document.querySelector("#impactA .station-impact-title").innerHTML=`${a.name} <span>EFFET 5G</span>`;
-  document.querySelector("#impactB .station-impact-title").innerHTML=`${b.name} <span>EFFET 5G</span>`;
-  stationImpact(a,"a"); stationImpact(b,"b");
-}
-function registerNewStationForPair(s){
-  if(!pairMode) return false;
-  if(pairStations.length<2){
-    pairStations.push(s);
-    updatePairUI();
-    if(pairStations.length===1){
-      document.getElementById("pairModeText").textContent="Station A placée. Choisissez maintenant la deuxième station : elle deviendra Station B.";
-      log(`${s.name} = Station A. Placez Station B.`,"yellow");
-    }else if(pairStations.length===2){
-      document.getElementById("pairModeText").textContent=`A=${pairStations[0].name} · B=${s.name}. Calcul du milieu et création automatique de la 5G…`;
-      create5GForPair(pairStations[0],pairStations[1]);
+function finishPair5GMode(){}
+function updatePairUI(){}
+function create5GForPair(){}
+function updatePairImpact(){}
+function registerNewStationForPair(){ return false; }
+
+function evaluate5GCandidate(){
+  const base=stations.filter(s=>s.tech!=="5G");
+  if(base.length<2) return null;
+  let best=null, bestD=Infinity;
+  for(let i=0;i<base.length;i++){
+    for(let j=i+1;j<base.length;j++){
+      const d=map.distance([base[i].lat,base[i].lng],[base[j].lat,base[j].lng]);
+      if(d<bestD){bestD=d;best=[base[i],base[j]];}
     }
-    return true;
   }
-  return false;
+  const a=best[0],b=best[1];
+  const mid={lat:(a.lat+b.lat)/2,lng:(a.lng+b.lng)/2};
+  const env=envSel();
+  let zone="Urbain";
+  if(env==="Rural") zone="Rural";
+  else if(env==="Périurbain") zone="Périurbain";
+  const limits={Urbain:[500,3000],Périurbain:[1000,5000],Rural:[3000,15000]};
+  const [lo,hi]=limits[zone]||limits.Urbain;
+  const suitable=bestD>=lo && bestD<=hi;
+  return {a,b,d:bestD,mid,zone,suitable};
+}
+function show5GCandidate(){
+  const c=evaluate5GCandidate();
+  if(!c){log("Il faut au moins deux stations existantes pour analyser une densification 5G.","yellow");return;}
+  const km=c.d/1000;
+  const text=c.suitable
+    ? `Densification 5G pertinente à étudier : ${c.a.name} ↔ ${c.b.name}, distance ${km.toFixed(2)} km. Point médian proposé, sans création automatique.`
+    : `Distance ${km.toFixed(2)} km entre ${c.a.name} et ${c.b.name} : hors plage indicative de planification ${c.zone}. Aucune 5G n'est créée automatiquement.`;
+  log(text,c.suitable?"green":"yellow");
+  if(document.getElementById("impactIntro")){
+    document.getElementById("impactIntro").innerHTML=
+      `<b>Analyse de densification :</b> ${text}<br>
+       Point médian proposé : ${c.mid.lat.toFixed(5)}, ${c.mid.lng.toFixed(5)}. 
+       L'ajout manuel de la 5G reste une décision de l'utilisateur via <b>AJOUTER STATION</b>.`;
+  }
 }
 function add5GBetween4G(){
   const fourG=stations.filter(s=>s.tech==="4G");
@@ -758,17 +803,18 @@ function add5GBetween4G(){
 }
 
 function drawCentralInfluence(a,b,g){
-  impactLayer.clearLayers();
+  // Legacy visualization helper. It is only used if a 5G cell is explicitly created.
+  const pairLayer=L.layerGroup().addTo(impactLayer);
   const line4=L.polyline([[a.lat,a.lng],[b.lat,b.lng]],{
     color:"#356ae6",weight:2,dashArray:"6 6",opacity:.65
   }).bindTooltip("Axe entre les deux stations 4G");
-  line4.addTo(impactLayer);
+  line4.addTo(pairLayer);
 
   const line5=L.circle([g.lat,g.lng],{
     radius:g.band==="3500"?1800:g.band==="2100"?3000:5000,
     color:"#7c4dff",weight:2,dashArray:"5 5",fillColor:"#7c4dff",fillOpacity:.045
   }).bindTooltip(`Influence 5G centrale · ${g.band} MHz`);
-  line5.addTo(impactLayer);
+  line5.addTo(pairLayer);
 
   L.marker([g.lat,g.lng],{
     icon:L.divIcon({
@@ -776,14 +822,14 @@ function drawCentralInfluence(a,b,g){
       html:`<div style="width:34px;height:34px;border-radius:50%;background:#7c4dff;color:#fff;border:3px solid #fff;box-shadow:0 2px 10px #0004;display:grid;place-items:center;font-size:10px;font-weight:900">5G</div>`,
       iconSize:[34,34],iconAnchor:[17,17]
     })
-  }).bindTooltip("gNodeB 5G centrale — influence entre les deux 4G").addTo(impactLayer);
+  }).bindTooltip("gNodeB 5G centrale — influence entre les deux 4G").addTo(pairLayer);
 
   // Highlight the two sides of the middle corridor.
   const d=map.distance([a.lat,a.lng],[b.lat,b.lng]);
   L.circle([g.lat,g.lng],{
     radius:Math.min(0.42*d,1800),
     color:"#8a6336",weight:1,fillColor:"#8a6336",fillOpacity:.035,dashArray:"2 4"
-  }).bindTooltip("Zone d'étude : effet local de l'ajout 5G").addTo(impactLayer);
+  }).bindTooltip("Zone d'étude : effet local de l'ajout 5G").addTo(pairLayer);
 }
 
 function updateCentralImpact(){
@@ -791,7 +837,7 @@ function updateCentralImpact(){
   const intro=document.getElementById("impactIntro");
   if(!central5G || !pre5GMetrics){
     box.textContent="en attente";
-    intro.textContent="Scénario de référence : deux eNodeB 4G. Ajoutez une gNodeB 5G au milieu pour visualiser précisément ce qui change dans la zone intermédiaire.";
+    intro.textContent="Scénario de référence : deux eNodeB 4G. Ajoutez manuellement une gNodeB 5G au point médian proposé pour visualiser précisément ce qui change dans la zone intermédiaire.";
     ["impactDistance","impactCoverage","impactRate","impactLatency"].forEach(id=>document.getElementById(id).textContent="—");
     return;
   }
@@ -828,7 +874,7 @@ function optimize(){
  m.bindPopup(`<b>Emplacement recommandé</b><br>${tech} ${band} MHz<br>Zone faible détectée · cliquez « Ajouter station » pour confirmer.`).openPopup();
  setTimeout(()=>map.removeLayer(m),6000);log(`Recommandation : ${tech} ${band} MHz autour de la zone la plus faible`,"green");
 }
-function resetScenario(){if(!confirm("Revenir au scénario initial 2×4G ?"))return;loadReferenceScenario();baseline=null;pre5GMetrics=null;central5G=null;pairMode=false;pairStations=[];pairHistory=[];pairId=1;impactLayer.clearLayers();coverageBeforeLayer.clearLayers();coverageAfterLayer.clearLayers();gainLayer.clearLayers();updatePairUI();generateUsers();updateCentralImpact();log("Scénario réinitialisé : 2×4G sans 5G centrale","bad")}
+function resetScenario(){if(!confirm("Revenir au scénario initial 2×4G ?"))return;loadReferenceScenario();baseline=null;pre5GMetrics=null;central5G=null;pairMode=false;pairStations=[];pairHistory=[];pairId=1;if(typeof renderPairHistory==="function")renderPairHistory();impactLayer.clearLayers();coverageBeforeLayer.clearLayers();coverageAfterLayer.clearLayers();gainLayer.clearLayers();generateUsers();updateCentralImpact();log("Scénario réinitialisé : 2×4G sans 5G centrale","bad")}
 function log(msg,type=""){const el=document.getElementById("log"),d=document.createElement("div");d.innerHTML=`<span class="t">[${new Date().toLocaleTimeString("fr-FR")}]</span>${msg}`;if(type==="bad")d.style.color="#c83b4b";else if(type==="yellow")d.style.color="#b7791f";else if(type==="green")d.style.color="#168a5b";el.appendChild(d);el.scrollTop=el.scrollHeight}
 function openReport(){
  const m=metrics();let rows=stations.map(s=>`<tr><td>${s.name}</td><td>${s.tech}</td><td>${s.band} MHz</td><td>${s.bw}</td><td>${s.power} dBm</td><td>${s.users}</td></tr>`).join("");
@@ -838,6 +884,7 @@ function openReport(){
 function downloadReport(){
  const m=metrics();let txt=`MOBILE NETWORK PLANNER MAROC\\nSCENARIO DE SIMULATION\\n\\nVille: ${document.getElementById("city").value}\\nEnvironnement: ${profiles[envSel()].label}\\nArchitecture: 5G NSA / EPC 4G\\n\\nKPI\\nCouverture: ${m.cov}%\\nRSRP moyen: ${m.rsrp} dBm\\nSINR moyen: ${m.sinr} dB\\nDébit moyen: ${formatRate(m.rate)}\\nLatence estimée: ${m.lat} ms\\n\\nSTATIONS\\n${stations.map(s=>`${s.name} | ${s.tech} | ${s.band} MHz | ${s.bw} | ${s.power} dBm | ${s.users} UE`).join("\\n")}\\n\\nNote: simulation pédagogique comparative.`;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain;charset=utf-8"}));a.download="mobile-network-planner-maroc.txt";a.click()}
 init();
+
 </script>
 </body>
 </html>

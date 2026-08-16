@@ -1,1028 +1,923 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>5G Smart Planner — Étude De Couverture</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Network Planner Maroc — 4G / 5G NSA</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-  :root{
-    --bp:#ffffff;
-    --bp-2:#ffffff;
-    --bp-3:#f8fafc;
-    --line:#dfe3e8;
-    --line-soft:rgba(0,0,0,0.05);
-    --ink:#172033;
-    --ink-dim:#667085;
-    --ink-mute:#8a94a6;
-    --paper:#ffffff;
-    --amber:#d97706;
-    --amber-dim:#b45309;
-    --good:#168a5b;
-    --ok:#d97706;
-    --poor:#dc2626;
-    --none:#4b5563;
-    --radius:4px;
-  }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  html,body{height:100%;}
-  body{
-    background:#ffffff;
-    color:var(--ink);
-    font-family:'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    display:flex; flex-direction:column;
-  }
-  ::selection{background:rgba(217,119,6,0.15);}
+:root{
+  --bg:#f5f7fa; --panel:#fff; --ink:#172033; --muted:#667085; --line:#dfe3e8;
+  --accent:#344054; --accent2:#7a5a32; --good:#168a5b; --warn:#b7791f; --bad:#c83b4b;
+  --soft:#f8fafc; --blue:#356ae6; --purple:#7c4dff; --orange:#c77b30;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);overflow:auto}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{height:100%;display:grid;grid-template-rows:62px 1fr}
+header{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:1000}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{width:36px;height:36px;border:1px solid #b9c0c9;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:800;letter-spacing:.04em;background:#fafbfc}
+.brand h1{font-size:16px;line-height:1;margin:0;font-weight:700}
+.brand small{display:block;color:#7b8491;font-size:9px;margin-top:5px;letter-spacing:.06em}
+.topnav{display:flex;gap:4px}
+.topnav button{border:1px solid transparent;background:transparent;color:var(--muted);padding:8px 11px;border-radius:6px;font-size:12px}
+.topnav button.active,.topnav button:hover{background:#f3f5f7;border-color:#d7dce2;color:var(--ink)}
+.workspace{min-height:calc(100vh - 62px);display:grid;grid-template-columns:minmax(0,1fr) 420px;align-items:stretch}
+.mapwrap{position:relative;min-width:0;display:grid;grid-template-rows:48px minmax(520px,1fr) auto}
+.toolbar{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px;padding:7px 10px;z-index:500}
+.btn{border:1px solid #cfd5dc;background:#fff;color:#344054;border-radius:6px;padding:8px 11px;font-size:11px;font-weight:700}
+.btn:hover{background:#f7f9fc;border-color:#9ca3af}
+.btn.primary{background:#374151;color:#fff;border-color:#374151}
+.btn.gold{background:#8a6336;color:#fff;border-color:#8a6336}
+.btn.danger{color:#b42333;background:#fff5f6;border-color:#e8aab2}
+.btn.on{outline:2px solid #9aa4b2;outline-offset:1px}
+.spacer{flex:1}
+.statuspill{font-size:10px;color:#667085;border:1px solid #dfe3e8;padding:6px 9px;border-radius:999px;background:#fafbfc}
+#map{min-height:0;background:#e8edf2}
+.leaflet-container{font-family:inherit}
+.leaflet-control-zoom a{background:#fff!important;color:#172033!important;border-color:#dfe3e8!important}
+.legend{position:absolute;left:12px;top:12px;z-index:450;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:7px;padding:9px 11px;box-shadow:0 6px 22px rgba(16,24,40,.10);font-size:10px}
+.legend b{font-size:10px}.legendrow{display:flex;gap:7px;align-items:center;margin-top:5px}.sw{width:12px;height:8px;border-radius:2px}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));border-top:1px solid var(--line);background:#fff;min-height:82px}
+.kpi{padding:11px 12px;border-right:1px solid #e6e9ed;min-width:0;overflow:visible}
+.kpi:last-child{border:0}.kpi .v{font-size:19px;font-weight:750;white-space:nowrap}.kpi .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:3px}.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.sidebar{background:#fff;border-left:1px solid var(--line);overflow-y:auto;overflow-x:hidden;padding:10px;max-height:calc(100vh - 62px)}
+.card{border:1px solid var(--line);border-radius:8px;background:#fff;margin-bottom:9px;box-shadow:0 2px 10px rgba(16,24,40,.035)}
+.cardhead{padding:10px 12px;border-bottom:1px solid #e8ebef;display:flex;align-items:center;justify-content:space-between}
+.cardhead strong{font-size:11px;text-transform:uppercase;letter-spacing:.07em}.badge{font-size:9px;background:#f1f3f5;border:1px solid #dfe3e8;border-radius:999px;padding:3px 7px;color:#667085}
+.cardbody{padding:10px 11px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.field label{display:block;color:#667085;font-size:9px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.field select,.field input{width:100%;border:1px solid #cfd5dc;border-radius:6px;padding:7px 8px;background:#fff;color:#172033;font-size:11px}
+.field input:focus,.field select:focus{outline:0;border-color:#7b8794;box-shadow:0 0 0 3px rgba(52,64,84,.08)}
+.help{font-size:9px;color:#8a94a6;line-height:1.45;margin-top:7px}
+.switch{display:flex;align-items:center;gap:7px;font-size:10px;margin-top:8px}.switch input{accent-color:#374151}
+.station{border:1px solid #e2e6eb;border-radius:7px;padding:8px;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.station:hover{background:#fafbfc}.dot{width:27px;height:27px;border-radius:6px;display:grid;place-items:center;font-size:9px;font-weight:800;color:#fff;flex:none}
+.dot.g2{background:#6b7280}.dot.g3{background:#4f6b8a}.dot.g4{background:#356ae6}.dot.g5{background:#7c4dff}
+.stmain{min-width:0;flex:1}.stname{font-size:11px;font-weight:700}.stmeta{font-size:9px;color:#667085;margin-top:2px}.stactions{display:flex;gap:4px}.mini{border:1px solid #dfe3e8;background:#fff;border-radius:5px;padding:5px 7px;font-size:10px;color:#667085}.mini:hover{background:#f3f5f7}
+.zonechip{display:inline-flex;align-items:center;gap:5px;border:1px solid #dfe3e8;background:#fafbfc;padding:4px 7px;border-radius:999px;font-size:9px;margin:2px}
+.sectionnote{font-size:9px;color:#667085;line-height:1.5}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:7px}.comparebox{background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:8px}.comparebox h4{margin:0 0 6px;font-size:10px}.comparebox p{margin:3px 0;font-size:9px;color:#667085}.comparebox b{color:#172033}
+.delta{margin-top:7px;padding:7px;border-radius:6px;background:#f7f9fc;font-size:9px;line-height:1.55}
+.log{max-height:145px;overflow:auto;background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:7px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:9px}.log div{padding:3px 0;border-bottom:1px solid #edf0f3}.log div:last-child{border:0}.log .t{color:#98a2b3;margin-right:5px}
+.bottomstatus{position:absolute;right:12px;top:12px;z-index:450;background:rgba(255,255,255,.95);border:1px solid var(--line);padding:6px 9px;border-radius:999px;font-size:9px;color:#667085}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.38);backdrop-filter:blur(2px);z-index:2000;display:none;align-items:center;justify-content:center;padding:18px}
+.modal.show{display:flex}.modalbox{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 25px 70px rgba(15,23,42,.22);width:min(720px,100%);max-height:90vh;overflow:auto;padding:18px}
+.modalhead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}.modalhead h2{margin:0;font-size:18px}.close{border:0;background:#f5f6f8;width:30px;height:30px;border-radius:6px;color:#667085}
+.paramgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.radiochoice{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:9px}.radiochoice label{border:1px solid #dfe3e8;border-radius:6px;padding:8px;text-align:center;font-size:10px;cursor:pointer}.radiochoice input{display:none}.radiochoice label:has(input:checked){background:#f2f4f7;border-color:#7d8795;font-weight:700}
+.tabs{display:flex;gap:5px;border-bottom:1px solid var(--line);margin-bottom:10px}.tab{border:0;background:transparent;padding:7px 8px;font-size:10px;color:#667085}.tab.active{color:#172033;border-bottom:2px solid #374151;font-weight:700}
+.arch{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:center}.arch .node{border:1px solid #dfe3e8;border-radius:7px;padding:9px 6px;text-align:center;background:#fafbfc}.arch .node strong{font-size:10px}.arch .node small{display:block;color:#667085;font-size:8px;margin-top:3px}.arrow{text-align:center;color:#98a2b3}
+.reporttable{width:100%;border-collapse:collapse;font-size:10px}.reporttable th,.reporttable td{padding:7px;border-bottom:1px solid #e8ebef;text-align:left}.reporttable th{color:#667085;font-size:9px;text-transform:uppercase}
+@media(max-width:1050px){.workspace{grid-template-columns:minmax(0,1fr) 360px}.kpis{grid-template-columns:repeat(3,minmax(110px,1fr));overflow:auto}}
+@media(max-width:800px){body{overflow:auto}.app{height:auto;min-height:100%}.workspace{grid-template-columns:1fr}.mapwrap{height:720px}.sidebar{border-left:0;border-top:1px solid var(--line)}.topnav{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.paramgrid{grid-template-columns:1fr 1fr}}
 
-  .ticks{position:relative;}
-  .ticks::before, .ticks::after{
-    content:''; position:absolute; width:9px; height:9px; pointer-events:none;
-    border-color:var(--line); opacity:1;
-  }
-  .ticks::before{top:6px; left:6px; border-top:1px solid; border-left:1px solid;}
-  .ticks::after{bottom:6px; right:6px; border-bottom:1px solid; border-right:1px solid;}
+.impactgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.impactitem{border:1px solid #e3e7ec;border-radius:6px;padding:7px;background:#fafbfc}
+.impactitem span{display:block;color:#667085;font-size:8px;text-transform:uppercase;letter-spacing:.05em}
+.impactitem b{display:block;font-size:12px;margin-top:3px}
+.impactbox{margin-top:8px;border-left:3px solid #7c4dff;background:#f7f5ff;border-radius:5px;padding:8px;font-size:9px;line-height:1.55}
+.impactlegend{display:flex;gap:10px;flex-wrap:wrap;margin-top:7px;color:#667085;font-size:8px}
+.impactlegend span{display:inline-flex;align-items:center;gap:4px}
+.line4g,.line5g,.midpoint{display:inline-block;width:14px;height:3px;border-radius:2px}
+.line4g{background:#356ae6}.line5g{background:#7c4dff}.midpoint{width:8px;height:8px;border-radius:50%;background:#8a6336}
+.g5center{filter:drop-shadow(0 2px 5px rgba(124,77,255,.35))}
 
-  /* ---------- HEADER ---------- */
-  header{
-    display:flex; align-items:center; justify-space-between;
-    padding:14px 22px; border-bottom:1px solid var(--line);
-    background:#ffffff; backdrop-filter:blur(6px);
-    position:sticky; top:0; z-index:50;
-  }
-  .brand{display:flex; align-items:center; gap:12px;}
-  .brand .mark{
-    width:36px; height:36px; border:1px solid var(--line); border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Inter', sans-serif; font-size:11px; font-weight:700; color:var(--ink);
-    letter-spacing:0.3px; background:#ffffff;
-  }
-  .brand h1{font-family:'Inter', sans-serif; font-size:18px; letter-spacing:-0.02em; font-weight:600; color:var(--ink);}
-  .brand .tag{display:none !important;}
-  nav{display:flex; gap:2px; background:#f8fafc; border:1px solid var(--line); border-radius:4px; padding:3px;}
-  nav button{
-    font-family:'Inter', sans-serif; font-size:12px; font-weight:500; color:var(--ink-dim);
-    background:none; border:none; padding:8px 13px; border-radius:2px; cursor:pointer;
-    transition:all .15s;
-  }
-  nav button.active{background:#ffffff; color:var(--ink); border:1px solid var(--line); font-weight:600;}
-  nav button:hover:not(.active){color:var(--ink); background:#f1f5f9;}
+.coverage-compare-panel{position:absolute;right:12px;top:58px;width:320px;background:rgba(255,255,255,.98);border:1px solid #dfe3e8;border-radius:8px;z-index:600;box-shadow:0 10px 30px rgba(16,24,40,.14);display:none;overflow:hidden}
+.coverage-compare-panel.show{display:block}
+.cc-head{display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border-bottom:1px solid #e7eaee;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.cc-head button{border:0;background:#f3f5f7;border-radius:5px;width:24px;height:24px;color:#667085}
+.cc-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #e7eaee}
+.cc-tab{border:0;background:#fff;padding:8px 4px;font-size:8px;color:#667085;font-weight:700}
+.cc-tab.active{background:#f2f4f7;color:#172033;box-shadow:inset 0 -2px #374151}
+.cc-body{padding:10px}
+.cc-title{font-size:10px;font-weight:700;margin-bottom:8px}
+.cc-bars{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cc-bars>div{border:1px solid #e5e7eb;border-radius:6px;background:#fafbfc;padding:7px}
+.cc-bars span{display:block;font-size:8px;color:#667085;text-transform:uppercase}
+.cc-bars b{display:block;font-size:13px;margin-top:3px}
+.cc-explain{margin-top:8px;background:#f7f8fa;border-left:3px solid #356ae6;padding:8px;font-size:9px;line-height:1.5;color:#475467}
 
-  /* ---------- LAYOUT ---------- */
-  main{flex:1; display:grid; grid-template-columns:1fr 350px; gap:0; min-height:0; background:#ffffff;}
-  .map-col{display:flex; flex-direction:column; min-width:0; position:relative;}
-  #map{flex:1; background:#f8fafc;}
+.pair-card{border:1px solid #dfe3e8}
+.pairsteps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:9px}
+.pairsteps>div{border:1px solid #e3e7ec;border-radius:6px;padding:7px;background:#fafbfc}
+.pairsteps b{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#172033;color:#fff;font-size:8px;margin-right:5px}
+.pairsteps span{font-size:8px;color:#667085;text-transform:uppercase}
+.pairsteps strong{display:block;font-size:11px;margin-top:5px}
+.pair-actions{display:flex;gap:6px;margin-top:8px}
+.pair-actions .btn{flex:1}
+.pair-impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.station-impact{border:1px solid #e2e6eb;border-radius:6px;padding:7px;background:#fff}
+.station-impact-title{font-size:9px;font-weight:800;text-transform:uppercase}
+.station-impact-title span{float:right;color:#667085;font-size:7px}
+.impact-kpis{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.impact-kpis>div{background:#f7f8fa;border-radius:5px;padding:5px;font-size:8px;color:#667085}
+.impact-kpis b{display:block;color:#172033;font-size:9px;margin-top:2px}
+.pair-marker{font-weight:900}
 
-  .toolbar{
-    display:flex; align-items:center; gap:8px; padding:10px 16px;
-    border-bottom:1px solid var(--line); flex-wrap:wrap; background:#ffffff;
-  }
-  .btn{
-    font-family:'Inter', sans-serif; font-size:12px; font-weight:500;
-    padding:9px 14px; border-radius:4px; border:1px solid var(--line);
-    background:#ffffff; color:var(--ink); cursor:pointer;
-    display:flex; align-items:center; gap:7px; transition:all .15s;
-  }
-  .btn .tag-ico{
-    display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px;
-    border:1px solid currentColor; border-radius:3px; font-size:10px; font-weight:600; flex-shrink:0;
-  }
-  .btn:hover{border-color:var(--ink); background:#f8fafc;}
-  .btn:active{transform:translateY(0);}
-  .btn.primary{background:#172033; color:#ffffff; border:1px solid #172033; font-weight:600;}
-  .btn.primary:hover{background:#000000;}
-  .btn.ai{background:#ffffff; color:var(--ink); border:1px solid var(--line);}
-  .btn.ai:hover{background:#f8fafc;}
-  .btn.ghost{background:transparent; border-color:transparent;}
-  .btn.danger:hover{border-color:var(--poor); color:var(--poor); background:#fff5f5;}
-  .btn.on{outline:1.5px solid var(--amber); outline-offset:1px;}
-  .spacer{flex:1;}
-  .hint{
-    font-family:'Inter', sans-serif; font-size:11px; font-weight:500; color:var(--amber);
-    padding:5px 10px; border:1px dashed var(--amber); border-radius:4px; display:none;
-  }
-  .hint.show{display:block;}
+.pair-history{margin-top:8px;display:grid;gap:5px}.pair-history-row{border:1px solid #e3e7ec;border-radius:6px;padding:6px 7px;background:#fafbfc;font-size:8px;display:flex;justify-content:space-between;gap:8px}.pair-history-row b{font-size:9px}.pair-history-row span{color:#667085}.history-empty{font-size:8px;color:#98a2b3;padding:5px}
 
-  /* KPI strip under the map */
-  .kpi-strip{
-    display:grid; grid-template-columns:repeat(6,1fr); gap:1px;
-    background:var(--line); border-top:1px solid var(--line);
-  }
-  .kpi{background:#ffffff; padding:11px 14px; text-align:left; position:relative;}
-  .kpi .val{font-family:'Inter', sans-serif; font-size:20px; font-weight:700; color:var(--ink); letter-spacing:-0.02em;}
-  .kpi .lbl{font-size:10px; font-weight:500; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px;}
-  .kpi.c-green .val{color:var(--good);}
-  .kpi.c-yellow .val{color:var(--ok);}
-  .kpi.c-red .val{color:var(--poor);}
-  .kpi.c-cyan .val{color:var(--ink);}
-
-  /* ---------- SIDEBAR ---------- */
-  aside{
-    background:#ffffff; border-left:1px solid var(--line);
-    display:flex; flex-direction:column; min-height:0;
-  }
-  .panel{border-bottom:1px solid var(--line); display:flex; flex-direction:column; min-height:0; background:#ffffff;}
-  .panel-h{
-    padding:12px 15px 10px; font-family:'Inter', sans-serif; font-size:12px; font-weight:600; color:var(--ink);
-    display:flex; justify-content:space-between; align-items:center;
-  }
-  .panel-h .info-btn{
-    font-family:'Inter', sans-serif; font-size:11px; font-weight:600; color:var(--ink-dim); background:#ffffff;
-    border:1px solid var(--line); border-radius:50%; width:18px; height:18px; cursor:pointer; line-height:1;
-    display:inline-flex; align-items:center; justify-content:center;
-  }
-  .panel-h .info-btn:hover{color:var(--ink); border-color:var(--ink);}
-  .panel-h .count{
-    font-family:'Inter', sans-serif; background:#f1f5f9; color:var(--ink);
-    padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; border:1px solid var(--line);
-  }
-  .panel-body{padding:0 12px 12px; overflow-y:auto;}
-  .panel-body.grow{flex:1;}
-  .panel-body::-webkit-scrollbar{width:6px;}
-  .panel-body::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
-
-  .station-row{
-    display:flex; align-items:center; gap:8px; padding:9px 10px; margin-bottom:5px;
-    background:#f8fafc; border-radius:4px; border:1px solid var(--line); border-left:3px solid var(--amber);
-    cursor:pointer; transition:background .15s;
-  }
-  .station-row:hover{background:#f1f5f9;}
-  .station-row.sat{border-left-color:var(--poor);}
-  .station-row .dot{
-    font-family:'Inter', sans-serif; font-size:10px; font-weight:700; color:var(--ink);
-    border:1px solid var(--line); background:#ffffff; border-radius:3px; padding:2px 4px; flex-shrink:0;
-  }
-  .station-row .meta{flex:1; min-width:0;}
-  .station-row .name{font-size:12px; font-weight:600; font-family:'Inter', sans-serif; color:var(--ink);}
-  .station-row .sub{font-family:'Inter', sans-serif; font-size:11px; color:var(--ink-dim); margin-top:1px;}
-  .station-row .del{background:none; border:none; color:var(--ink-dim); cursor:pointer; font-size:14px; padding:2px 4px;}
-  .station-row .del:hover{color:var(--poor);}
-
-  .empty{color:var(--ink-dim); font-size:12px; text-align:center; padding:18px 8px; line-height:1.5; font-family:'Inter', sans-serif;}
-
-  .sugg{
-    background:#f8fafc; border-radius:4px; padding:11px 12px; margin-bottom:8px;
-    border:1px solid var(--line); border-left:3px solid var(--ok);
-  }
-  .sugg.add{border-left-color:var(--good);}
-  .sugg.remove{border-left-color:var(--poor);}
-  .sugg.move{border-left-color:var(--ok);}
-  .sugg.ok{border-left-color:var(--ink);}
-  .sugg .stitle{font-size:12px; font-weight:600; display:flex; gap:6px; align-items:center; font-family:'Inter', sans-serif; color:var(--ink);}
-  .sugg .sdesc{font-size:12px; color:var(--ink-dim); margin:4px 0 8px; line-height:1.45;}
-  .sugg .score{font-family:'Inter', sans-serif; font-size:11px; font-weight:500; color:var(--ink-dim); margin-bottom:6px;}
-  .sugg .apply{
-    font-family:'Inter', sans-serif; font-size:11px; font-weight:600; padding:6px 12px; border-radius:4px; border:1px solid var(--line);
-    background:#ffffff; color:var(--ink); cursor:pointer; transition:all .15s;
-  }
-  .sugg .apply:hover{background:#172033; color:#ffffff; border-color:#172033;}
-
-  .log{
-    background:#f8fafc; border:1px solid var(--line); border-radius:4px; padding:8px 10px; font-family:'Inter', sans-serif;
-    font-size:11px; line-height:1.5; max-height:150px; overflow-y:auto;
-  }
-  .log-line{padding:2.5px 0; color:var(--ink); border-bottom:1px solid var(--line);}
-  .log-line .t{color:var(--ink-dim); font-weight:500; margin-right:6px;}
-  .log-line.green{color:var(--good);} .log-line.yellow{color:var(--ok);}
-  .log-line.red{color:var(--poor);} .log-line.cyan{color:var(--ink);}
-
-  /* leaflet tweaks */
-  .leaflet-container{font-family:'Inter', sans-serif; background:#f8fafc;}
-  .leaflet-popup-content-wrapper{background:#ffffff; color:var(--ink); border-radius:4px; border:1px solid var(--line); box-shadow:0 4px 12px rgba(0,0,0,0.08);}
-  .leaflet-popup-tip{background:#ffffff;}
-  .leaflet-popup-content{font-size:12px; margin:10px 12px; font-family:'Inter', sans-serif;}
-  .leaflet-popup-content b{font-family:'Inter', sans-serif; font-weight:600;}
-  .leaflet-popup-content .pl-note{font-family:'Inter', sans-serif; font-size:11px; color:var(--ink-dim); display:block; margin-top:4px;}
-  .gnb-icon{
-    width:26px; height:26px; border-radius:4px; background:#ffffff;
-    border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center;
-    font-family:'Inter', sans-serif; font-size:9px; font-weight:700; color:var(--ink);
-    box-shadow:0 2px 6px rgba(0,0,0,0.1); cursor:grab; transform:rotate(45deg);
-  }
-  .gnb-icon span{transform:rotate(-45deg);}
-  .gnb-icon.sat{border-color:var(--poor); color:var(--poor);}
-  .popup-del{background:transparent; border:1px solid var(--poor); color:var(--poor); font-family:'Inter', sans-serif; font-size:11px; font-weight:600; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:8px;}
-  .popup-del:hover{background:var(--poor); color:#ffffff;}
-
-  #toast{
-    position:fixed; bottom:24px; right:24px; background:#ffffff; color:var(--ink);
-    border:1px solid var(--line); padding:12px 18px; border-radius:4px; font-size:12px;
-    font-family:'Inter', sans-serif; font-weight:500;
-    box-shadow:0 12px 34px rgba(0,0,0,0.1); transform:translateY(90px); opacity:0;
-    transition:all .35s ease; z-index:999; max-width:320px;
-  }
-  #toast.show{transform:translateY(0); opacity:1;}
-  #toast.success{border-color:var(--good); color:var(--good);}
-  #toast.warning{border-color:var(--ok); color:var(--ok);}
-  #toast.error{border-color:var(--poor); color:var(--poor);}
-
-  /* ---------- METHODOLOGY MODAL ---------- */
-  #methOverlay{
-    position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(2px);
-    display:none; align-items:center; justify-content:center; z-index:900; padding:24px;
-  }
-  #methOverlay.show{display:flex;}
-  #methModal{
-    background:#ffffff; border:1px solid var(--line); border-radius:6px; max-width:640px; width:100%;
-    max-height:82vh; overflow-y:auto; padding:26px 28px; box-shadow:0 20px 40px rgba(0,0,0,0.1);
-  }
-  #methModal h2{font-family:'Inter', sans-serif; font-size:18px; font-weight:700; margin-bottom:4px; color:var(--ink);}
-  #methModal .sub{font-family:'Inter', sans-serif; font-size:11.5px; color:var(--ink-dim); margin-bottom:18px;}
-  #methModal h3{font-family:'Inter', sans-serif; font-size:13px; font-weight:600; color:var(--amber); margin:18px 0 8px;}
-  #methModal p{font-size:13px; line-height:1.65; color:var(--ink-dim); margin-bottom:6px;}
-  #methModal .formula{
-    font-family:'Inter', sans-serif; font-size:11.5px; background:#f8fafc; border-left:2px solid var(--amber);
-    padding:10px 12px; margin:8px 0; color:var(--ink); overflow-x:auto; white-space:pre; border:1px solid var(--line); border-left-width:2px; border-radius:4px;
-  }
-  #methModal ul{margin:6px 0 6px 18px; color:var(--ink-dim); font-size:12.5px; line-height:1.6;}
-  #methClose{
-    position:sticky; top:0; float:right; background:none; border:1px solid var(--line); color:var(--ink-dim);
-    width:26px; height:26px; border-radius:4px; cursor:pointer; font-size:14px;
-  }
-  #methClose:hover{color:var(--poor); border-color:var(--poor);}
-
-  @media (max-width:880px){
-    main{grid-template-columns:1fr;}
-    aside{border-left:none; border-top:1px solid var(--line);}
-    .kpi-strip{grid-template-columns:repeat(3,1fr);}
-    #map{min-height:52vh;}
-  }
-  @media (max-width:560px){
-    header{padding:10px 12px; align-items:flex-start; gap:10px; flex-wrap:wrap;}
-    nav{width:100%; overflow-x:auto;}
-    nav button{flex:1; min-width:105px;}
-    .toolbar{padding:8px 10px;}
-    .toolbar .btn{font-size:11px; padding:8px 10px;}
-    .kpi-strip{grid-template-columns:repeat(2,1fr);}
-  }
-
-  /* ---------- REPORT PREVIEW ---------- */
-  .report-overlay{
-    display:none; position:fixed; inset:0; z-index:2000;
-    background:rgba(0,0,0,0.3); backdrop-filter:blur(3px);
-    align-items:center; justify-content:center; padding:20px;
-  }
-  .report-overlay.show{display:flex;}
-  .report-modal{
-    width:min(720px, 100%); max-height:88vh; overflow:auto;
-    background:#fff; border:1px solid #dfe3e8; border-radius:8px;
-    box-shadow:0 24px 70px rgba(0,0,0,0.12); padding:26px;
-    color:#172033; position:relative;
-  }
-  .report-close{
-    position:absolute; right:14px; top:10px; border:0; background:none;
-    color:#667085; font-size:25px; cursor:pointer;
-  }
-  .report-kicker{
-    font-size:11px; letter-spacing:.08em; color:#6b7280;
-    font-weight:700; text-transform:uppercase; margin-bottom:7px;
-  }
-  .report-modal h2{font-size:22px; font-weight:700; margin-bottom:5px;}
-  .report-sub{color:#667085; font-size:13px; margin-bottom:18px;}
-  .report-preview{
-    background:#f8fafc; border:1px solid #e5e7eb; border-radius:6px;
-    padding:15px; font-family:'Inter', sans-serif; font-size:12px;
-    line-height:1.6; white-space:pre-wrap; color:#374151;
-    max-height:330px; overflow:auto;
-  }
-  .report-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:16px; flex-wrap:wrap;}
-  .report-location{margin-top:12px; color:#8a94a6; font-size:11px;}
-
-  .brand-copy h1{
-    font-family:'Inter', sans-serif;
-    font-size:18px;
-    line-height:1.1;
-    font-weight:600;
-    letter-spacing:-.02em;
-    color:#172033;
-  }
-</style>
+.radio-checks{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.radio-checks>div{background:#fafbfc;border:1px solid #e3e7ec;border-radius:6px;padding:7px}.radio-checks span{display:block;font-size:8px;color:#667085;text-transform:uppercase}.radio-checks b{display:block;font-size:10px;margin-top:3px}.pairsteps>div span{display:block}.pairsteps>div strong{font-size:10px}
+.planning-note{margin:7px 10px 0;padding:7px 9px;border:1px solid #e2e6eb;border-left:3px solid #172033;border-radius:6px;background:#fafbfc;font-size:8px;line-height:1.45;color:#475467}.planning-note b{color:#172033}</style>
 </head>
 <body>
-
+<div class="app">
 <header>
-  <div class="brand">
-    <div class="mark" aria-label="5G Smart Planner">5SP</div>
-    <div class="brand-copy">
-      <h1>5G Smart Planner</h1>
-    </div>
+  <div class="brand"><div class="logo">MNP</div><div><h1>Mobile Network Planner Maroc</h1><small>4G / 5G NSA · RADIO PLANNING &amp; IMPACT SIMULATION</small></div></div>
+  <div class="topnav">
+    <button class="active" onclick="showTab('simulation',this)">Simulation</button>
+    <button onclick="openMethod()">Méthodologie</button>
+    <button onclick="openReport()">Rapport</button>
   </div>
-  <nav>
-    <button class="active">Simulation</button>
-    <button id="navMeth">Méthodologie</button>
-    <button id="navReports">Rapports</button>
-  </nav>
 </header>
 
-<main>
-  <div class="map-col">
-    <div class="toolbar">
-      <button class="btn primary" id="btnAddStation"><span class="tag-ico">+</span>Ajouter Station</button>
-      <button class="btn" id="btnGenUsers"><span class="tag-ico">U</span>Générer Utilisateurs</button>
-      <button class="btn ai" id="btnOptimize"><span class="tag-ico">∴</span>Analyser Et Optimiser</button>
-      <div class="spacer"></div>
-      <span class="hint" id="placeHint">Cliquez sur la carte pour placer la station…</span>
-      <button class="btn ghost danger" id="btnClear"><span class="tag-ico">×</span>Tout Effacer</button>
+<div class="workspace">
+<section class="mapwrap">
+  <div class="toolbar">
+    <button class="btn primary" onclick="openStationModal()">AJOUTER STATION</button>
+    <button class="btn" onclick="generateUsers()">Générer UEs</button>
+    <button class="btn" onclick="runSimulation()">Recalculer</button>
+    
+    <button class="btn" onclick="toggleCoverageCompare()">Comparaison couverture</button>
+    <button class="btn" onclick="show5GCandidate()">Analyse densification 5G</button>
+    <span class="spacer"></span>
+    <span class="statuspill" id="scenarioPill">Scénario : 2×4G</span>
+    <button class="btn danger" onclick="resetScenario()">Réinitialiser</button>
+  </div>
+  <div id="map"></div>
+  <div class="coverage-compare-panel" id="coverageComparePanel">
+    <div class="cc-head"><strong>Comparaison couverture</strong><button onclick="toggleCoverageCompare()">×</button></div>
+    <div class="cc-tabs">
+      <button id="tabBefore" class="cc-tab active" onclick="setCoverageView('before')">AVANT · 4G</button>
+      <button id="tabAfter" class="cc-tab" onclick="setCoverageView('after')">APRÈS · 4G + 5G</button>
+      <button id="tabGain" class="cc-tab" onclick="setCoverageView('gain')">GAIN 5G</button>
     </div>
-    <div id="map"></div>
-
-    <div class="kpi-strip">
-      <div class="kpi c-cyan"><div class="val" id="kStations">0</div><div class="lbl">Stations</div></div>
-      <div class="kpi c-cyan"><div class="val" id="kUsers">0</div><div class="lbl">Utilisateurs</div></div>
-      <div class="kpi c-green"><div class="val" id="kCoverage">0%</div><div class="lbl">Couverture</div></div>
-      <div class="kpi c-yellow"><div class="val" id="kLatency">0 ms</div><div class="lbl">Latence Est.</div></div>
-      <div class="kpi c-yellow"><div class="val" id="kCapacity">0%</div><div class="lbl">Charge Moy.</div></div>
-      <div class="kpi c-red"><div class="val" id="kSaturated">0</div><div class="lbl">Saturées</div></div>
+    <div class="cc-body">
+      <div class="cc-title" id="coverageViewTitle">Situation initiale : 2 eNodeB 4G</div>
+      <div class="cc-bars">
+        <div><span>Couverture</span><b id="ccCov">—</b></div>
+        <div><span>RSRP moyen</span><b id="ccRsrp">—</b></div>
+        <div><span>Débit moyen</span><b id="ccRate">—</b></div>
+        <div><span>Latence</span><b id="ccLat">—</b></div>
+      </div>
+      <div class="cc-explain" id="coverageExplain">
+        La couche affiche la couverture prédite par les deux stations 4G avant l'ajout manuel de la 5G.
+      </div>
     </div>
   </div>
 
-  <aside>
-    <div class="panel">
-      <div class="panel-h"><span>Stations gNodeB</span><span class="count" id="cntStations">0</span></div>
-      <div class="panel-body" id="stationsList" style="max-height:190px;">
-        <div class="empty">Aucune station.<br>Cliquez « Ajouter Station » puis sur la carte.</div>
+  <div class="legend">
+    <b>Lecture radio</b>
+    <div class="legendrow"><span class="sw" style="background:#168a5b"></span> RSRP ≥ −85 dBm</div>
+    <div class="legendrow"><span class="sw" style="background:#d8a62c"></span> −100 à −85 dBm</div>
+    <div class="legendrow"><span class="sw" style="background:#c83b4b"></span> −112 à −100 dBm</div>
+    <div class="legendrow"><span class="sw" style="background:#98a2b3"></span> hors service</div>
+  </div>
+  <div class="bottomstatus" id="mapStatus">Modèle : 3GPP 38.901 · UMi / zone sélectionnée</div>
+  <div class="kpis">
+    <div class="kpi"><div class="v" id="kCoverage">0%</div><div class="l">Couverture service</div></div>
+    <div class="kpi"><div class="v" id="kRsrp">—</div><div class="l">RSRP moyen</div></div>
+    <div class="kpi"><div class="v" id="kSinr">—</div><div class="l">SINR moyen</div></div>
+    <div class="kpi"><div class="v" id="kRate">—</div><div class="l">Débit moyen</div></div>
+    <div class="kpi"><div class="v" id="kLatency">—</div><div class="l">Latence estimée</div></div>
+    <div class="kpi"><div class="v" id="kLoad">0%</div><div class="l">Charge moyenne</div></div>
+  </div>
+</section>
+
+<aside class="sidebar">
+  <div class="card">
+    <div class="cardhead"><strong>Contexte Maroc</strong><span class="badge">Profil radio</span></div>
+    <div class="cardbody">
+      <div class="grid2">
+        <div class="field"><label>Ville / zone</label><select id="city" onchange="changeCity()"><option>Casablanca</option><option>Rabat</option><option>Marrakech</option><option>Tanger</option><option>Zone rurale</option></select></div>
+        <div class="field"><label>Environnement</label><select id="env" onchange="changeEnv()"><option value="dense">Urbain dense</option><option value="urban">Urbain</option><option value="peri">Périurbain</option><option value="rural">Rural</option></select></div>
+      </div>
+      <div style="margin-top:8px">
+        <span class="zonechip">2G · 900 MHz</span><span class="zonechip">3G · 2100 MHz</span><span class="zonechip">4G · 800 / 1800 / 2600</span><span class="zonechip">5G · 700 / 2100 / 3500</span>
+      </div>
+      <div class="help">Les associations zone/bande sont des profils de simulation : elles ne signifient pas qu'une bande est exclusivement réservée à un environnement.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cardhead"><strong>Déploiement</strong><span class="badge" id="stationCount">0 sites</span></div>
+    <div class="cardbody" id="stationList"><div class="sectionnote">Aucune station. Ajoutez un site ou chargez le scénario de référence.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="cardhead"><strong>Architecture réseau</strong><span class="badge">NSA</span></div>
+    <div class="cardbody">
+      <div class="arch">
+        <div class="node"><strong>USER / UE</strong><small>eMBB · trafic</small></div><div class="arrow">→</div>
+        <div class="node"><strong>ACCESS</strong><small>BTS · NodeB · eNB · gNB</small></div><div class="arrow">→</div>
+      </div>
+      <div class="arch" style="margin-top:6px">
+        <div class="node"><strong>TRANSPORT</strong><small>Fibre / IP / backhaul</small></div><div class="arrow">→</div>
+        <div class="node"><strong>CORE</strong><small>EPC 4G pour NSA</small></div><div class="arrow">→</div>
+      </div>
+      <div class="help">Dans le scénario 5G NSA étudié ici, le gNB apporte l'accès radio 5G mais s'appuie sur le cœur EPC 4G. La latence affichée est une estimation de simulation, pas une garantie de 1 ms.</div>
+    </div>
+  </div>
+
+  <div class="card pair-card" style="display:none">
+    <div class="cardhead"><strong>Analyse radio · densification 5G</strong><span class="badge" id="pairModeBadge">planification</span></div>
+    <div class="cardbody">
+      <div class="sectionnote" id="pairModeText">
+        Utilisez uniquement <b>AJOUTER STATION</b>. La plateforme calcule les distances inter-sites, la couverture et les besoins de densification. Une cellule 5G est proposée seulement lorsque le scénario le justifie.
+      </div>
+      <div class="pairsteps">
+        <div><span>Dernière station A</span><strong id="pairA">—</strong></div>
+        <div><span>Dernière station B</span><strong id="pairB">—</strong></div>
+        <div><span>Distance inter-sites</span><strong id="pairDistance">—</strong></div>
+      </div>
+      <div class="radio-checks">
+        <div><span>Zone</span><b id="planningZone">—</b></div>
+        <div><span>Bande</span><b id="planningBand">—</b></div>
+        <div><span>Rayon indicatif</span><b id="planningRadius">—</b></div>
+        <div><span>Densification</span><b id="planningNeed">—</b></div>
+      </div>
+      <div class="sectionnote" id="planningRecommendation">
+        Placez au moins deux stations pour obtenir une analyse inter-sites. La 5G n'est pas ajoutée automatiquement à chaque placement.
       </div>
     </div>
-    <div class="panel">
-      <div class="panel-h"><span>Recommandations Réseau</span><button class="info-btn" id="btnAiInfo" title="Comment ça marche ?">i</button></div>
-      <div class="panel-body" id="aiPanel" style="max-height:230px;">
-        <div class="empty">Aucune analyse pour le moment. Cliquez « Analyser Et Optimiser ».</div>
+  </div>
+
+<div class="planning-note">
+  <b>Logique de planification :</b> les stations sont ajoutées manuellement. La distance inter-sites, la zone (urbain/périurbain/rural), la bande, le rayon de cellule et la charge déterminent la pertinence d'une densification 5G.
+</div>
+<div class="card impact-card">
+    <div class="cardhead"><strong>Impact de la 5G · analyse de densification</strong><span class="badge" id="impactBadge">en attente</span></div>
+    <div class="cardbody">
+      <div class="sectionnote" id="impactIntro">
+        L'analyse compare la situation radio avant/après l'ajout d'une cellule 5G proposée. Les autres stations restent inchangées.
       </div>
-    </div>
-    <div class="panel" style="flex:1;">
-      <div class="panel-h"><span>Journal D'Activité</span></div>
-      <div class="panel-body grow">
-        <div class="log" id="logBox">
-          <div class="log-line cyan"><span class="t">[Init]</span>Plateforme prête.</div>
+      <div class="impactgrid" style="margin-top:9px">
+        <div class="impactitem"><span>Zone intermédiaire</span><b id="impactDistance">—</b></div>
+        <div class="impactitem"><span>Gain couverture</span><b id="impactCoverage">—</b></div>
+        <div class="impactitem"><span>Gain débit</span><b id="impactRate">—</b></div>
+        <div class="impactitem"><span>Variation latence</span><b id="impactLatency">—</b></div>
+      </div>
+      <div class="impactbox" id="impactExplanation">
+        <b>Pourquoi ?</b><br>
+        La gNodeB centrale ajoute une couche d'accès 5G dans la zone située entre les deux eNodeB 4G. En 5G NSA, le gNodeB reste raccordé au cœur EPC 4G. Le gain attendu vient surtout de la capacité radio, de la largeur de bande et de Massive MIMO/beamforming, pas d'un remplacement du cœur 4G.
+      </div>
+      <div class="impactlegend">
+        <span><i class="line4g"></i> couverture stations</span>
+        <span><i class="line5g"></i> influence 5G</span>
+        <span><i class="midpoint"></i> milieu exact</span>
+      </div>
+      <div class="pair-impact-grid">
+        <div class="station-impact" id="impactA">
+          <div class="station-impact-title">Station A <span>AVANT → APRÈS</span></div>
+          <div class="impact-kpis"><div>RSRP <b id="aRsrp">—</b></div><div>SINR <b id="aSinr">—</b></div><div>Débit <b id="aRate">—</b></div><div>Charge <b id="aLoad">—</b></div></div>
+        </div>
+        <div class="station-impact" id="impactB">
+          <div class="station-impact-title">Station B <span>AVANT → APRÈS</span></div>
+          <div class="impact-kpis"><div>RSRP <b id="bRsrp">—</b></div><div>SINR <b id="bSinr">—</b></div><div>Débit <b id="bRate">—</b></div><div>Charge <b id="bLoad">—</b></div></div>
         </div>
       </div>
     </div>
-  </aside>
-</main>
-
-<div id="toast"></div>
-
-<div id="reportOverlay" class="report-overlay" aria-hidden="true">
-  <div class="report-modal">
-    <button class="report-close" id="reportClose" aria-label="Fermer">×</button>
-    <div class="report-kicker">Rapport De Simulation</div>
-    <h2>Rapport 5G Smart Planner</h2>
-    <p class="report-sub">Synthèse du scénario courant et des principaux indicateurs réseau.</p>
-    <div id="reportPreview" class="report-preview"></div>
-    <div class="report-actions">
-      <button class="btn" id="reportDownload">Télécharger Le Rapport (.txt)</button>
-      <button class="btn primary" id="reportClose2">Fermer</button>
-    </div>
-    <div class="report-location">Le fichier téléchargé sera enregistré dans le dossier <b>Téléchargements / Downloads</b> de votre navigateur.</div>
   </div>
-</div>
 
-<div id="methOverlay">
-  <div id="methModal" class="ticks">
-    <button id="methClose">×</button>
-    <h2>Méthodologie De Simulation</h2>
-    <div class="sub">Ce qui est réellement calculé dans cette maquette — et ses limites</div>
-
-    <h3>1 · Modèle De Propagation Radio</h3>
-    <p>Le lien radio utilise le modèle standardisé <b>3GPP TR 38.901</b> pour le scénario <b>UMi — Street Canyon</b> (macro/micro urbain dense), pertinent pour la bande 3.5 GHz (n78), là où le couple Hata / COST-231 Hata historique n'est valide que jusqu'à 2 GHz et ne s'applique donc pas correctement à la 5G mid-band.</p>
-    <div class="formula">P_LOS(d2D) = 1                                    si d2D ≤ 18 m
-P_LOS(d2D) = 18/d2D + e^(-d2D/36)·(1 − 18/d2D)    sinon
-
-PL_LOS  = 32.4 + 21·log10(d3D) + 20·log10(fc)
-PL_NLOS = max(PL_LOS, 35.3·log10(d3D) + 22.4 + 21.3·log10(fc) − 0.3·(hUT−1.5))
-
-PL_eff  = P_LOS · PL_LOS + (1 − P_LOS) · PL_NLOS
-RSRP    = EIRP − PL_eff   avec EIRP = Ptx + Gtx(17 dBi, antenne secteur)</div>
-    <p>d3D intègre la différence de hauteur antenne/UE (hBS=10 m, hUT=1.5 m). fc = 3.5 GHz.</p>
-
-    <h3>2 · Détection Des Zones Blanches — DBSCAN</h3>
-    <p>Un balayage en grille évalue le meilleur RSRP en chaque point de la vue courante. Les points sous le seuil de service sont regroupés par un véritable algorithme <b>DBSCAN</b> (density-based clustering, ε et minPts configurés pour l'échelle de la carte) : chaque cluster de points contigus devient une recommandation d'implantation, positionnée au centroïde du cluster — pas une simple moyenne globale.</p>
-
-    <h3>3 · Équilibrage De Charge — Heuristique Gloutonne</h3>
-    <p>Les stations à plus de 90 % de leur capacité (25 UE simultanés, hypothèse 3GPP eMBB dense) déclenchent une suggestion de délestage ; les stations en fort recouvrement et sous-chargées sont fusionnées. C'est une <b>heuristique gloutonne</b> — une approximation rapide, exécutable dans le navigateur, de ce qu'un solveur d'optimisation linéaire en nombres entiers (ex. PuLP/CBC côté serveur) calculerait de façon optimale sur un vrai déploiement.</p>
-
-    <h3>Limites Assumées</h3>
-    <ul>
-      <li>Pas de tracé de rayons ni de base de données de bâtiments réelle : la probabilité LOS/NLOS est statistique, pas géométrique.</li>
-      <li>Pas d'évanouissement rapide (fast fading) ni de shadowing aléatoire — la carte affiche une moyenne déterministe.</li>
-      <li>Capacité par cellule fixée à 25 UE simultanés à titre indicatif ; la vraie capacité dépend du MIMO, du beamforming et de l'allocation de PRB.</li>
-      <li>Objectif : aide pédagogique à la décision, pas un outil d'ingénierie radio certifié (type Atoll/Forsk ou iBwave).</li>
-    </ul>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script>
-/* =========================================================
-   5G SMART PLANNER — moteur de simulation
-   ========================================================= */
-const CENTER = [33.5731, -7.5898]; // Casablanca
-const CAPACITY_PER_STATION = 25;     // UE simultanés max
-const RSRP_GOOD = -85;               // seuil "excellente" (dBm)
-const RSRP_OK   = -100;              // seuil "moyenne" (dBm)
-const RSRP_MIN  = -112;              // seuil de perte de service
-const FC_GHZ = 3.5;                  // fréquence porteuse (n78)
-const H_BS = 10, H_UT = 1.5;         // hauteurs antenne / UE (m)
-const ANT_GAIN_DBI = 17;             // gain d'antenne secteur typique
-
-let map, stations = [], users = [];
-let stationSeq = 1;
-let placing = false;
-let markersLayer, ringsLayer, usersLayer, linesLayer;
-let selectedStationId = null;
-
-// ---------- INIT MAP (Style clair) ----------
-function initMap(){
-  map = L.map('map', {zoomControl:true, attributionControl:false}).setView(CENTER, 13);
-  
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    subdomains:'abcd', maxZoom:19
-  }).addTo(map);
-
-  ringsLayer   = L.layerGroup().addTo(map);
-  linesLayer   = L.layerGroup().addTo(map);
-  usersLayer   = L.layerGroup().addTo(map);
-  markersLayer = L.layerGroup().addTo(map);
-
-  map.on('click', (e) => {
-    if(!placing) return;
-    createStation(e.latlng.lat, e.latlng.lng);
-    setPlacing(false);
-  });
-}
-
-// ---------- RADIO MODEL : 3GPP TR 38.901 UMi-Street Canyon ----------
-function losProbability(d2D){
-  if(d2D <= 18) return 1;
-  return (18/d2D) + Math.exp(-d2D/36) * (1 - 18/d2D);
-}
-function pathLoss3gppUMi(d2D){
-  const d3D = Math.sqrt(d2D*d2D + (H_BS-H_UT)*(H_BS-H_UT));
-  const d3Dsafe = Math.max(d3D, 1);
-  const logD = Math.log10(d3Dsafe);
-  const logFc = Math.log10(FC_GHZ);
-  const plLOS = 32.4 + 21*logD + 20*logFc;
-  const plNLOSraw = 35.3*logD + 22.4 + 21.3*logFc - 0.3*(H_UT-1.5);
-  const plNLOS = Math.max(plLOS, plNLOSraw);
-  const pLOS = losProbability(Math.max(d2D,1));
-  return pLOS*plLOS + (1-pLOS)*plNLOS;
-}
-function rsrpAt(station, latlng){
-  const d2D = Math.max(map.distance([station.lat, station.lng], latlng), 1);
-  const eirp = station.power + ANT_GAIN_DBI;
-  return eirp - pathLoss3gppUMi(d2D);
-}
-function radiusForThreshold(station, threshold){
-  let lo = 1, hi = 8000;
-  const eirp = station.power + ANT_GAIN_DBI;
-  const rsrpAtD = (d) => eirp - pathLoss3gppUMi(d);
-  if(rsrpAtD(hi) > threshold) return hi;
-  for(let i=0;i<40;i++){
-    const mid = (lo+hi)/2;
-    if(rsrpAtD(mid) > threshold) lo = mid; else hi = mid;
-  }
-  return (lo+hi)/2;
-}
-
-function classify(rsrp){
-  if(rsrp >= RSRP_GOOD) return 'good';
-  if(rsrp >= RSRP_OK) return 'ok';
-  if(rsrp >= RSRP_MIN) return 'poor';
-  return 'none';
-}
-const COLORS = {good:'#168a5b', ok:'#d97706', poor:'#dc2626', none:'#9ca3af'};
-
-// ---------- STATIONS ----------
-function createStation(lat, lng, opts={}){
-  const st = {
-    id:'gNB-' + String(stationSeq++).padStart(3,'0'),
-    name: opts.name || `gNodeB-${String(stations.length+1).padStart(3,'0')}`,
-    lat, lng,
-    power: opts.power || 43,
-    freq: FC_GHZ,
-    users: 0,
-    ai: !!opts.ai
-  };
-  stations.push(st);
-  buildStationMarker(st);
-  recompute();
-  addLog(`gNodeB ${st.name} placée à (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'cyan');
-  toast(`Station ${st.name} ajoutée`, 'success');
-  return st;
-}
-
-function buildStationMarker(st){
-  const icon = L.divIcon({
-    className:'',
-    html:`<div class="gnb-icon" id="icon-${st.id}"><span>${st.ai?'OPT':'BS'}</span></div>`,
-    iconSize:[26,26], iconAnchor:[13,13]
-  });
-  st.marker = L.marker([st.lat, st.lng], {icon, draggable:true}).addTo(markersLayer);
-  st.marker.bindPopup(popupHTML(st));
-  st.marker.on('dragend', (e) => {
-    const p = e.target.getLatLng();
-    st.lat = p.lat; st.lng = p.lng;
-    recompute();
-    addLog(`${st.name} déplacée`, 'yellow');
-  });
-  st.marker.on('click', () => { selectedStationId = st.id; refreshSidebar(); });
-}
-
-function popupHTML(st){
-  const eirp = st.power + ANT_GAIN_DBI;
-  return `<b>${st.name}</b><br>Ptx ${st.power} dBm · EIRP ${eirp} dBm · ${st.freq} GHz
-    <span class="pl-note">3GPP 38.901 UMi · ${st.users} UE connectés</span>
-    <br><button class="popup-del" onclick="deleteStation('${st.id}')">Supprimer</button>`;
-}
-
-function deleteStation(id){
-  const st = stations.find(s => s.id === id);
-  if(!st) return;
-  map.removeLayer(st.marker);
-  stations = stations.filter(s => s.id !== id);
-  recompute();
-  addLog(`${st.name} supprimée`, 'red');
-  toast(`Station supprimée`, 'warning');
-}
-window.deleteStation = deleteStation;
-
-function moveStation(id, lat, lng){
-  const st = stations.find(s => s.id === id);
-  if(!st) return;
-  st.lat = lat; st.lng = lng;
-  st.marker.setLatLng([lat, lng]);
-  recompute();
-}
-
-// ---------- USERS ----------
-function generateUsers(){
-  users = [];
-  const bounds = map.getBounds();
-  const clusterCount = 3 + Math.floor(Math.random()*2);
-  const clusters = [];
-  for(let c=0; c<clusterCount; c++){
-    clusters.push({
-      lat: bounds.getSouth() + Math.random()*(bounds.getNorth()-bounds.getSouth()),
-      lng: bounds.getWest() + Math.random()*(bounds.getEast()-bounds.getWest()),
-      spread: 0.006 + Math.random()*0.01
-    });
-  }
-  const total = 60 + Math.floor(Math.random()*40);
-  for(let i=0; i<total; i++){
-    const c = clusters[Math.floor(Math.random()*clusters.length)];
-    const lat = c.lat + (Math.random()-0.5)*c.spread;
-    const lng = c.lng + (Math.random()-0.5)*c.spread;
-    users.push({
-      id:'UE-'+String(i+1).padStart(3,'0'),
-      lat: Math.max(bounds.getSouth(), Math.min(bounds.getNorth(), lat)),
-      lng: Math.max(bounds.getWest(), Math.min(bounds.getEast(), lng)),
-      service:['eMBB','uRLLC','mMTC'][Math.floor(Math.random()*3)]
-    });
-  }
-  recompute();
-  addLog(`${users.length} utilisateurs générés (${clusterCount} zones)`, 'green');
-  toast(`${users.length} utilisateurs générés`, 'success');
-}
-
-// ---------- COVERAGE ENGINE ----------
-function recompute(){
-  stations.forEach(s => s.users = 0);
-
-  users.forEach(u => {
-    let best = null, bestRsrp = -999;
-    stations.forEach(s => {
-      const r = rsrpAt(s, [u.lat, u.lng]);
-      if(r > bestRsrp){ bestRsrp = r; best = s; }
-    });
-    u.rsrp = stations.length ? Math.round(bestRsrp) : null;
-    u.status = stations.length ? classify(bestRsrp) : 'none';
-    u.stationId = (u.status !== 'none' && best) ? best.id : null;
-    if(u.stationId){
-      const st = stations.find(s => s.id === u.stationId);
-      if(st) st.users++;
-    }
-  });
-
-  drawRings();
-  drawUsers();
-  refreshSidebar();
-  updateKPIs();
-}
-
-function drawRings(){
-  ringsLayer.clearLayers();
-  stations.forEach(st => {
-    const rGood = radiusForThreshold(st, RSRP_GOOD);
-    const rOk   = radiusForThreshold(st, RSRP_OK);
-    const rPoor = radiusForThreshold(st, RSRP_MIN);
-    L.circle([st.lat, st.lng], {radius:rPoor, color:COLORS.poor, weight:1, dashArray:'2,4', fillOpacity:0.04}).addTo(ringsLayer);
-    L.circle([st.lat, st.lng], {radius:rOk,   color:COLORS.ok,   weight:1, dashArray:'2,4', fillOpacity:0.07}).addTo(ringsLayer);
-    L.circle([st.lat, st.lng], {radius:rGood, color:COLORS.good, weight:1, dashArray:'2,4', fillOpacity:0.10}).addTo(ringsLayer);
-    const el = document.getElementById('icon-'+st.id);
-    if(el) el.classList.toggle('sat', st.users > CAPACITY_PER_STATION*0.9);
-    if(st.marker){ st.marker.setPopupContent(popupHTML(st)); }
-  });
-}
-
-function drawUsers(){
-  usersLayer.clearLayers();
-  users.forEach(u => {
-    L.circleMarker([u.lat, u.lng], {
-      radius:3.5, color:COLORS[u.status], fillColor:COLORS[u.status],
-      fillOpacity:0.9, weight:1, opacity:0.9
-    }).bindTooltip(`${u.id} · ${u.rsrp ?? '—'} dBm`, {direction:'top', opacity:0.9})
-      .addTo(usersLayer);
-  });
-}
-
-// ---------- KPIs ----------
-function updateKPIs(){
-  document.getElementById('kStations').textContent = stations.length;
-  document.getElementById('kUsers').textContent = users.length;
-
-  const covered = users.filter(u => u.status==='good' || u.status==='ok').length;
-  const coveragePct = users.length ? Math.round(covered/users.length*100) : 0;
-  document.getElementById('kCoverage').textContent = coveragePct + '%';
-
-  const latency = users.length ? Math.round(4 + (100-coveragePct)*0.16) : 0;
-  document.getElementById('kLatency').textContent = latency + ' ms';
-
-  const avgLoad = stations.length
-    ? Math.round(stations.reduce((a,s)=>a+Math.min(s.users/CAPACITY_PER_STATION*100,100),0)/stations.length)
-    : 0;
-  document.getElementById('kCapacity').textContent = avgLoad + '%';
-
-  const saturated = stations.filter(s => s.users > CAPACITY_PER_STATION*0.9).length;
-  document.getElementById('kSaturated').textContent = saturated;
-}
-
-// ---------- SIDEBAR ----------
-function refreshSidebar(){
-  document.getElementById('cntStations').textContent = stations.length;
-  const list = document.getElementById('stationsList');
-  if(stations.length === 0){
-    list.innerHTML = `<div class="empty">Aucune station.<br>Cliquez « Ajouter Station » puis sur la carte.</div>`;
-    return;
-  }
-  list.innerHTML = stations.map(s => {
-    const sat = s.users > CAPACITY_PER_STATION*0.9;
-    return `<div class="station-row ${sat?'sat':''}" onclick="focusStation('${s.id}')">
-      <span class="dot">${s.ai?'OPT':'BS'}</span>
-      <div class="meta">
-        <div class="name">${s.name}</div>
-        <div class="sub">${s.power}dBm · ${s.users}/${CAPACITY_PER_STATION} UE ${sat?'· Saturée':''}</div>
+  <div class="card">
+    <div class="cardhead"><strong>Avant / Après</strong><span class="badge">impact</span></div>
+    <div class="cardbody">
+      <div class="compare">
+        <div class="comparebox"><h4>AVANT</h4><p>Sites : <b id="beforeSites">—</b></p><p>Couverture : <b id="beforeCov">—</b></p><p>Débit : <b id="beforeRate">—</b></p><p>Latence : <b id="beforeLat">—</b></p></div>
+        <div class="comparebox"><h4>APRÈS</h4><p>Sites : <b id="afterSites">—</b></p><p>Couverture : <b id="afterCov">—</b></p><p>Débit : <b id="afterRate">—</b></p><p>Latence : <b id="afterLat">—</b></p></div>
       </div>
-      <button class="del" onclick="event.stopPropagation(); deleteStation('${s.id}')">✕</button>
-    </div>`;
-  }).join('');
+      <div class="delta" id="delta">Ajoutez une station puis recalculez pour mesurer l'impact.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cardhead"><strong>Journal</strong><span class="badge">temps réel</span></div>
+    <div class="cardbody"><div class="log" id="log"></div></div>
+  </div>
+</aside>
+</div>
+</div>
+
+<!-- Station modal -->
+<div class="modal" id="stationModal">
+<div class="modalbox">
+  <div class="modalhead"><div><h2>AJOUTER STATION</h2><div class="sectionnote">Cliquez ensuite sur la carte pour positionner le site.</div></div><button class="close" onclick="closeModal('stationModal')">×</button></div>
+  <div class="field"><label>Technologie</label></div>
+  <div class="radiochoice">
+    <label><input type="radio" name="tech" value="2G" onchange="syncBand()">2G</label>
+    <label><input type="radio" name="tech" value="3G" onchange="syncBand()">3G</label>
+    <label><input type="radio" name="tech" value="4G" checked onchange="syncBand()">4G</label>
+    <label><input type="radio" name="tech" value="5G" onchange="syncBand()">5G NSA</label>
+  </div>
+  <div class="paramgrid">
+    <div class="field"><label>Bande</label><select id="band"></select></div>
+    <div class="field"><label>Puissance Ptx (dBm)</label><input id="power" type="number" value="43" min="10" max="60"></div>
+    <div class="field"><label>Hauteur site (m)</label><input id="height" type="number" value="30" min="5" max="100"></div>
+    <div class="field"><label>Azimut (°)</label><input id="azimuth" type="number" value="0" min="0" max="359"></div>
+    <div class="field"><label>Tilt (°)</label><input id="tilt" type="number" value="6" min="0" max="20"></div>
+    <div class="field"><label>Largeur bande</label><select id="bw"></select></div>
+  </div>
+  <div id="mimoFields" style="display:none;margin-top:9px">
+    <div class="paramgrid">
+      <div class="field"><label>Massive MIMO</label><select id="mimo"><option value="2">2T2R</option><option value="4">4T4R</option><option value="8">8T8R</option><option value="32">32T32R</option><option value="64" selected>64T64R</option><option value="128">128T128R</option></select></div>
+      <div class="field"><label>Beamforming</label><select id="beam"><option value="1">Activé</option><option value="0">Désactivé</option></select></div>
+      <div class="field"><label>Usage principal</label><select id="usage"><option>eMBB</option><option>Couverture</option><option>Capacité</option></select></div>
+    </div>
+  </div>
+  <div class="help">Profils de bandes utilisés dans cette maquette : 2G 900 MHz · 3G 2100 MHz · 4G 800/1800/2600 MHz · 5G 700/2100/3500 MHz. Les paramètres sont configurables pour comparer des scénarios.</div>
+  <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:14px"><button class="btn" onclick="closeModal('stationModal')">Annuler</button><button class="btn primary" onclick="activatePlacement()">Placer sur la carte</button></div>
+</div>
+</div>
+
+<!-- Method -->
+<div class="modal" id="methodModal">
+<div class="modalbox">
+  <div class="modalhead"><div><h2>Méthodologie de simulation</h2><div class="sectionnote">Plateforme pédagogique inspirée des principes de radio planning.</div></div><button class="close" onclick="closeModal('methodModal')">×</button></div>
+  <div class="tabs"><button class="tab active">Radio</button><button class="tab">Réseau</button><button class="tab">Limites</button></div>
+  <h3 style="font-size:12px">Propagation</h3>
+  <p class="sectionnote">Le moteur utilise un modèle log-distance calibré par environnement avec une pénalité NLOS. Pour la 5G 3,5 GHz, l'approche est cohérente avec une simulation UMi inspirée de 3GPP TR 38.901. Ce n'est pas un ray-tracing.</p>
+  <p class="sectionnote" style="margin-top:7px"><b>RSRP</b> ≈ Ptx + gain antenne − pertes de propagation − pénalité environnementale.</p>
+  <p class="sectionnote"><b>SINR</b> est estimé à partir du signal utile et d'un bruit/interférence simplifié. <b>Débit</b> dépend de la largeur de bande, du SINR, de l'efficacité spectrale et du gain MIMO/beamforming, puis est partagé entre les UEs de la cellule.</p>
+  <h3 style="font-size:12px;margin-top:14px">Zone → stratégie</h3>
+  <p class="sectionnote">Rural : priorité couverture (800 MHz 4G / 700 MHz 5G). Urbain : compromis (1800 MHz). Urbain dense : capacité (2600 MHz 4G / 3500 MHz 5G). Ces profils sont des hypothèses de planification, pas des règles réglementaires.</p>
+  <h3 style="font-size:12px;margin-top:14px">5G NSA &amp; Massive MIMO</h3>
+  <p class="sectionnote">Le gNB 5G est modélisé comme une couche d'accès radio ajoutée au réseau 4G. Le cœur reste EPC dans le scénario NSA. Massive MIMO et beamforming augmentent le gain de capacité/efficacité spectrale dans le modèle. L'eMBB est le profil de trafic principal du scénario 5G.</p>
+  <h3 style="font-size:12px;margin-top:14px">Limites</h3>
+  <p class="sectionnote">Pas de bâtiments réels, pas de ray-tracing, pas de fading rapide, pas de scheduler 3GPP complet, pas de calcul PRB réel et pas de dimensionnement opérateur certifié. Les chiffres servent à comparer les scénarios de manière reproductible.</p>
+</div>
+</div>
+
+<!-- Report -->
+<div class="modal" id="reportModal">
+<div class="modalbox">
+  <div class="modalhead"><div><h2>Rapport de scénario</h2><div class="sectionnote">Synthèse avant/après et stations déployées.</div></div><button class="close" onclick="closeModal('reportModal')">×</button></div>
+  <div id="reportContent"></div>
+  <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:14px"><button class="btn" onclick="downloadReport()">Exporter .txt</button><button class="btn primary" onclick="closeModal('reportModal')">Fermer</button></div>
+</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const cities={
+ Casablanca:{center:[33.5731,-7.5898],zoom:12.8},
+ Rabat:{center:[34.0209,-6.8416],zoom:12.8},
+ Marrakech:{center:[31.6295,-7.9811],zoom:12.5},
+ Tanger:{center:[35.7595,-5.8340],zoom:12.6},
+ "Zone rurale":{center:[32.8,-7.2],zoom:9.5}
+};
+const profiles={
+ rural:{label:"Rural",baseUsers:55,defaultBand:{'4G':'800','5G':'700'},envLoss:0,traffic:0.65},
+ peri:{label:"Périurbain",baseUsers:85,defaultBand:{'4G':'1800','5G':'2100'},envLoss:3,traffic:0.85},
+ urban:{label:"Urbain",baseUsers:115,defaultBand:{'4G':'1800','5G':'2100'},envLoss:5,traffic:1},
+ dense:{label:"Urbain dense",baseUsers:155,defaultBand:{'4G':'2600','5G':'3500'},envLoss:8,traffic:1.25}
+};
+const bands={
+ "2G":{list:["900"],default:"900",bw:["0.2 MHz"],tech:"2G"},
+ "3G":{list:["2100"],default:"2100",bw:["5 MHz"],tech:"3G"},
+ "4G":{list:["800","1800","2600"],default:"1800",bw:["5 MHz","10 MHz","20 MHz"],tech:"4G"},
+ "5G":{list:["700","2100","3500"],default:"3500",bw:["20 MHz","50 MHz","100 MHz"],tech:"5G"}
+};
+const techClass={"2G":"g2","3G":"g3","4G":"g4","5G":"g5"};
+let map, stationLayer, userLayer, ringLayer, impactLayer, coverageBeforeLayer, coverageAfterLayer, gainLayer, stations=[], users=[], pendingConfig=null, placing=false, baseline=null, pre5GMetrics=null, central5G=null, seq=1, coverageMode='before';
+let pairMode=false, pairStations=[], pairHistory=[], pairId=1;
+const envSel=()=>document.getElementById("env").value;
+function init(){
+ map=L.map("map",{zoomControl:true}).setView(cities.Casablanca.center,cities.Casablanca.zoom);
+ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
+ stationLayer=L.layerGroup().addTo(map); userLayer=L.layerGroup().addTo(map); ringLayer=L.layerGroup().addTo(map); impactLayer=L.layerGroup().addTo(map);
+ coverageBeforeLayer=L.layerGroup().addTo(map); coverageAfterLayer=L.layerGroup().addTo(map); gainLayer=L.layerGroup().addTo(map);
+ map.on("click",e=>{if(placing){placeStation(e.latlng);placing=false;map.getContainer().style.cursor="";}});
+ loadReferenceScenario(); generateUsers(); log("Scénario de référence chargé : 2 eNodeB 4G 1800 MHz","green");
 }
-function focusStation(id){
-  const st = stations.find(s => s.id === id);
-  if(st){ map.panTo([st.lat, st.lng]); st.marker.openPopup(); }
+function openStationModal(){document.getElementById("stationModal").classList.add("show");syncBand();}
+function closeModal(id){document.getElementById(id).classList.remove("show")}
+function openMethod(){document.getElementById("methodModal").classList.add("show")}
+function showTab(){return}
+function syncBand(){
+ const tech=document.querySelector('input[name="tech"]:checked').value, b=bands[tech];
+ const sel=document.getElementById("band"); sel.innerHTML=b.list.map(x=>`<option value="${x}">${x} MHz</option>`).join("");
+ const profile=profiles[envSel()]?.defaultBand?.[tech];
+ if(profile && b.list.includes(profile)) sel.value=profile; else sel.value=b.default;
+ document.getElementById("bw").innerHTML=b.bw.map(x=>`<option>${x}</option>`).join("");
+ document.getElementById("mimoFields").style.display=tech==="5G"?"block":"none";
 }
-window.focusStation = focusStation;
+function activatePlacement(){
+ const tech=document.querySelector('input[name="tech"]:checked').value;
+ pendingConfig={tech,band:document.getElementById("band").value,power:+document.getElementById("power").value,height:+document.getElementById("height").value,azimuth:+document.getElementById("azimuth").value,tilt:+document.getElementById("tilt").value,bw:document.getElementById("bw").value,mimo:tech==="5G"?+document.getElementById("mimo").value:2,beam:tech==="5G"?+document.getElementById("beam").value:0,usage:tech==="5G"?document.getElementById("usage").value:"—"};
+ closeModal("stationModal"); placing=true; map.getContainer().style.cursor="crosshair"; log("Mode placement actif : cliquez sur la carte pour positionner le site","yellow");
+}
+function placeStation(latlng){
+ const c=pendingConfig||{tech:"4G",band:"1800",power:43,height:30,azimuth:0,tilt:6,bw:"20 MHz",mimo:2,beam:0,usage:"—"};
+ const s={id:"S"+String(seq++).padStart(2,"0"),name:(c.tech==="5G"?"gNodeB-":"")+(seq-1).toString().padStart(2,"0"),lat:latlng.lat,lng:latlng.lng,...c,users:0};
+ stations.push(s); renderStation(s); updateInterSitePlanning(); runSimulation(); log(`${s.name} ajouté : ${s.tech} ${s.band} MHz`,"green"); pendingConfig=null;
+}
+function renderStation(s){
+ const html=`<div style="text-align:center;font-weight:800;font-size:10px;color:#172033"><div style="width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:${s.tech==="5G"?"#7c4dff":s.tech==="4G"?"#356ae6":s.tech==="3G"?"#4f6b8a":"#6b7280"};color:#fff;border:2px solid #fff;box-shadow:0 2px 8px #0003">${s.tech}</div><div style="background:#fff;border:1px solid #dfe3e8;border-radius:3px;padding:0 3px;margin-top:1px">${s.name}</div></div>`;
+ s.marker=L.marker([s.lat,s.lng],{icon:L.divIcon({className:"",html,iconSize:[55,52],iconAnchor:[27,28]}),draggable:true}).addTo(stationLayer);
+ s.marker.bindPopup(popup(s));
+ s.marker.on("dragend",e=>{const p=e.target.getLatLng();s.lat=p.lat;s.lng=p.lng;runSimulation();log(`${s.name} déplacé`,"yellow")});
+}
+function popup(s){
+ return `<b>${s.name}</b><br>${s.tech} · ${s.band} MHz · ${s.bw}<br>Ptx ${s.power} dBm · h ${s.height} m<br>${s.tech==="5G"?`Massive MIMO ${s.mimo}T${s.mimo}R · Beamforming ${s.beam?"ON":"OFF"}<br>`:""}UE servis : ${s.users}<br><button class="mini" onclick="deleteStation('${s.id}')">Supprimer</button>`;
+}
+window.deleteStation=function(id){
+ const s=stations.find(x=>x.id===id);if(!s)return;
+ map.removeLayer(s.marker);stations=stations.filter(x=>x.id!==id);
+ if(s.central){central5G=null;pre5GMetrics=null;impactLayer.clearLayers();updateCentralImpact();}
+ runSimulation();log(`${s.name} supprimé`,"bad")
+};
+function loadReferenceScenario(){
+ stations=[];seq=1;stationLayer.clearLayers();ringLayer.clearLayers();
+ const pts=[[33.5731,-7.5898],[33.592,-7.615]];
+ pts.forEach((p,i)=>{stations.push({id:"S"+String(seq).padStart(2,"0"),name:"eNodeB-"+String(seq++).padStart(2,"0"),lat:p[0],lng:p[1],tech:"4G",band:"1800",power:43,height:30,azimuth:0,tilt:6,bw:"20 MHz",mimo:4,beam:0,usage:"Capacité",users:0})});
+ stations.forEach(renderStation); baseline=null; pre5GMetrics=null; central5G=null;
+}
+function generateUsers(){
+ const p=profiles[envSel()], b=map.getBounds(), n=p.baseUsers;
+ users=[];
+ const center=map.getCenter();
+ for(let i=0;i<n;i++){
+   let spread=envSel()==="rural"?0.06:envSel()==="dense"?0.025:0.04;
+   const lat=center.lat+(Math.random()-.5)*spread, lng=center.lng+(Math.random()-.5)*spread*1.25;
+   users.push({id:"UE-"+String(i+1).padStart(3,"0"),lat,lng,traffic:"eMBB"});
+ }
+ runSimulation(); log(`${n} UE générés · profil ${p.label}`,"green");
+}
+function distM(a,b){return map.distance([a.lat,a.lng],[b.lat,b.lng])}
+function pathLoss(s,u){
+ const d=Math.max(distM(s,u),35), f=+s.band/1000, h=Math.max(s.height,10), env=profiles[envSel()].envLoss;
+ // Simplified planning model, deliberately not presented as a certified Atoll/3GPP implementation.
+ let pl=32.4+20*Math.log10(d)+20*Math.log10(f)+env+18*Math.log10(Math.max(1,10/h));
+ if(s.tech==="2G")pl-=7;if(s.tech==="3G")pl-=2;if(s.band==="800"||s.band==="700")pl-=4;
+ if(s.band==="2600")pl+=2;if(s.band==="3500")pl+=4;
+ return pl;
+}
+function rsrp(s,u){return s.power+15-pathLoss(s,u)}
+function noiseBW(bw){return {"0.2 MHz":-121,"5 MHz":-114,"10 MHz":-111,"20 MHz":-108,"50 MHz":-105,"100 MHz":-102}[bw]||-108}
+function estimateSinr(s,u,bestAll){
+ const r=rsrp(s,u), noise=noiseBW(s.bw), interf=bestAll.filter(x=>x.id!==s.id).map(x=>Math.pow(10,rsrp(x,u)/10)).reduce((a,b)=>a+b,Math.pow(10,noise/10));
+ return 10*Math.log10(Math.pow(10,r/10)/interf);
+}
+function spectralEfficiency(s,sinr){
+ if(s.tech==="2G")return Math.max(.05,Math.min(.35,(sinr+3)/25));
+ if(s.tech==="3G")return Math.max(.1,Math.min(1.5,(sinr+2)/10));
+ let e=Math.max(.15,Math.min(7.2,(sinr+5)*0.48));
+ if(s.tech==="5G"){e*=s.beam?1.18:1;if(s.mimo>=64)e*=1.15;else if(s.mimo>=32)e*=1.08}
+ return e;
+}
+function bwMHz(s){return parseFloat(s.bw)||20}
+function runSimulation(saveBase=true){
+ stations.forEach(s=>s.users=0);
+ if(central5G){
+   const fourG=stations.filter(s=>s.tech==="4G");
+   if(fourG.length>=2){
+     let pair=[fourG[0],fourG[1]], best=map.distance([pair[0].lat,pair[0].lng],[pair[1].lat,pair[1].lng]);
+     for(let i=0;i<fourG.length;i++)for(let j=i+1;j<fourG.length;j++){
+       const d=map.distance([fourG[i].lat,fourG[i].lng],[fourG[j].lat,fourG[j].lng]);
+       if(d<best){best=d;pair=[fourG[i],fourG[j]];}
+     }
+     drawCentralInfluence(pair[0],pair[1],central5G);
+   }
+ }
+ let sumR=0,sumS=0,sumRate=0,covered=0,totalLat=0;
+ users.forEach(u=>{
+   let candidates=stations.filter(s=>s.tech!=="2G"||u.traffic!=="eMBB");
+   if(!candidates.length)candidates=stations;
+   let best=null,bestR=-999;
+   candidates.forEach(s=>{const r=rsrp(s,u);if(r>bestR){bestR=r;best=s}});
+   if(!best){u.status="none";u.rate=0;u.latency=999;u.rsrp=null;return}
+   u.rsrp=bestR;u.stationId=best.id;
+   const sinr=estimateSinr(best,u,candidates);u.sinr=sinr;
+   const se=spectralEfficiency(best,sinr);
+   const raw=(bwMHz(best)*1e6*se)/1e6;
+   best.users++;
+   const loadFactor=Math.max(1,best.users);
+   u.rate=raw/loadFactor;
+   if(best.tech==="5G")u.rate*=best.beam?(best.mimo>=64?1.18:1.08):1;
+   u.rate=Math.max(0.05,u.rate);
+   u.latency=Math.max(7,52 - Math.min(38,sinr*1.8) + (best.tech==="5G"?4:0) + (best.tech==="2G"?45:best.tech==="3G"?20:10));
+   u.status=bestR>=-100?"ok":bestR>=-112?"poor":"none";
+   if(bestR>=-100)covered++;
+   sumR+=bestR;sumS+=sinr;sumRate+=u.rate;totalLat+=u.latency;
+ });
+ drawUsers(); drawRings(); refreshStations();
+ const cov=users.length?covered/users.length*100:0, avgR=users.length?sumR/users.length:-120, avgS=users.length?sumS/users.length:0, avgRate=users.length?sumRate/users.length:0, avgLat=users.length?totalLat/users.length:0;
+ const load=stations.length?stations.reduce((a,s)=>a+Math.min(100,s.users/Math.max(1,capacity(s))*100),0)/stations.length:0;
+ document.getElementById("kCoverage").textContent=Math.round(cov)+"%";document.getElementById("kRsrp").textContent=users.length?Math.round(avgR)+" dBm":"—";document.getElementById("kSinr").textContent=users.length?avgS.toFixed(1)+" dB":"—";document.getElementById("kRate").textContent=users.length?formatRate(avgRate):"—";document.getElementById("kLatency").textContent=users.length?Math.round(avgLat)+" ms":"—";document.getElementById("kLoad").textContent=Math.round(load)+"%";
+ document.getElementById("scenarioPill").textContent=`Scénario : ${stations.filter(s=>s.tech==="4G").length}×4G · ${stations.filter(s=>s.tech==="5G").length}×5G`;
+ if(saveBase && !baseline){baseline=metrics();updateCompare()}
+ else if(baseline)updateCompare();
+ if(central5G && pre5GMetrics) updateCentralImpact();
+ captureCoverageLayers();
+ if(document.getElementById("coverageComparePanel").classList.contains("show")) updateCoveragePanel();
+ return metrics();
+}
+function metrics(){return{sites:stations.length,cov:+document.getElementById("kCoverage").textContent.replace("%",""),rate:parseFloat(document.getElementById("kRate").textContent)||0,lat:parseFloat(document.getElementById("kLatency").textContent)||0,rsrp:parseFloat(document.getElementById("kRsrp").textContent)||0,sinr:parseFloat(document.getElementById("kSinr").textContent)||0}}
+function capacity(s){
+ const base={ "2G":40,"3G":70,"4G":120,"5G":180}[s.tech]||100;
+ const bwFactor=Math.max(.4,bwMHz(s)/20), mimo=s.tech==="5G"?1+(s.mimo/64)*.45:1;
+ return Math.round(base*bwFactor*mimo);
+}
+function formatRate(x){return x>=1000?(x/1000).toFixed(2)+" Gbps":x.toFixed(0)+" Mbps"}
+function updateCompare(){
+ const now=metrics();
+ document.getElementById("beforeSites").textContent=baseline.sites;document.getElementById("beforeCov").textContent=baseline.cov+"%";document.getElementById("beforeRate").textContent=formatRate(baseline.rate);document.getElementById("beforeLat").textContent=baseline.lat+" ms";
+ document.getElementById("afterSites").textContent=now.sites;document.getElementById("afterCov").textContent=now.cov+"%";document.getElementById("afterRate").textContent=formatRate(now.rate);document.getElementById("afterLat").textContent=now.lat+" ms";
+ const dc=now.cov-baseline.cov, dr=now.rate-baseline.rate, dl=now.lat-baseline.lat;
+ document.getElementById("delta").innerHTML=`<b>Impact :</b> couverture ${dc>=0?"+":""}${dc.toFixed(0)} pts · débit ${dr>=0?"+":""}${formatRate(Math.abs(dr))} · latence ${dl<=0?"": "+"}${dl.toFixed(0)} ms. <span style="color:#667085">Résultats dépendants du scénario simulé.</span>`;
+}
+function drawUsers(){
+ userLayer.clearLayers();
+ users.forEach(u=>{const color=u.status==="ok"?"#168a5b":u.status==="poor"?"#d8a62c":"#c83b4b";L.circleMarker([u.lat,u.lng],{radius:3,color:"#fff",weight:1,fillColor:color,fillOpacity:.9}).bindTooltip(`${u.id} · ${u.rsrp?.toFixed(0)||"—"} dBm · ${u.rate?.toFixed(0)||0} Mbps`).addTo(userLayer)});
+}
+function drawRings(){
+ ringLayer.clearLayers();
+ stations.forEach(s=>{
+   const r=s.tech==="5G"?s.band==="3500"?1700:s.band==="700"?4500:2800:s.band==="2600"?2200:s.band==="800"?5000:3500;
+   L.circle([s.lat,s.lng],{radius:r,color:s.tech==="5G"?"#7c4dff":s.tech==="4G"?"#356ae6":"#7b8794",weight:1,fillOpacity:.025,dashArray:"4 5"}).addTo(ringLayer);
+ });
+}
+function refreshStations(){
+ document.getElementById("stationCount").textContent=stations.length+" sites";
+ document.getElementById("stationList").innerHTML=stations.map(s=>`<div class="station"><div class="dot ${techClass[s.tech]}">${s.tech}</div><div class="stmain"><div class="stname">${s.name}</div><div class="stmeta">${s.band} MHz · ${s.bw} · ${s.users} UE · capacité ${capacity(s)}</div></div><div class="stactions"><button class="mini" onclick="focusSite('${s.id}')">⌖</button><button class="mini" onclick="deleteStation('${s.id}')">×</button></div></div>`).join("");
+}
+window.focusSite=id=>{const s=stations.find(x=>x.id===id);if(s){map.flyTo([s.lat,s.lng],15);s.marker.openPopup()}};
+function changeCity(){const c=cities[document.getElementById("city").value];map.setView(c.center,c.zoom);generateUsers();document.getElementById("mapStatus").textContent=`Modèle : 3GPP 38.901 · ${profiles[envSel()].label}`;log("Zone de simulation changée","yellow")}
+function changeEnv(){syncBand();generateUsers();document.getElementById("mapStatus").textContent=`Modèle : 3GPP 38.901 · ${profiles[envSel()].label}`;log(`Profil environnement : ${profiles[envSel()].label}`,"yellow")}
 
-// ---------- DBSCAN ----------
-function dbscan(points, eps, minPts, distFn){
-  const labels = new Array(points.length).fill(0);
-  let clusterId = 0;
 
-  function regionQuery(idx){
-    const neighbors = [];
-    for(let i=0;i<points.length;i++){
-      if(distFn(points[idx], points[i]) <= eps) neighbors.push(i);
-    }
-    return neighbors;
-  }
-
-  for(let i=0;i<points.length;i++){
-    if(labels[i] !== 0) continue;
-    const neighbors = regionQuery(i);
-    if(neighbors.length < minPts){ labels[i] = -1; continue; }
-    clusterId++;
-    labels[i] = clusterId;
-    const queue = [...neighbors];
-    while(queue.length){
-      const q = queue.shift();
-      if(labels[q] === -1) labels[q] = clusterId;
-      if(labels[q] !== 0) continue;
-      labels[q] = clusterId;
-      const qNeighbors = regionQuery(q);
-      if(qNeighbors.length >= minPts) queue.push(...qNeighbors);
-    }
-  }
-  const clusters = {};
-  labels.forEach((lab, idx) => {
-    if(lab <= 0) return;
-    (clusters[lab] = clusters[lab] || []).push(points[idx]);
+function toggleCoverageCompare(){
+  const el=document.getElementById("coverageComparePanel");
+  el.classList.toggle("show");
+  if(el.classList.contains("show")){ captureCoverageLayers(); updateCoveragePanel(); }
+}
+function setCoverageView(mode){
+  coverageMode=mode;
+  ["before","after","gain"].forEach(x=>document.getElementById("tab"+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle("active",x===mode));
+  coverageBeforeLayer.clearLayers(); coverageAfterLayer.clearLayers(); gainLayer.clearLayers();
+  if(mode==="before") coverageBeforeLayer.addTo(map);
+  if(mode==="after") coverageAfterLayer.addTo(map);
+  if(mode==="gain") gainLayer.addTo(map);
+  updateCoveragePanel();
+}
+function cellRadius(s){
+  if(s.tech==="5G") return s.band==="3500"?1800:s.band==="2100"?3000:5000;
+  if(s.band==="2600") return 2200;
+  if(s.band==="1800") return 3300;
+  if(s.band==="800") return 5200;
+  if(s.tech==="3G") return 3600;
+  return 6000;
+}
+function drawCoverageLayer(layer, list, mode){
+  layer.clearLayers();
+  list.forEach(s=>{
+    const r=cellRadius(s);
+    let color="#356ae6";
+    if(mode==="after" && s.tech==="5G") color="#7c4dff";
+    if(mode==="gain") color="#168a5b";
+    L.circle([s.lat,s.lng],{
+      radius:r,color,weight:2,fillColor:color,fillOpacity:mode==="gain"?.11:.045,dashArray:mode==="gain"?"3 5":""
+    }).bindTooltip(`${mode==="before"?"4G":"after"===mode?"5G/4G":"Gain"} · ${s.name} · ${s.band} MHz`).addTo(layer);
   });
-  return Object.values(clusters);
 }
-
-// ---------- NETWORK OPTIMIZER ----------
-function networkScore(candidateStations){
-  if(!users.length) return {score:0, covered:0, good:0, avgRsrp:-999, loadStd:0};
-  const loads = candidateStations.map(()=>0);
-  let covered=0, good=0, sum=0;
-  users.forEach(u => {
-    let best=-999, bestIdx=-1;
-    candidateStations.forEach((st,idx)=>{
-      const r=rsrpAt(st,[u.lat,u.lng]);
-      if(r>best){best=r; bestIdx=idx;}
-    });
-    sum += best;
-    if(best>=RSRP_OK) covered++;
-    if(best>=RSRP_GOOD) good++;
-    if(bestIdx>=0 && best>=RSRP_MIN) loads[bestIdx]++;
-  });
-  const avg=loads.reduce((a,b)=>a+b,0)/Math.max(loads.length,1);
-  const variance=loads.reduce((a,b)=>a+Math.pow(b-avg,2),0)/Math.max(loads.length,1);
-  const loadStd=Math.sqrt(variance);
-  const avgRsrp=sum/users.length;
-  const score=covered*5 + good*2 + Math.max(avgRsrp+100,0)*0.8 - loadStd*1.5;
-  return {score, covered, good, avgRsrp, loadStd, loads};
-}
-
-function candidatePositionsForCluster(cluster, limit=7){
-  const cLat=cluster.reduce((a,p)=>a+p.lat,0)/cluster.length;
-  const cLng=cluster.reduce((a,p)=>a+p.lng,0)/cluster.length;
-  const points=[{lat:cLat,lng:cLng}];
-  cluster.slice().sort((a,b)=>a.lat-b.lat).forEach(p=>points.push(p));
-  cluster.slice().sort((a,b)=>b.lng-a.lng).forEach(p=>points.push(p));
-  return points.slice(0,limit);
-}
-
-function bestAddCandidate(cluster){
-  const candidates=candidatePositionsForCluster(cluster);
-  const base=networkScore(stations);
-  let best=null;
-  candidates.forEach(pos=>{
-    const tooClose=stations.some(s=>map.distance([s.lat,s.lng],[pos.lat,pos.lng])<120);
-    if(tooClose) return;
-    const candidate={id:'candidate',lat:pos.lat,lng:pos.lng,power:43};
-    const result=networkScore(stations.concat(candidate));
-    const gain=result.score-base.score;
-    if(!best || gain>best.gain) best={...pos,gain,result,base};
-  });
-  return best;
-}
-
-function bestMoveCandidate(station, targetPoints){
-  const candidates=candidatePositionsForCluster(targetPoints,8);
-  const base=networkScore(stations);
-  let best=null;
-  candidates.forEach(pos=>{
-    const tooClose=stations.some(s=>s.id!==station.id && map.distance([s.lat,s.lng],[pos.lat,pos.lng])<120);
-    if(tooClose) return;
-    const moved=stations.map(s=>s.id===station.id ? {...s,lat:pos.lat,lng:pos.lng} : s);
-    const result=networkScore(moved);
-    const gain=result.score-base.score;
-    if(!best || gain>best.gain) best={...pos,gain,result,base};
-  });
-  return best;
-}
-
-function optimizeNetwork(){
-  if(stations.length === 0){ toast("Ajoutez au moins une station d'abord", 'warning'); return; }
-  if(users.length === 0){ toast("Générez des utilisateurs d'abord", 'warning'); return; }
-
-  const suggestions=[];
-  const bounds=map.getBounds();
-  const steps=16;
-  const gridPoints=[];
-  const cellSizeM=map.distance([bounds.getSouth(),bounds.getWest()],[bounds.getSouth(),bounds.getEast()])/steps;
-  for(let i=0;i<=steps;i++){
-    for(let j=0;j<=steps;j++){
-      const lat=bounds.getSouth()+(bounds.getNorth()-bounds.getSouth())*i/steps;
-      const lng=bounds.getWest()+(bounds.getEast()-bounds.getWest())*j/steps;
-      let bestRsrp=-999;
-      stations.forEach(s=>{const r=rsrpAt(s,[lat,lng]);if(r>bestRsrp)bestRsrp=r;});
-      if(classify(bestRsrp)==='poor'||classify(bestRsrp)==='none') gridPoints.push({lat,lng});
-    }
-  }
-  const eps=Math.max(cellSizeM*1.6,60);
-  const clusters=dbscan(gridPoints,eps,3,(a,b)=>map.distance([a.lat,a.lng],[b.lat,b.lng]));
-  const base=networkScore(stations);
-
-  clusters.sort((a,b)=>b.length-a.length).slice(0,3).forEach(cluster=>{
-    const best=bestAddCandidate(cluster);
-    if(!best || best.gain<=0) return;
-    suggestions.push({
-      type:'add', title:'Ajouter une station ici',
-      desc:`Zone de couverture faible regroupant ${cluster.length} points. L'emplacement suggéré améliore la couverture et la répartition de charge.`,
-      score:`gain estimé=${best.gain.toFixed(1)} · couverture ${base.covered}→${best.result.covered} UE · RSRP moyen ${Math.round(base.avgRsrp)}→${Math.round(best.result.avgRsrp)} dBm`,
-      action:()=>createStation(best.lat,best.lng,{ai:true,power:43})
-    });
-  });
-
-  stations.filter(s=>s.users>CAPACITY_PER_STATION*0.9).forEach(s=>{
-    const attached=users.filter(u=>u.stationId===s.id);
-    const targets=attached.length?attached:users.filter(u=>u.status==='poor'||u.status==='none');
-    if(!targets.length)return;
-    const best=bestAddCandidate(targets);
-    if(!best || best.gain<=0)return;
-    suggestions.push({
-      type:'add', title:`Délester ${s.name}`,
-      desc:`${s.name} est à ${Math.round(s.users/CAPACITY_PER_STATION*100)}% de charge. Emplacement optimal calculé pour éponger le trafic.`,
-      score:`gain=${best.gain.toFixed(1)} · charge actuelle=${s.users}/${CAPACITY_PER_STATION} UE · position ${best.lat.toFixed(4)}, ${best.lng.toFixed(4)}`,
-      action:()=>createStation(best.lat,best.lng,{ai:true,power:40})
-    });
-  });
-
-  for(let i=0;i<stations.length;i++){
-    for(let j=i+1;j<stations.length;j++){
-      const a=stations[i],b=stations[j];
-      const d=map.distance([a.lat,a.lng],[b.lat,b.lng]);
-      const combinedRange=radiusForThreshold(a,RSRP_OK)+radiusForThreshold(b,RSRP_OK);
-      if(d<combinedRange*0.35&&(a.users<CAPACITY_PER_STATION*0.3||b.users<CAPACITY_PER_STATION*0.3)){
-        const weak=a.users<=b.users?a:b;
-        const targetUsers=users.filter(u=>u.status==='poor'||u.status==='none');
-        const move=targetUsers.length?bestMoveCandidate(weak,targetUsers):null;
-        if(move && move.gain>0){
-          suggestions.push({
-            type:'move', title:`Déplacer ${weak.name}`,
-            desc:`${weak.name} est peu chargée et très proche d'une autre cellule. Redéploiement proposé.`,
-            score:`gain=${move.gain.toFixed(1)} · nouvelle position=${move.lat.toFixed(4)}, ${move.lng.toFixed(4)}`,
-            action:()=>{moveStation(weak.id,move.lat,move.lng);addLog(`${weak.name} déplacée vers un emplacement plus utile`,'yellow');}
-          });
-        }
-        suggestions.push({
-          type:'remove', title:`Supprimer ${weak.name}`,
-          desc:`Option économique : supprimer ${weak.name} (faible charge & fort chevauchement).`,
-          score:`distance=${Math.round(d)} m · charge=${Math.round(weak.users/CAPACITY_PER_STATION*100)}%`,
-          action:()=>deleteStation(weak.id)
-        });
+function captureCoverageLayers(){
+  const before=stations.filter(s=>s.tech!=="5G");
+  const after=stations.slice();
+  drawCoverageLayer(coverageBeforeLayer,before,"before");
+  drawCoverageLayer(coverageAfterLayer,after,"after");
+  // Gain layer: highlight the central 5G footprint and the corridor between the two 4G sites.
+  gainLayer.clearLayers();
+  if(central5G){
+    const r=cellRadius(central5G);
+    L.circle([central5G.lat,central5G.lng],{radius:r,color:"#168a5b",weight:2,fillColor:"#168a5b",fillOpacity:.10,dashArray:"5 5"})
+      .bindTooltip("Gain de couverture associé à la nouvelle cellule 5G").addTo(gainLayer);
+    const fg=stations.filter(s=>s.tech==="4G");
+    if(fg.length>=2){
+      let pair=[fg[0],fg[1]], best=Infinity;
+      for(let i=0;i<fg.length;i++)for(let j=i+1;j<fg.length;j++){
+        const d=map.distance([fg[i].lat,fg[i].lng],[fg[j].lat,fg[j].lng]);
+        if(d<best){best=d;pair=[fg[i],fg[j]];}
       }
+      L.polyline([[pair[0].lat,pair[0].lng],[central5G.lat,central5G.lng],[pair[1].lat,pair[1].lng]],{color:"#168a5b",weight:5,opacity:.55})
+       .bindTooltip("Corridor étudié : impact de l'ajout manuel de la 5G").addTo(gainLayer);
     }
   }
-
-  suggestions.sort((a,b)=>{
-    const ga=parseFloat((a.score.match(/gain=([\d.-]+)/)||[])[1]||'-999');
-    const gb=parseFloat((b.score.match(/gain=([\d.-]+)/)||[])[1]||'-999');
-    return gb-ga;
-  });
-  renderSuggestions(suggestions.slice(0,8));
-  addLog(`Analyse : ${clusters.length} zone(s) faible(s), ${suggestions.length} recommandation(s)`, 'cyan');
-  toast(suggestions.length?`${Math.min(suggestions.length,8)} recommandation(s) proposées`:'Réseau déjà satisfaisant','success');
+  if(coverageMode==="before") coverageBeforeLayer.addTo(map);
+  if(coverageMode==="after") coverageAfterLayer.addTo(map);
+  if(coverageMode==="gain") gainLayer.addTo(map);
+}
+function updateCoveragePanel(){
+  const title=document.getElementById("coverageViewTitle"), exp=document.getElementById("coverageExplain");
+  let m;
+  if(coverageMode==="before"){
+    m=pre5GMetrics||baseline||metrics();
+    title.textContent="AVANT — couverture assurée par les stations 4G";
+    exp.textContent="Les cercles bleus représentent l'emprise radio estimée des eNodeB 4G. Cette vue sert de référence avant l'installation de la gNodeB.";
+  }else if(coverageMode==="after"){
+    m=metrics();
+    title.textContent=central5G?"APRÈS — 2×4G + gNodeB 5G centrale":"APRÈS — scénario actuel";
+    exp.textContent=central5G?"La zone violette correspond à l'influence de la nouvelle cellule 5G au milieu des deux 4G. Les UE eMBB peuvent être servis par la 5G si son signal et son SINR sont suffisants.":"Ajoutez la 5G au milieu pour obtenir une comparaison réelle.";
+  }else{
+    m=metrics();
+    title.textContent="GAIN — contribution de la nouvelle 5G";
+    exp.textContent=central5G?"La zone verte met en évidence l'aire ajoutée autour de la gNodeB centrale et le corridor entre les deux eNodeB. Le gain est évalué par comparaison des KPI avant/après.":"Le gain apparaîtra après l'ajout de la gNodeB centrale.";
+  }
+  document.getElementById("ccCov").textContent=m?.cov!=null?m.cov+"%":"—";
+  document.getElementById("ccRsrp").textContent=m?.rsrp?m.rsrp+" dBm":"—";
+  document.getElementById("ccRate").textContent=m?.rate!=null?formatRate(m.rate):"—";
+  document.getElementById("ccLat").textContent=m?.lat?m.lat+" ms":"—";
 }
 
-function renderSuggestions(list){
-  const panel = document.getElementById('aiPanel');
-  if(list.length === 0){
-    panel.innerHTML = `<div class="sugg ok"><div class="stitle">✓ Réseau Satisfaisant</div>
-      <div class="sdesc">La simulation ne détecte pas d'action prioritaire sur la couverture, la charge ou le placement des stations.</div></div>`;
+function renderPairHistory(){
+  const el=document.getElementById("pairHistoryView");
+  if(!pairHistory.length){el.innerHTML='<div class="history-empty">Aucune paire créée.</div>';return;}
+  el.innerHTML=pairHistory.map(x=>{
+    const a=stations.find(s=>s.id===x.a),b=stations.find(s=>s.id===x.b),g=stations.find(s=>s.id===x.g);
+    return `<div class="pair-history-row"><b>Paire #${x.id}</b><span>${a?.name||x.a} — <strong>${g?.name||x.g}</strong> — ${b?.name||x.b}</span></div>`;
+  }).join("");
+}
+
+function updateInterSitePlanning(){
+  const recent=stations.filter(s=>s.tech!=="5G").slice(-2);
+  if(recent.length<2) return;
+  const a=recent[0], b=recent[1];
+  const dKm=map.distance([a.lat,a.lng],[b.lat,b.lng])/1000;
+  const zone=envSel();
+  const radius=zone==="Urbain"?"~1–3 km":zone==="Périurbain"?"~2–5 km":"~5–15+ km";
+  let need="Faible";
+  if(zone==="Urbain" && dKm>2) need="Élevé";
+  else if(zone==="Périurbain" && dKm>4) need="Élevé";
+  else if(zone==="Rural" && dKm>10) need="Élevé";
+  else if(dKm>1.5) need="Modéré";
+  document.getElementById("pairA").textContent=a.name;
+  document.getElementById("pairB").textContent=b.name;
+  document.getElementById("pairDistance").textContent=dKm.toFixed(2)+" km";
+  document.getElementById("planningZone").textContent=zone;
+  document.getElementById("planningBand").textContent=`${a.band} / ${b.band} MHz`;
+  document.getElementById("planningRadius").textContent=radius;
+  document.getElementById("planningNeed").textContent=need;
+  document.getElementById("planningRecommendation").innerHTML=
+    `Distance réelle entre <b>${a.name}</b> et <b>${b.name}</b> : <b>${dKm.toFixed(2)} km</b>. `+
+    (need==="Élevé"
+      ? "Une densification intermédiaire 5G peut être étudiée pour renforcer la capacité eMBB dans la zone centrale."
+      : "La distance ne justifie pas automatiquement une nouvelle cellule 5G : la décision doit aussi tenir compte de la charge, de la couverture et de la capacité.");
+}
+function enablePair5GMode(){
+  // Deprecated: station placement is now controlled only by AJOUTER STATION.
+  document.getElementById("pairModeText").textContent="La planification se fait uniquement avec AJOUTER STATION. Les distances et besoins de densification sont calculés automatiquement.";
+function finishPair5GMode(){
+  pairMode=false; pairStations=[]; updatePairUI();
+function updatePairUI(){
+  document.getElementById("pairA").textContent=pairStations[0]?.name||"—";
+  document.getElementById("pairB").textContent=pairStations[1]?.name||"—";
+  document.getElementById("pairG").textContent=pairStations[2]?.name||"—";
+}
+function create5GForPair(a,b){
+  const lat=(a.lat+b.lat)/2, lng=(a.lng+b.lng)/2;
+  const env=envSel(), band=profiles[env].defaultBand["5G"]||"3500";
+  const g={
+    id:"G"+String(pairId).padStart(2,"0"),
+    name:`gNodeB-P${pairId}`,
+    lat,lng,tech:"5G",band,power:43,height:30,azimuth:0,tilt:6,
+    bw:band==="3500"?"100 MHz":"20 MHz",mimo:64,beam:1,usage:"eMBB",
+    users:0,central:true,pairId,linkedA:a.id,linkedB:b.id
+  };
+  pre5GMetrics=metrics();
+  central5G=g;
+  stations.push(g);
+  renderStation(g);
+  pairStations.push(g);
+  pairHistory.push({id:pairId,a:a.id,b:b.id,g:g.id,before:pre5GMetrics});
+  drawCentralInfluence(a,b,g);
+  runSimulation(false);
+  updatePairImpact(a,b,g,pre5GMetrics);
+  const createdPairId=pairId;
+  pairId++;
+  // IMPORTANT: this pair is now finished. The next two stations create a NEW independent pair.
+  pairStations=[];
+  updatePairUI();
+  renderPairHistory();
+  document.getElementById("pairModeBadge").textContent=`paire #${createdPairId} terminée`;
+  document.getElementById("pairModeText").textContent=`Paire #${createdPairId} : ${a.name} — ${g.name} — ${b.name}. Pour créer la paire suivante C–D avec une nouvelle 5G, cliquez sur « Nouvelle paire ».`;
+  log(`${g.name} créée entre ${a.name} et ${b.name}. Paire #${createdPairId} verrouillée. Nouvelle paire disponible.`,"green");
+}
+function updatePairImpact(a,b,g,before){
+  const after=metrics();
+  const dist=map.distance([a.lat,a.lng],[b.lat,b.lng])/1000;
+  document.getElementById("impactBadge").textContent=`Paire #${g.pairId}`;
+  document.getElementById("impactIntro").innerHTML=`<b>${g.name}</b> est exactement au milieu de <b>${a.name}</b> et <b>${b.name}</b> · distance ${dist.toFixed(2)} km · ${g.band} MHz · Massive MIMO 64T64R · NSA.`;
+  document.getElementById("impactDistance").textContent=dist.toFixed(2)+" km";
+  document.getElementById("impactCoverage").textContent=(after.cov-before.cov>=0?"+":"")+(after.cov-before.cov).toFixed(0)+" pts";
+  document.getElementById("impactRate").textContent=(after.rate-before.rate>=0?"+":"")+formatRate(Math.abs(after.rate-before.rate));
+  document.getElementById("impactLatency").textContent=(after.lat-before.lat>=0?"+":"")+(after.lat-before.lat).toFixed(0)+" ms";
+  const fmt=(v,u)=>`${v.toFixed(0)} ${u}`;
+  document.getElementById("impactExplanation").innerHTML=`<b>Effet isolé de la paire :</b> la comparaison AVANT correspond au réseau juste avant l'ajout de ${g.name}. La 5G ne déplace aucune autre station et reste liée à cette paire. Les nouveaux UE peuvent être servis par la cellule 5G lorsque le RSRP/SINR est suffisant.`;
+  // Station-specific qualitative impact from distance to the new gNodeB.
+  function stationImpact(s,prefix){
+    const d=map.distance([s.lat,s.lng],[g.lat,g.lng]);
+    const r=cellRadius(g);
+    const strength=Math.max(0,1-d/r);
+    const rsrpGain=Math.round(2+10*strength);
+    const sinrGain=Math.round(1+7*strength);
+    const rateGain=Math.round(5+35*strength);
+    const loadDrop=Math.round(3+25*strength);
+    document.getElementById(prefix+"Rsrp").textContent=`+${rsrpGain} dB`;
+    document.getElementById(prefix+"Sinr").textContent=`+${sinrGain} dB`;
+    document.getElementById(prefix+"Rate").textContent=`+${rateGain}%`;
+    document.getElementById(prefix+"Load").textContent=`−${loadDrop}%`;
+    return strength;
+  }
+  document.querySelector("#impactA .station-impact-title").innerHTML=`${a.name} <span>EFFET 5G</span>`;
+  document.querySelector("#impactB .station-impact-title").innerHTML=`${b.name} <span>EFFET 5G</span>`;
+  stationImpact(a,"a"); stationImpact(b,"b");
+}
+function registerNewStationForPair(s){
+  if(!pairMode) return false;
+  if(pairStations.length<2){
+    pairStations.push(s);
+    updatePairUI();
+    if(pairStations.length===1){
+      document.getElementById("pairModeText").textContent="Station A placée. Choisissez maintenant la deuxième station : elle deviendra Station B.";
+      log(`${s.name} = Station A. Placez Station B.`,"yellow");
+    }else if(pairStations.length===2){
+      document.getElementById("pairModeText").textContent=`A=${pairStations[0].name} · B=${s.name}. Calcul du milieu et création automatique de la 5G…`;
+      create5GForPair(pairStations[0],pairStations[1]);
+    }
+    return true;
+  }
+  return false;
+}
+
+function evaluate5GCandidate(){
+  const base=stations.filter(s=>s.tech!=="5G");
+  if(base.length<2) return null;
+  let best=null, bestD=Infinity;
+  for(let i=0;i<base.length;i++){
+    for(let j=i+1;j<base.length;j++){
+      const d=map.distance([base[i].lat,base[i].lng],[base[j].lat,base[j].lng]);
+      if(d<bestD){bestD=d;best=[base[i],base[j]];}
+    }
+  }
+  const a=best[0],b=best[1];
+  const mid={lat:(a.lat+b.lat)/2,lng:(a.lng+b.lng)/2};
+  const env=envSel();
+  let zone="Urbain";
+  if(env==="Rural") zone="Rural";
+  else if(env==="Périurbain") zone="Périurbain";
+  const limits={Urbain:[500,3000],Périurbain:[1000,5000],Rural:[3000,15000]};
+  const [lo,hi]=limits[zone]||limits.Urbain;
+  const suitable=bestD>=lo && bestD<=hi;
+  return {a,b,d:bestD,mid,zone,suitable};
+}
+function show5GCandidate(){
+  const c=evaluate5GCandidate();
+  if(!c){log("Il faut au moins deux stations existantes pour analyser une densification 5G.","yellow");return;}
+  const km=c.d/1000;
+  const text=c.suitable
+    ? `Densification 5G pertinente à étudier : ${c.a.name} ↔ ${c.b.name}, distance ${km.toFixed(2)} km. Point médian proposé, sans création automatique.`
+    : `Distance ${km.toFixed(2)} km entre ${c.a.name} et ${c.b.name} : hors plage indicative de planification ${c.zone}. Aucune 5G n'est créée automatiquement.`;
+  log(text,c.suitable?"green":"yellow");
+  if(document.getElementById("impactIntro")){
+    document.getElementById("impactIntro").innerHTML=
+      `<b>Analyse de densification :</b> ${text}<br>
+       Point médian proposé : ${c.mid.lat.toFixed(5)}, ${c.mid.lng.toFixed(5)}. 
+       L'ajout manuel de la 5G reste une décision de l'utilisateur via <b>AJOUTER STATION</b>.`;
+  }
+}
+function add5GBetween4G(){
+  const fourG=stations.filter(s=>s.tech==="4G");
+  if(fourG.length<2){
+    alert("Il faut d'abord avoir au moins deux stations 4G pour utiliser « + 5G au milieu ».");
     return;
   }
-  panel.innerHTML = list.map((s, idx) => `
-    <div class="sugg ${s.type}">
-      <div class="stitle">${s.type==='add'?'+':s.type==='remove'?'−':'↔'} ${s.title}</div>
-      <div class="sdesc">${s.desc}</div>
-      <div class="score">${s.score||''}</div>
-      <button class="apply" onclick="applySuggestion(${idx})">Appliquer</button>
-    </div>`).join('');
-  window.__suggestions = list;
-}
-function applySuggestion(idx){
-  const s = window.__suggestions[idx];
-  if(!s) return;
-  s.action();
-  toast('Recommandation appliquée', 'success');
-  setTimeout(optimizeNetwork, 250);
-}
-window.applySuggestion = applySuggestion;
 
-// ---------- UI HELPERS ----------
-function setPlacing(v){
-  placing = v;
-  document.getElementById('placeHint').classList.toggle('show', v);
-  document.getElementById('btnAddStation').classList.toggle('on', v);
-  document.getElementById('map').style.cursor = v ? 'crosshair' : '';
-}
+  // Use the two closest 4G sites to define the intended central location.
+  let pair=null, best=Infinity;
+  for(let i=0;i<fourG.length;i++){
+    for(let j=i+1;j<fourG.length;j++){
+      const d=map.distance([fourG[i].lat,fourG[i].lng],[fourG[j].lat,fourG[j].lng]);
+      if(d<best){best=d;pair=[fourG[i],fourG[j]];}
+    }
+  }
 
-function clearAll(){
-  if(!confirm('Supprimer toutes les stations et utilisateurs ?')) return;
-  stations.forEach(s => map.removeLayer(s.marker));
-  stations = []; users = []; stationSeq = 1;
-  ringsLayer.clearLayers(); usersLayer.clearLayers();
-  refreshSidebar(); updateKPIs();
-  document.getElementById('aiPanel').innerHTML = `<div class="empty">Aucune analyse pour le moment. Cliquez « Analyser Et Optimiser ».</div>`;
-  addLog('Scénario réinitialisé', 'red');
-  toast('Tout a été effacé', 'warning');
-}
+  // If a central 5G already exists, do not duplicate it.
+  if(stations.some(s=>s.tech==="5G" && s.central)){
+    const old=stations.find(s=>s.tech==="5G" && s.central);
+    map.flyTo([old.lat,old.lng],14);
+    log("La gNodeB centrale existe déjà : son influence est affichée.","yellow");
+    updateCentralImpact();
+    return;
+  }
 
-function toast(msg, type){
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'show ' + (type||'');
-  el.id = 'toast';
-  clearTimeout(el._t);
-  el._t = setTimeout(()=>el.classList.remove('show'), 2800);
+  const a=pair[0], b=pair[1];
+  const lat=(a.lat+b.lat)/2, lng=(a.lng+b.lng)/2;
+  const env=envSel();
+  const band=profiles[env].defaultBand["5G"] || "3500";
+  const s={
+    id:"S"+String(seq++).padStart(2,"0"),
+    name:"gNodeB-CENTRALE",
+    lat,lng,tech:"5G",band,power:43,height:30,azimuth:0,tilt:6,
+    bw:band==="700"?"20 MHz":"100 MHz",mimo:64,beam:1,usage:"eMBB",
+    users:0,central:true
+  };
+  pre5GMetrics=metrics();
+  central5G=s;
+  stations.push(s);
+  renderStation(s);
+  drawCentralInfluence(a,b,s);
+  runSimulation(false);
+  updateCentralImpact();
+  map.flyTo([lat,lng],14);
+  s.marker.openPopup();
+  log(`gNodeB centrale installée entre ${a.name} et ${b.name} · ${band} MHz · 64T64R · beamforming ON`,"green");
 }
 
-function addLog(msg, color){
-  const box = document.getElementById('logBox');
-  const time = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  const div = document.createElement('div');
-  div.className = 'log-line ' + (color||'');
-  div.innerHTML = `<span class="t">[${time}]</span>${msg}`;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
+function drawCentralInfluence(a,b,g){
+  // Keep all existing pair influences visible; only redraw the current pair on a dedicated layer.
+  const pairLayer=L.layerGroup().addTo(pairLayer);
+  const line4=L.polyline([[a.lat,a.lng],[b.lat,b.lng]],{
+    color:"#356ae6",weight:2,dashArray:"6 6",opacity:.65
+  }).bindTooltip("Axe entre les deux stations 4G");
+  line4.addTo(pairLayer);
+
+  const line5=L.circle([g.lat,g.lng],{
+    radius:g.band==="3500"?1800:g.band==="2100"?3000:5000,
+    color:"#7c4dff",weight:2,dashArray:"5 5",fillColor:"#7c4dff",fillOpacity:.045
+  }).bindTooltip(`Influence 5G centrale · ${g.band} MHz`);
+  line5.addTo(pairLayer);
+
+  L.marker([g.lat,g.lng],{
+    icon:L.divIcon({
+      className:"g5center",
+      html:`<div style="width:34px;height:34px;border-radius:50%;background:#7c4dff;color:#fff;border:3px solid #fff;box-shadow:0 2px 10px #0004;display:grid;place-items:center;font-size:10px;font-weight:900">5G</div>`,
+      iconSize:[34,34],iconAnchor:[17,17]
+    })
+  }).bindTooltip("gNodeB 5G centrale — influence entre les deux 4G").addTo(pairLayer);
+
+  // Highlight the two sides of the middle corridor.
+  const d=map.distance([a.lat,a.lng],[b.lat,b.lng]);
+  L.circle([g.lat,g.lng],{
+    radius:Math.min(0.42*d,1800),
+    color:"#8a6336",weight:1,fillColor:"#8a6336",fillOpacity:.035,dashArray:"2 4"
+  }).bindTooltip("Zone d'étude : effet local de l'ajout 5G").addTo(pairLayer);
 }
 
-// ---------- WIRING ----------
-document.getElementById('btnAddStation').addEventListener('click', () => setPlacing(!placing));
-document.getElementById('btnGenUsers').addEventListener('click', generateUsers);
-document.getElementById('btnOptimize').addEventListener('click', optimizeNetwork);
-document.getElementById('btnClear').addEventListener('click', clearAll);
-document.getElementById('navMeth').addEventListener('click', () => document.getElementById('methOverlay').classList.add('show'));
-document.getElementById('btnAiInfo').addEventListener('click', () => document.getElementById('methOverlay').classList.add('show'));
-document.getElementById('methClose').addEventListener('click', () => document.getElementById('methOverlay').classList.remove('show'));
-document.getElementById('methOverlay').addEventListener('click', (e) => { if(e.target.id === 'methOverlay') e.currentTarget.classList.remove('show'); });
-
-function buildReportText(){
-  const covered = users.filter(u => u.status==='good' || u.status==='ok').length;
-  const coveragePct = users.length ? Math.round(covered/users.length*100) : 0;
-  const avgLoad = stations.length
-    ? Math.round(stations.reduce((a,s)=>a+Math.min(s.users/CAPACITY_PER_STATION*100,100),0)/stations.length)
-    : 0;
-  const saturated = stations.filter(s => s.users > CAPACITY_PER_STATION*0.9).length;
-
-  const lines = [
-    '5G Smart Planner — Rapport De Simulation',
-    '==========================================',
-    `Date : ${new Date().toLocaleString('fr-FR')}`,
-    'Zone : Casablanca',
-    'Modèle : 3GPP TR 38.901 — UMi Street Canyon',
-    'Fréquence : 3.5 GHz (n78)',
-    '',
-    'Indicateurs',
-    `Stations : ${stations.length}`,
-    `Utilisateurs : ${users.length}`,
-    `Couverture service : ${coveragePct}%`,
-    `Charge moyenne : ${avgLoad}%`,
-    `Stations saturées : ${saturated}`,
-    '',
-    'Stations'
-  ];
-
-  stations.forEach(s => {
-    lines.push(`${s.name} | ${s.lat.toFixed(5)}, ${s.lng.toFixed(5)} | Ptx=${s.power} dBm | UE=${s.users}/${CAPACITY_PER_STATION}`);
-  });
-
-  lines.push(
-    '',
-    'Limites',
-    'Simulation pédagogique : sans bâtiments réels, ray-tracing, fast fading ou capacité radio détaillée.'
-  );
-  return lines.join('\n');
+function updateCentralImpact(){
+  const box=document.getElementById("impactBadge");
+  const intro=document.getElementById("impactIntro");
+  if(!central5G || !pre5GMetrics){
+    box.textContent="en attente";
+    intro.textContent="Scénario de référence : deux eNodeB 4G. Ajoutez manuellement une gNodeB 5G au point médian proposé pour visualiser précisément ce qui change dans la zone intermédiaire.";
+    ["impactDistance","impactCoverage","impactRate","impactLatency"].forEach(id=>document.getElementById(id).textContent="—");
+    return;
+  }
+  const fourG=stations.filter(s=>s.tech==="4G");
+  let pair=null,best=Infinity;
+  for(let i=0;i<fourG.length;i++)for(let j=i+1;j<fourG.length;j++){
+    const d=map.distance([fourG[i].lat,fourG[i].lng],[fourG[j].lat,fourG[j].lng]);
+    if(d<best){best=d;pair=[fourG[i],fourG[j]];}
+  }
+  const now=metrics();
+  const dc=now.cov-pre5GMetrics.cov, dr=now.rate-pre5GMetrics.rate, dl=now.lat-pre5GMetrics.lat;
+  document.getElementById("impactDistance").textContent=(best/1000).toFixed(2)+" km";
+  document.getElementById("impactCoverage").textContent=(dc>=0?"+":"")+dc.toFixed(0)+" pts";
+  document.getElementById("impactRate").textContent=(dr>=0?"+":"")+formatRate(Math.abs(dr));
+  document.getElementById("impactLatency").textContent=(dl>=0?"+":"")+dl.toFixed(0)+" ms";
+  box.textContent="ACTIVE";
+  intro.innerHTML=`La gNodeB <b>centrale</b> est positionnée à mi-distance entre <b>${pair[0].name}</b> et <b>${pair[1].name}</b>. La zone violette montre son aire d'influence radio estimée.`;
+  document.getElementById("impactExplanation").innerHTML=
+    `<b>Influence observée :</b> la nouvelle cellule 5G peut reprendre une partie des UE eMBB dans la zone centrale, ce qui augmente la capacité disponible et le débit moyen si le SINR est suffisant. <br><br>
+    <b>Architecture :</b> accès radio 5G → transport → EPC 4G (NSA). <br>
+    <b>Massive MIMO :</b> 64T64R + beamforming dans ce scénario, pour modéliser un gain de capacité/efficacité spectrale. <br>
+    <b>Attention :</b> la valeur de latence est une estimation de simulation et non la promesse théorique de 1 ms.`;
+  if(pair) drawCentralInfluence(pair[0],pair[1],central5G);
 }
 
+function optimize(){
+ if(!users.length){generateUsers();return}
+ let weak=users.filter(u=>u.status==="poor"||u.status==="none"), target=weak.length?weak:users;
+ const lat=target.reduce((a,u)=>a+u.lat,0)/target.length,lng=target.reduce((a,u)=>a+u.lng,0)/target.length;
+ const tech=envSel()==="dense"?"5G":envSel()==="rural"?"4G":"5G";
+ const band=tech==="5G"?(profiles[envSel()].defaultBand["5G"]||"3500"):(profiles[envSel()].defaultBand["4G"]||"1800");
+ pendingConfig={tech,band,power:43,height:30,azimuth:0,tilt:6,bw:tech==="5G"?"100 MHz":"20 MHz",mimo:64,beam:1,usage:"eMBB"};
+ const m=L.marker([lat,lng],{icon:L.divIcon({className:"",html:`<div style="background:#fff;border:2px solid #8a6336;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;color:#8a6336;font-weight:900">+</div>`,iconSize:[22,22],iconAnchor:[11,11]})}).addTo(map);
+ m.bindPopup(`<b>Emplacement recommandé</b><br>${tech} ${band} MHz<br>Zone faible détectée · cliquez « Ajouter station » pour confirmer.`).openPopup();
+ setTimeout(()=>map.removeLayer(m),6000);log(`Recommandation : ${tech} ${band} MHz autour de la zone la plus faible`,"green");
+}
+function resetScenario(){if(!confirm("Revenir au scénario initial 2×4G ?"))return;loadReferenceScenario();baseline=null;pre5GMetrics=null;central5G=null;pairMode=false;pairStations=[];pairHistory=[];pairId=1;renderPairHistory();impactLayer.clearLayers();coverageBeforeLayer.clearLayers();coverageAfterLayer.clearLayers();gainLayer.clearLayers();updatePairUI();generateUsers();updateCentralImpact();log("Scénario réinitialisé : 2×4G sans 5G centrale","bad")}
+function log(msg,type=""){const el=document.getElementById("log"),d=document.createElement("div");d.innerHTML=`<span class="t">[${new Date().toLocaleTimeString("fr-FR")}]</span>${msg}`;if(type==="bad")d.style.color="#c83b4b";else if(type==="yellow")d.style.color="#b7791f";else if(type==="green")d.style.color="#168a5b";el.appendChild(d);el.scrollTop=el.scrollHeight}
 function openReport(){
-  const preview = document.getElementById('reportPreview');
-  preview.textContent = buildReportText();
-  document.getElementById('reportOverlay').classList.add('show');
-  document.getElementById('reportOverlay').setAttribute('aria-hidden','false');
+ const m=metrics();let rows=stations.map(s=>`<tr><td>${s.name}</td><td>${s.tech}</td><td>${s.band} MHz</td><td>${s.bw}</td><td>${s.power} dBm</td><td>${s.users}</td></tr>`).join("");
+ document.getElementById("reportContent").innerHTML=`<p class="sectionnote"><b>Scénario 5G centrale :</b> ${central5G?"ACTIVE — gNodeB placée entre les deux 4G":"non activé"}</p><p class="sectionnote">Ville : <b>${document.getElementById("city").value}</b> · Zone : <b>${profiles[envSel()].label}</b> · Architecture : <b>5G NSA / EPC 4G</b></p><table class="reporttable"><tr><th>Indicateur</th><th>Valeur</th></tr><tr><td>Couverture service</td><td>${m.cov}%</td></tr><tr><td>RSRP moyen</td><td>${m.rsrp} dBm</td></tr><tr><td>SINR moyen</td><td>${m.sinr} dB</td></tr><tr><td>Débit moyen</td><td>${formatRate(m.rate)}</td></tr><tr><td>Latence estimée</td><td>${m.lat} ms</td></tr><tr><td>Sites</td><td>${m.sites}</td></tr></table><h3 style="font-size:12px;margin:15px 0 7px">Sites</h3><table class="reporttable"><tr><th>Site</th><th>Tech.</th><th>Bande</th><th>BW</th><th>Ptx</th><th>UE</th></tr>${rows}</table><p class="sectionnote" style="margin-top:10px">Simulation pédagogique : les résultats sont des estimations comparatives et ne remplacent pas un dimensionnement radio professionnel.</p>`;
+ document.getElementById("reportModal").classList.add("show");
 }
-
-function closeReport(){
-  document.getElementById('reportOverlay').classList.remove('show');
-  document.getElementById('reportOverlay').setAttribute('aria-hidden','true');
-}
-
 function downloadReport(){
-  const blob = new Blob([buildReportText()], {type:'text/plain;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `5G-Smart-Planner-rapport-${new Date().toISOString().slice(0,10)}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 500);
-  addLog('Rapport de simulation téléchargé', 'green');
-  toast('Rapport téléchargé dans Téléchargements', 'success');
-}
-
-window.exportReport = openReport;
-document.getElementById('navReports').addEventListener('click', openReport);
-document.getElementById('reportClose').addEventListener('click', closeReport);
-document.getElementById('reportClose2').addEventListener('click', closeReport);
-document.getElementById('reportDownload').addEventListener('click', downloadReport);
-document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeReport(); });
-document.getElementById('reportOverlay').addEventListener('click', (e) => {
-  if(e.target.id === 'reportOverlay') closeReport();
-});
-
-// ---------- BOOTSTRAP ----------
-initMap();
-setTimeout(() => {
-  createStation(33.5731, -7.5898);
-  createStation(33.582, -7.615);
-  generateUsers();
-  addLog('5G Smart Planner initialisé — modèle 3GPP TR 38.901 UMi actif', 'green');
-}, 350);
+ const m=metrics();let txt=`MOBILE NETWORK PLANNER MAROC\\nSCENARIO DE SIMULATION\\n\\nVille: ${document.getElementById("city").value}\\nEnvironnement: ${profiles[envSel()].label}\\nArchitecture: 5G NSA / EPC 4G\\n\\nKPI\\nCouverture: ${m.cov}%\\nRSRP moyen: ${m.rsrp} dBm\\nSINR moyen: ${m.sinr} dB\\nDébit moyen: ${formatRate(m.rate)}\\nLatence estimée: ${m.lat} ms\\n\\nSTATIONS\\n${stations.map(s=>`${s.name} | ${s.tech} | ${s.band} MHz | ${s.bw} | ${s.power} dBm | ${s.users} UE`).join("\\n")}\\n\\nNote: simulation pédagogique comparative.`;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain;charset=utf-8"}));a.download="mobile-network-planner-maroc.txt";a.click()}
+init();
 </script>
 </body>
 </html>
